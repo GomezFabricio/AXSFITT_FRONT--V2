@@ -27,10 +27,12 @@ const Aside = () => {
     const mapa = {};
     const raices = [];
 
+    // Crea el mapa de módulos
     modulos.forEach(mod => {
       mapa[mod.modulo_id] = { ...mod, children: [] };
     });
 
+    // Asocia hijos a padres
     modulos.forEach(mod => {
       if (mod.modulo_padre_id === null) {
         raices.push(mapa[mod.modulo_id]);
@@ -87,35 +89,37 @@ const Aside = () => {
 
     return (
       <li key={modulo.modulo_id} className="text-white">
-        {tieneHijos ? (
-          <>
-            <button
-              onClick={() => toggleMenu(modulo.modulo_id)}
-              className="w-full flex items-center justify-between px-4 py-2 hover:bg-purple-800 transition"
-            >
-              <span className="flex items-center gap-2">
-                {obtenerIcono(modulo.modulo_descripcion)}
-                {modulo.modulo_descripcion}
-              </span>
-              {estaAbierto ? <FaAngleDown /> : <FaAngleRight />}
-            </button>
-            {estaAbierto && (
-              <ul className="pl-6 space-y-1">
-                {modulo.children.map(hijo => renderizarModulo(hijo))}
-              </ul>
-            )}
-          </>
-        ) : (
-          <Link
-            to={modulo.modulo_ruta}
-            className="block px-4 py-2 hover:bg-purple-800 transition"
+        <div>
+          <button
+            onClick={() => toggleMenu(modulo.modulo_id)}
+            className="w-full flex items-center justify-between px-4 py-2 hover:bg-purple-800 transition"
           >
             <span className="flex items-center gap-2">
               {obtenerIcono(modulo.modulo_descripcion)}
               {modulo.modulo_descripcion}
             </span>
-          </Link>
-        )}
+            {tieneHijos || (modulo.permisos && modulo.permisos.length > 0) ? (
+              estaAbierto ? <FaAngleDown /> : <FaAngleRight />
+            ) : null}
+          </button>
+          {estaAbierto && (
+            <ul className="pl-6 space-y-1">
+              {/* Renderiza submódulos */}
+              {tieneHijos && modulo.children.map(hijo => renderizarModulo(hijo))}
+              {/* Renderiza permisos como tercer nivel */}
+              {modulo.permisos && modulo.permisos.length > 0 && (
+                modulo.permisos.map(permiso => (
+                  <li key={permiso.permiso_id} className="text-purple-200 pl-4">
+                    <span className="flex items-center gap-2">
+                      {obtenerIcono(permiso.permiso_descripcion)}
+                      {permiso.permiso_descripcion}
+                    </span>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
+        </div>
       </li>
     );
   };

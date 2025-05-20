@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
-import config from '../../config/config'
+import config from '../../config/config';
 
 const ProtectedRoute = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -11,6 +11,9 @@ const ProtectedRoute = ({ children }) => {
             // Verificar tanto en localStorage como en sessionStorage
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             
+            // Imprime el token en la consola del navegador para depuración
+            console.log('Token enviado al backend:', token);
+
             if (!token) {
                 setIsAuthenticated(false);
                 return;
