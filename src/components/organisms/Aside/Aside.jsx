@@ -5,7 +5,8 @@ import {
   FaAngleDown, FaAngleRight, FaFolder, FaUserCircle, FaTools, FaUsers, FaCubes,
   FaIdBadge, FaUserShield, FaBoxOpen, FaTags, FaPlusSquare, FaBoxes, FaSlidersH,
   FaArrowUp, FaDollarSign, FaBell, FaShoppingCart, FaListAlt, FaCartPlus,
-  FaAddressBook, FaChartLine, FaCreditCard, FaTruck
+  FaAddressBook, FaChartLine, FaCreditCard, FaTruck, FaPercent, FaTicketAlt,
+  FaUserPlus, FaUsersCog
 } from 'react-icons/fa';
 
 const Aside = () => {
@@ -52,34 +53,45 @@ const Aside = () => {
   };
 
   const obtenerIcono = (descripcion) => {
-    const nombre = descripcion.toLowerCase();
-  
+    const nombre = descripcion?.toLowerCase() || '';
+
+    // Administración
     if (nombre.includes('administración')) return <FaTools />;
-    if (nombre.includes('gestión de usuarios')) return <FaUsers />;
-    if (nombre.includes('gestión de módulos')) return <FaCubes />;
-    if (nombre.includes('gestión de perfiles')) return <FaIdBadge />;
-    if (nombre.includes('gestión de permisos')) return <FaUserShield />;
+    if (nombre === 'ver modulos') return <FaCubes />;
+    if (nombre === 'usuarios') return <FaUsers />;
+    if (nombre === 'agregar usuario') return <FaUserPlus />;
+    if (nombre === 'administrar usuarios') return <FaUsersCog />;
+    if (nombre === 'perfiles') return <FaIdBadge />;
+    if (nombre === 'agregar perfil') return <FaUserShield />;
+    if (nombre === 'administrar perfiles') return <FaUserShield />;
+
+    // Productos
     if (nombre === 'productos') return <FaBoxOpen />;
-    if (nombre === 'categorías') return <FaTags />;
+    if (nombre === 'categorias' || nombre === 'categorías') return <FaTags />;
+    if (nombre === 'agregar categoria') return <FaPlusSquare />;
+    if (nombre === 'administrar categorias') return <FaTags />;
     if (nombre === 'agregar producto') return <FaPlusSquare />;
-    if (nombre === 'administrar productos') return <FaBoxes />;
     if (nombre === 'configuración avanzada') return <FaSlidersH />;
-    if (nombre === 'aumentar precios') return (
-      <span className="flex items-center gap-1"><FaArrowUp /><FaDollarSign /></span>
-    );
+    if (nombre === 'aumentar precios') return <FaArrowUp />;
     if (nombre === 'notificaciones de stock') return <FaBell />;
+
+    // Ventas
     if (nombre === 'gestión de ventas') return <FaShoppingCart />;
     if (nombre === 'listado de ventas') return <FaListAlt />;
     if (nombre === 'agregar venta') return <FaCartPlus />;
     if (nombre === 'clientes') return <FaAddressBook />;
-    if (nombre === 'métricas') return <FaChartLine />;
-    if (nombre === 'métodos de pago') return <FaCreditCard />;
-    if (nombre === 'métodos de envío') return <FaTruck />;
+    if (nombre === 'metricas' || nombre === 'métricas') return <FaChartLine />;
+    if (nombre === 'metodos de pago' || nombre === 'métodos de pago') return <FaCreditCard />;
+    if (nombre === 'metodos de envio' || nombre === 'métodos de envío') return <FaTruck />;
+    if (nombre === 'logistica' || nombre === 'logística') return <FaTruck />;
     if (nombre === 'crear promociones') return <FaTags />;
-    if (nombre === 'ofertas') return <FaDollarSign />;
-    if (nombre === 'cupones de descuento') return <FaTags />;
+    if (nombre === 'ofertas') return <FaPercent />;
+    if (nombre === 'cupones de descuento') return <FaTicketAlt />;
+
+    // Perfil
     if (nombre === 'perfil') return <FaUserCircle />;
-  
+
+    // Default
     return <FaFolder />;
   };
 
@@ -110,10 +122,17 @@ const Aside = () => {
               {modulo.permisos && modulo.permisos.length > 0 && (
                 modulo.permisos.map(permiso => (
                   <li key={permiso.permiso_id} className="text-purple-200 pl-4">
-                    <span className="flex items-center gap-2">
-                      {obtenerIcono(permiso.permiso_descripcion)}
-                      {permiso.permiso_descripcion}
-                    </span>
+                    {permiso.permiso_ruta ? (
+                      <Link to={permiso.permiso_ruta} className="flex items-center gap-2 hover:underline">
+                        {obtenerIcono(permiso.permiso_descripcion)}
+                        {permiso.permiso_descripcion}
+                      </Link>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        {obtenerIcono(permiso.permiso_descripcion)}
+                        {permiso.permiso_descripcion}
+                      </span>
+                    )}
                   </li>
                 ))
               )}
@@ -130,11 +149,6 @@ const Aside = () => {
       {/* Perfil de usuario */}
       {usuario && (
         <div className="flex items-center gap-3 px-4 py-3 border-b border-purple-700">
-          <img
-            src="/dist/img/user2-160x160.jpg"
-            alt="User"
-            className="h-10 w-10 rounded-full"
-          />
           <Link to="/perfil" className="hover:underline">
             {usuario.nombre} {usuario.apellido}
           </Link>
