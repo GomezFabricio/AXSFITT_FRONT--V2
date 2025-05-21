@@ -26,14 +26,14 @@ const Layout = ({ children }) => {
         {/* Botón hamburguesa: parte superior, entre aside y contenido */}
         <button
           onClick={toggleAside}
-          className="absolute top-4 z-20 bg-black text-white p-2 rounded-r hover:bg-purple-800 transition"
+          className="absolute top-4 z-20 text-black p-3 rounded-r hover:cursor-pointer shadow-md transition-all duration-300"
           style={{ left: isAsideOpen ? '18rem' : '0.5rem' }} // 18rem = w-72
         >
           <FaBars />
         </button>
 
         {/* Contenido central */}
-        <main className="flex-1 pt-15 transition-all duration-300">
+        <main className="flex-1 pt-12 transition-all duration-300">
           <div className="px-4">
             {children}
           </div>

@@ -37,7 +37,7 @@ const PerfilesPage = () => {
 
   return (
     <div>
-      <h2>Listado de Perfiles</h2>
+      <h2 className='pl-12 text-xl font-semibold'>Listado de Perfiles</h2>
       <Table columns={columns} data={perfiles} />
     </div>
   );

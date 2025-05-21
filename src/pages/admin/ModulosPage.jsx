@@ -37,7 +37,7 @@ const ModulosPage = () => {
 
   return (
     <div>
-      <h2>Listado de Módulos</h2>
+      <h2 className='pl-12 text-xl font-semibold'>Listado de Módulos</h2>
       <Table columns={columns} data={modulos} />
     </div>
   );

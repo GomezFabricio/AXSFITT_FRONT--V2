@@ -10,7 +10,7 @@ const Header = () => {
           <img
             src="/img/logo_axsfitt.svg"
             alt="AXSFITT Logo"
-            className="h-8 w-8 rounded-full"
+            className="h-10 w-10 rounded-full"
           />
           <span className="text-lg font-semibold text-white">AXSFITT</span>
         </div>

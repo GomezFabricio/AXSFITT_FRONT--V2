@@ -33,7 +33,7 @@ const UsuariosPage = () => {
 
   return (
     <div>
-      <h2>Listado de Usuarios</h2>
+      <h2 className='pl-12 text-xl font-semibold'>Listado de Usuarios</h2>
       <Table columns={columns} data={usuarios} />
     </div>
   );
