@@ -12,6 +12,11 @@ const UsuariosPage = () => {
     { title: 'Apellido', data: 'persona_apellido' },
     { title: 'Email', data: 'usuario_email' },
     { title: 'Estado', data: 'estado_usuario_nombre' },
+    {
+      title: 'Perfiles',
+      data: 'perfiles',
+      render: (data) => data && data.length > 0 ? data.map(p => p.perfil_descripcion).join(', ') : '-'
+    }
   ];
 
   useEffect(() => {
@@ -23,7 +28,7 @@ const UsuariosPage = () => {
       } catch (error) {
         // Maneja el error
       } finally {
-        setLoading(false);S
+        setLoading(false);
       }
     };
     fetchUsuarios();

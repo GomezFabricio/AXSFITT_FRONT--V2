@@ -120,21 +120,23 @@ const Aside = () => {
               {tieneHijos && modulo.children.map(hijo => renderizarModulo(hijo))}
               {/* Renderiza permisos como tercer nivel */}
               {modulo.permisos && modulo.permisos.length > 0 && (
-                modulo.permisos.map(permiso => (
-                  <li key={permiso.permiso_id} className="text-purple-200 pl-4">
-                    {permiso.permiso_ruta ? (
-                      <Link to={permiso.permiso_ruta} className="flex items-center gap-2 hover:underline">
-                        {obtenerIcono(permiso.permiso_descripcion)}
-                        {permiso.permiso_descripcion}
-                      </Link>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        {obtenerIcono(permiso.permiso_descripcion)}
-                        {permiso.permiso_descripcion}
-                      </span>
-                    )}
-                  </li>
-                ))
+                modulo.permisos
+                  .filter(permiso => permiso.permiso_visible_menu) // Solo permisos visibles en menú
+                  .map(permiso => (
+                    <li key={permiso.permiso_id} className="text-purple-200 pl-4">
+                      {permiso.permiso_ruta ? (
+                        <Link to={permiso.permiso_ruta} className="flex items-center gap-2 hover:underline">
+                          {obtenerIcono(permiso.permiso_descripcion)}
+                          {permiso.permiso_descripcion}
+                        </Link>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          {obtenerIcono(permiso.permiso_descripcion)}
+                          {permiso.permiso_descripcion}
+                        </span>
+                      )}
+                    </li>
+                  ))
               )}
             </ul>
           )}

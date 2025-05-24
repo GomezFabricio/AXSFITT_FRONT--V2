@@ -10,12 +10,16 @@ const PerfilesPage = () => {
     { title: 'ID', data: 'perfil_id' },
     { title: 'Nombre', data: 'perfil_descripcion' },
     {
-      title: 'Módulos asociados',
+      title: 'Módulos y Permisos',
       data: 'modulos',
-      render: (data) => data.map(m => m.modulo_descripcion).join(', ')
+      render: (data) =>
+        data && data.length > 0
+          ? data.map(m =>
+              `${m.modulo_descripcion} (${m.permisos.map(p => p.permiso_descripcion).join(', ')})`
+            ).join(' | ')
+          : '-'
     },
     { title: 'Usuarios con este perfil', data: 'cantidad_usuarios' }
-    // Agregar más columnas según sea necesario
   ];
 
   useEffect(() => {
