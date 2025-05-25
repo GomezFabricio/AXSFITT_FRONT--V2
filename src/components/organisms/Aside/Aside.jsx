@@ -14,14 +14,23 @@ const Aside = () => {
   const [modulos, setModulos] = useState([]);
   const [menuOpen, setMenuOpen] = useState({});
 
+  // Actualiza Aside cuando cambia userData en sessionStorage
   useEffect(() => {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || localStorage.getItem('userData'));
-    setUsuario(userData);
+    const cargarUserData = () => {
+      const userData = JSON.parse(sessionStorage.getItem('userData'));
+      setUsuario(userData);
 
-    if (userData && userData.modulos) {
-      const modulosJerarquicos = construirJerarquia(userData.modulos);
-      setModulos(modulosJerarquicos);
-    }
+      if (userData && userData.modulos) {
+        const modulosJerarquicos = construirJerarquia(userData.modulos);
+        setModulos(modulosJerarquicos);
+      }
+    };
+
+    cargarUserData();
+
+    // Escucha el evento personalizado para refrescar el Aside
+    window.addEventListener('userDataUpdated', cargarUserData);
+    return () => window.removeEventListener('userDataUpdated', cargarUserData);
   }, []);
 
   const construirJerarquia = (modulos) => {
@@ -121,7 +130,7 @@ const Aside = () => {
               {/* Renderiza permisos como tercer nivel */}
               {modulo.permisos && modulo.permisos.length > 0 && (
                 modulo.permisos
-                  .filter(permiso => permiso.permiso_visible_menu) // Solo permisos visibles en menú
+                  .filter(permiso => permiso.permiso_visible_menu)
                   .map(permiso => (
                     <li key={permiso.permiso_id} className="text-purple-200 pl-4">
                       {permiso.permiso_ruta ? (
