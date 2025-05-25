@@ -14,7 +14,7 @@ export const getModulos = async (token) => {
   }
 };
 
-// Nueva función para actualizar el nombre del módulo
+// Función para actualizar el nombre del módulo
 export const updateModulo = async (modulo_id, data, token) => {
   try {
     const response = await axios.put(
@@ -29,5 +29,23 @@ export const updateModulo = async (modulo_id, data, token) => {
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error('Error al actualizar módulo');
+  }
+};
+
+// Función para obtener permisos por módulos
+export const getPermisosPorModulos = async (moduloIds, token) => {
+  try {
+    const response = await axios.post(
+      `${config.backendUrl}/api/modulos/permisos`,
+      { moduloIds },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data; // { [modulo_id]: [permisos...] }
+  } catch (error) {
+    throw error.response?.data || new Error('Error al obtener permisos');
   }
 };

@@ -9,6 +9,8 @@ const ModulosPage = () => {
   const [moduloSeleccionado, setModuloSeleccionado] = useState(null);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [confirmar, setConfirmar] = useState(false);
+  const [modalPermisosOpen, setModalPermisosOpen] = useState(false);
+  const [permisosDetalle, setPermisosDetalle] = useState([]);
 
   // Obtener permisos del usuario solo desde sessionStorage
   const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -28,7 +30,11 @@ const ModulosPage = () => {
     {
       title: 'Permisos',
       data: 'permisos',
-      render: (data) => data.map(p => p.permiso_descripcion).join(', '),
+      orderable: false,
+      render: (data, type, row) => {
+        // Botón Detalle para abrir modal
+        return `<button class="btn-detalle-permisos" data-id="${row.modulo_id}" style="background:#ede9fe;color:#7c3aed;border:none;padding:6px 16px;border-radius:5px;cursor:pointer;font-weight:500;">Detalle</button>`;
+      },
       responsivePriority: 4
     },
     {
@@ -37,7 +43,8 @@ const ModulosPage = () => {
       orderable: false,
       render: (data, type, row) => {
         if (tienePermisoModificarModulo()) {
-          return `<button class="btn-modificar-modulo" data-id="${row.modulo_id}" data-nombre="${row.modulo_descripcion}">Modificar</button>`;
+          // Botón con estilos
+          return `<button class="btn-modificar-modulo" data-id="${row.modulo_id}" data-nombre="${row.modulo_descripcion}" style="background:#e0e7ff;color:#2563eb;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;">Modificar</button>`;
         }
         return '';
       },
@@ -60,7 +67,7 @@ const ModulosPage = () => {
     fetchModulos();
   }, []);
 
-  // Manejar clicks en el botón de modificar (delegación de eventos)
+  // Manejar clicks en los botones de la tabla (delegación de eventos)
   useEffect(() => {
     const handler = (e) => {
       if (e.target.classList.contains('btn-modificar-modulo')) {
@@ -71,10 +78,16 @@ const ModulosPage = () => {
         setModalOpen(true);
         setConfirmar(false);
       }
+      if (e.target.classList.contains('btn-detalle-permisos')) {
+        const id = e.target.getAttribute('data-id');
+        const modulo = modulos.find(m => String(m.modulo_id) === String(id));
+        setPermisosDetalle(modulo?.permisos || []);
+        setModalPermisosOpen(true);
+      }
     };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
-  }, []);
+  }, [modulos]);
 
   const handleCancelar = async () => {
     setModalOpen(false);
@@ -122,6 +135,51 @@ const ModulosPage = () => {
       setLoading(false);
     }
   };
+
+  // Modal para mostrar permisos del módulo
+  const ModalPermisos = ({ permisos, onClose }) => (
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50"
+      style={{
+        background: 'rgba(0,0,0,0.35)',
+        backdropFilter: 'blur(16px)', // Igual que en Perfiles
+        WebkitBackdropFilter: 'blur(16px)'
+      }}
+    >
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto border border-gray-200">
+        <h3 className="text-lg font-semibold mb-4">Permisos del Módulo</h3>
+        <ul>
+          {permisos.length === 0 && <li className="text-gray-500">Sin permisos</li>}
+          {permisos.map((p, idx) => (
+            <li key={idx} className="mb-2 text-gray-700">{p.permiso_descripcion}</li>
+          ))}
+        </ul>
+        <div className="flex justify-end mt-4">
+          <button
+            className="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
+            onClick={() => {
+              onClose();
+              setLoading(true);
+              // Recarga los módulos al cerrar el modal
+              (async () => {
+                try {
+                  const token = sessionStorage.getItem('token');
+                  const data = await getModulos(token);
+                  setModulos(data);
+                } catch (error) {
+                  // Maneja el error si quieres
+                } finally {
+                  setLoading(false);
+                }
+              })();
+            }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   if (loading) return <div>Cargando...</div>;
 
@@ -181,6 +239,13 @@ const ModulosPage = () => {
             )}
           </div>
         </div>
+      )}
+      {/* Modal para detalle de permisos */}
+      {modalPermisosOpen && (
+        <ModalPermisos
+          permisos={permisosDetalle}
+          onClose={() => setModalPermisosOpen(false)}
+        />
       )}
     </div>
   );
