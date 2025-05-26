@@ -6,7 +6,8 @@ import HomePage from './pages/HomePage';
 import ProtectedRoute from './pages/common/ProtectedRoute';
 
 // Importa los componentes de páginas
-import UsuariosPage from './pages/admin/UsuariosPage';
+import UsuariosPage from './pages/admin/usuarios/UsuariosPage';
+import CrearUsuarioPage from './pages/admin/usuarios/CrearUsuarioPage';
 import ModulosPage from './pages/admin/ModulosPage';
 import PerfilesPage from './pages/admin/perfiles/PerfilesPage';
 import CrearPerfilPage from './pages/admin/perfiles/CrearPerfilPage';
@@ -15,11 +16,11 @@ import EditarPerfilPage from './pages/admin/perfiles/EditarPerfilPage';
 // Mapea las rutas de permisos a componentes
 const permisoRutaToPage = {
   '/admin/usuarios': <UsuariosPage />,
+  '/admin/usuarios/agregar': <CrearUsuarioPage />,
   '/admin/modulos': <ModulosPage />,
   '/admin/perfiles': <PerfilesPage />,
   '/admin/perfiles/agregar': <CrearPerfilPage />,
-  '/admin/perfiles/editar/:perfil_id': <EditarPerfilPage />,
-  // Agregar el resto de rutas si es necesario
+  // Las rutas con parámetros dinámicos no se incluyen aquí
 };
 
 function extraerPermisos(modulos) {
@@ -68,37 +69,13 @@ function App() {
           />
         ))}
 
-      {/* Ruta para editar perfil (asegura que siempre exista) */}
+      {/* Ruta para editar perfil (con parámetro dinámico) */}
       <Route
         path="/admin/perfiles/editar/:perfil_id"
         element={
           <ProtectedRoute>
             <Layout>
               <EditarPerfilPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Ruta para crear perfil */}
-      <Route
-        path="/admin/perfiles/agregar"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <CrearPerfilPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Ruta para listado de perfiles */}
-      <Route
-        path="/admin/perfiles"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <PerfilesPage />
             </Layout>
           </ProtectedRoute>
         }

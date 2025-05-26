@@ -20,7 +20,6 @@ const customTableStyles = `
     font-size: 1rem;
     border-bottom: 2px solid #a5b4fc !important;
     padding: 12px 8px !important;
-    text-align: left !important;
   }
   #datatable tbody td {
     background: #fff;
@@ -28,7 +27,6 @@ const customTableStyles = `
     font-size: 0.98rem;
     padding: 10px 8px !important;
     border-bottom: 1px solid #e5e7eb !important;
-    text-align: left !important;
   }
   #datatable tbody tr:hover td {
     background: #f3f4f6 !important;
@@ -74,7 +72,7 @@ const Table = ({ columns, data, options = {} }) => {
       responsive: true,
       ...options,
       columnDefs: [
-        // Quitamos el centrado y dejamos alineación por defecto (izquierda)
+        { targets: "_all", className: "dt-center" },
         ...(options.columnDefs || [])
       ]
     });
@@ -86,12 +84,12 @@ const Table = ({ columns, data, options = {} }) => {
 
   return (
     <div className="py-6">
-      <div className="rounded-xl shadow-lg bg-white p-6 w-[90%] mx-auto border border-violet-200">
+      <div className="rounded-xl shadow-lg bg-white p-6 w-[95%] mx-auto border border-violet-200">
         <table id="datatable" className="display" style={{ width: "100%" }}>
           <thead>
             <tr>
               {columns.map((col, idx) => (
-                <th key={idx} style={{ textAlign: "left" }}>{col.title}</th>
+                <th key={idx} style={{ textAlign: "center" }}>{col.title}</th>
               ))}
             </tr>
           </thead>

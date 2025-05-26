@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Table from '../../components/molecules/Table';
-import { getUsuarios } from '../../api/usuariosApi';
+import Table from '../../../components/molecules/Table';
+import { getUsuarios } from '../../../api/usuariosApi';
 
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState([]);

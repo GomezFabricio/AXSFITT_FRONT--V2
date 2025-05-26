@@ -13,3 +13,21 @@ export const getUsuarios = async (token) => {
     throw error.response?.data || new Error('Error al obtener usuarios');
   }
 };
+
+// Alta de usuario (sin asignar perfil)
+export const agregarUsuario = async (usuario, token) => {
+  try {
+    const response = await axios.post(
+      `${config.backendUrl}/api/usuarios`,
+      usuario,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al crear usuario');
+  }
+};
