@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import {
   FaAngleDown, FaAngleRight, FaFolder, FaUserCircle, FaTools, FaUsers, FaCubes,
@@ -13,6 +13,7 @@ const Aside = () => {
   const [usuario, setUsuario] = useState(null);
   const [modulos, setModulos] = useState([]);
   const [menuOpen, setMenuOpen] = useState({});
+  const navigate = useNavigate();
 
   // Actualiza Aside cuando cambia userData en sessionStorage
   useEffect(() => {
@@ -159,6 +160,15 @@ const Aside = () => {
     );
   };
 
+  // Handler para cerrar sesión
+  const handleLogout = (e) => {
+    e.preventDefault();
+    sessionStorage.clear();
+    localStorage.clear();
+    window.dispatchEvent(new Event('storage'));
+    navigate('/login');
+  };
+
   return (
     <aside className="w-72 h-full bg-black text-white flex flex-col">
 
@@ -187,10 +197,14 @@ const Aside = () => {
 
       {/* Footer */}
       <div className="p-4 border-t border-purple-700">
-        <Link to="/logout" className="flex items-center gap-2 text-white hover:underline">
+        <a
+          href="/login"
+          className="flex items-center gap-2 text-white hover:underline"
+          onClick={handleLogout}
+        >
           <LogOut size={18} />
           Cerrar sesión
-        </Link>
+        </a>
       </div>
     </aside>
   );
