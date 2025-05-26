@@ -6,7 +6,7 @@ import {
   FaIdBadge, FaUserShield, FaBoxOpen, FaTags, FaPlusSquare, FaBoxes, FaSlidersH,
   FaArrowUp, FaDollarSign, FaBell, FaShoppingCart, FaListAlt, FaCartPlus,
   FaAddressBook, FaChartLine, FaCreditCard, FaTruck, FaPercent, FaTicketAlt,
-  FaUserPlus, FaUsersCog
+  FaUserPlus, FaUsersCog, FaThLarge, FaClipboardList, FaUserTag, FaGift, FaBoxes as FaBoxesSolid
 } from 'react-icons/fa';
 
 const Aside = () => {
@@ -61,31 +61,36 @@ const Aside = () => {
     }));
   };
 
+  // Iconos personalizados según el menú_schema.txt
   const obtenerIcono = (descripcion) => {
     const nombre = descripcion?.toLowerCase() || '';
 
-    // Administración
-    if (nombre.includes('administración')) return <FaTools />;
+    // Módulos principales
+    if (nombre === 'administración del sistema') return <FaTools />;
+    if (nombre === 'productos') return <FaBoxOpen />;
+    if (nombre === 'gestión de ventas') return <FaShoppingCart />;
+
+    // Submódulos y permisos visibles
+    // Administración del Sistema
     if (nombre === 'ver modulos') return <FaCubes />;
     if (nombre === 'usuarios') return <FaUsers />;
     if (nombre === 'agregar usuario') return <FaUserPlus />;
-    if (nombre === 'administrar usuarios') return <FaUsersCog />;
+    if (nombre === 'ver usuarios') return <FaUsersCog />;
     if (nombre === 'perfiles') return <FaIdBadge />;
     if (nombre === 'agregar perfil') return <FaUserShield />;
-    if (nombre === 'administrar perfiles') return <FaUserShield />;
+    if (nombre === 'ver perfiles') return <FaUserTag />;
 
     // Productos
-    if (nombre === 'productos') return <FaBoxOpen />;
     if (nombre === 'categorias' || nombre === 'categorías') return <FaTags />;
     if (nombre === 'agregar categoria') return <FaPlusSquare />;
-    if (nombre === 'administrar categorias') return <FaTags />;
+    if (nombre === 'ver categorias') return <FaClipboardList />;
     if (nombre === 'agregar producto') return <FaPlusSquare />;
-    if (nombre === 'configuración avanzada') return <FaSlidersH />;
+    if (nombre === 'ver productos') return <FaBoxesSolid />;
+    if (nombre === 'utilidades productos') return <FaSlidersH />;
     if (nombre === 'aumentar precios') return <FaArrowUp />;
     if (nombre === 'notificaciones de stock') return <FaBell />;
 
-    // Ventas
-    if (nombre === 'gestión de ventas') return <FaShoppingCart />;
+    // Gestión de ventas
     if (nombre === 'listado de ventas') return <FaListAlt />;
     if (nombre === 'agregar venta') return <FaCartPlus />;
     if (nombre === 'clientes') return <FaAddressBook />;
@@ -93,7 +98,7 @@ const Aside = () => {
     if (nombre === 'metodos de pago' || nombre === 'métodos de pago') return <FaCreditCard />;
     if (nombre === 'metodos de envio' || nombre === 'métodos de envío') return <FaTruck />;
     if (nombre === 'logistica' || nombre === 'logística') return <FaTruck />;
-    if (nombre === 'crear promociones') return <FaTags />;
+    if (nombre === 'promociones') return <FaGift />;
     if (nombre === 'ofertas') return <FaPercent />;
     if (nombre === 'cupones de descuento') return <FaTicketAlt />;
 

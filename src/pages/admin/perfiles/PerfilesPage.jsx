@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Table from '../../../components/molecules/Table';
 import { getPerfiles, eliminarPerfil } from '../../../api/perfilesApi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Función para chequear permisos del usuario logueado
 const tienePermiso = (permisoDescripcion) => {
@@ -20,6 +20,7 @@ const PerfilesPage = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [perfilAEliminar, setPerfilAEliminar] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Handlers para modificar y eliminar
   const handleModificar = (perfil_id) => {
@@ -165,9 +166,11 @@ const PerfilesPage = () => {
     }
   };
 
+  // Recarga perfiles cada vez que cambia la ruta (para soportar "recarga" en la misma ruta)
   useEffect(() => {
     reloadPerfiles();
-  }, []);
+    // eslint-disable-next-line
+  }, [location.pathname]);
 
   // Delegación de eventos para los botones y ver más
   useEffect(() => {

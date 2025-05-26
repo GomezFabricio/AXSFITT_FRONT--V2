@@ -52,19 +52,22 @@ const ModulosPage = () => {
     }
   ];
 
+  // Recargar módulos
+  const reloadModulos = async () => {
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem('token');
+      const data = await getModulos(token);
+      setModulos(data);
+    } catch (error) {
+      // Maneja el error si quieres
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchModulos = async () => {
-      try {
-        const token = sessionStorage.getItem('token');
-        const data = await getModulos(token);
-        setModulos(data);
-      } catch (error) {
-        // Maneja el error
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchModulos();
+    reloadModulos();
   }, []);
 
   // Manejar clicks en los botones de la tabla (delegación de eventos)
@@ -92,16 +95,7 @@ const ModulosPage = () => {
   const handleCancelar = async () => {
     setModalOpen(false);
     setConfirmar(false);
-    setLoading(true);
-    try {
-      const token = sessionStorage.getItem('token');
-      const data = await getModulos(token);
-      setModulos(data);
-    } catch (error) {
-      // Maneja el error si quieres
-    } finally {
-      setLoading(false);
-    }
+    await reloadModulos();
   };
 
   const handleActualizar = async () => {
@@ -114,9 +108,7 @@ const ModulosPage = () => {
       await updateModulo(moduloSeleccionado.modulo_id, { modulo_descripcion: nuevoNombre }, token);
       setModalOpen(false);
       setConfirmar(false);
-      setLoading(true);
-      const data = await getModulos(token);
-      setModulos(data);
+      await reloadModulos();
 
       // Actualizar el nombre del módulo en sessionStorage (userData)
       const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -131,8 +123,6 @@ const ModulosPage = () => {
       }
     } catch (error) {
       alert(error.message || 'Error al actualizar el módulo');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -142,7 +132,7 @@ const ModulosPage = () => {
       className="fixed inset-0 flex items-center justify-center z-50"
       style={{
         background: 'rgba(0,0,0,0.35)',
-        backdropFilter: 'blur(16px)', // Igual que en Perfiles
+        backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)'
       }}
     >
@@ -157,21 +147,9 @@ const ModulosPage = () => {
         <div className="flex justify-end mt-4">
           <button
             className="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
-            onClick={() => {
+            onClick={async () => {
               onClose();
-              setLoading(true);
-              // Recarga los módulos al cerrar el modal
-              (async () => {
-                try {
-                  const token = sessionStorage.getItem('token');
-                  const data = await getModulos(token);
-                  setModulos(data);
-                } catch (error) {
-                  // Maneja el error si quieres
-                } finally {
-                  setLoading(false);
-                }
-              })();
+              await reloadModulos();
             }}
           >
             Cerrar
@@ -189,7 +167,14 @@ const ModulosPage = () => {
       <Table columns={columns} data={modulos} />
       {/* Modal para modificar nombre */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)'
+          }}
+        >
           <div className="bg-white rounded-lg p-6 w-[350px] shadow-lg">
             {!confirmar ? (
               <>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './components/templates/Layout/Layout';
 import LoginPage from './pages/auth/LoginPage';
 import HomePage from './pages/HomePage';
@@ -39,6 +39,7 @@ function extraerPermisos(modulos) {
 
 function App() {
   const [permisos, setPermisos] = useState([]);
+  const location = useLocation();
 
   useEffect(() => {
     const userData = JSON.parse(sessionStorage.getItem('userData') || localStorage.getItem('userData'));
@@ -62,7 +63,10 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  {permisoRutaToPage[permiso.permiso_ruta] || <HomePage />}
+                  {/* Forzar remount de PerfilesPage usando key */}
+                  {permiso.permiso_ruta === '/admin/perfiles'
+                    ? <PerfilesPage key={location.key} />
+                    : permisoRutaToPage[permiso.permiso_ruta] || <HomePage />}
                 </Layout>
               </ProtectedRoute>
             }

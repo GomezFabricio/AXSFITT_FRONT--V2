@@ -31,3 +31,20 @@ export const agregarUsuario = async (usuario, token) => {
     throw error.response?.data || new Error('Error al crear usuario');
   }
 };
+
+export const updatePerfilesUsuario = async (usuario_id, perfiles, token) => {
+  try {
+    const response = await axios.put(
+      `${config.backendUrl}/api/usuarios/${usuario_id}/perfiles`,
+      { perfiles },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al actualizar perfiles');
+  }
+};
