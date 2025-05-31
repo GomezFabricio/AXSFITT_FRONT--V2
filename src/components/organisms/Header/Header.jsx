@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Header = () => {
   return (
-    <header className="bg-purple-900 shadow-md">
+    <header className="bg-gradient-to-r from-black via-gray-900 to-black shadow-md border-b border-gray-800">
       <div className="w-full flex justify-between items-center py-3 px-4">
         {/* Logo y título del Header */}
         <div className='flex justify-between items-center gap-2'>
@@ -20,7 +20,7 @@ const Header = () => {
           <span className="hidden sm:block text-sm text-white">Bienvenido, Usuario</span>
           <button
             type="button"
-            className="text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            className="text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
             aria-label="Notifications"
           >
             <i className="fas fa-bell text-lg"></i>

@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import {
-  FaAngleDown, FaAngleRight, FaFolder, FaUserCircle, FaTools, FaUsers, FaCubes,
+  FaAngleDown, FaAngleRight, FaFolder, FaTools, FaUsers, FaCubes,
   FaIdBadge, FaUserShield, FaBoxOpen, FaTags, FaPlusSquare, FaBoxes, FaSlidersH,
   FaArrowUp, FaDollarSign, FaBell, FaShoppingCart, FaListAlt, FaCartPlus,
   FaAddressBook, FaChartLine, FaCreditCard, FaTruck, FaPercent, FaTicketAlt,
   FaUserPlus, FaUsersCog, FaThLarge, FaClipboardList, FaUserTag, FaGift, FaBoxes as FaBoxesSolid
 } from 'react-icons/fa';
 
-const Aside = () => {
+const Aside = ({ isAsideOpen = true }) => {
   const [usuario, setUsuario] = useState(null);
   const [modulos, setModulos] = useState([]);
   const [menuOpen, setMenuOpen] = useState({});
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Actualiza Aside cuando cambia userData en sessionStorage
   useEffect(() => {
     const cargarUserData = () => {
       const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -28,8 +28,6 @@ const Aside = () => {
     };
 
     cargarUserData();
-
-    // Escucha el evento personalizado para refrescar el Aside
     window.addEventListener('userDataUpdated', cargarUserData);
     return () => window.removeEventListener('userDataUpdated', cargarUserData);
   }, []);
@@ -37,13 +35,9 @@ const Aside = () => {
   const construirJerarquia = (modulos) => {
     const mapa = {};
     const raices = [];
-
-    // Crea el mapa de módulos
     modulos.forEach(mod => {
       mapa[mod.modulo_id] = { ...mod, children: [] };
     });
-
-    // Asocia hijos a padres
     modulos.forEach(mod => {
       if (mod.modulo_padre_id === null) {
         raices.push(mapa[mod.modulo_id]);
@@ -51,7 +45,6 @@ const Aside = () => {
         mapa[mod.modulo_padre_id].children.push(mapa[mod.modulo_id]);
       }
     });
-
     return raices;
   };
 
@@ -62,17 +55,11 @@ const Aside = () => {
     }));
   };
 
-  // Iconos personalizados según el menú_schema.txt
   const obtenerIcono = (descripcion) => {
     const nombre = descripcion?.toLowerCase() || '';
-
-    // Módulos principales
     if (nombre === 'administración del sistema') return <FaTools />;
     if (nombre === 'productos') return <FaBoxOpen />;
     if (nombre === 'gestión de ventas') return <FaShoppingCart />;
-
-    // Submódulos y permisos visibles
-    // Administración del Sistema
     if (nombre === 'ver modulos') return <FaCubes />;
     if (nombre === 'usuarios') return <FaUsers />;
     if (nombre === 'agregar usuario') return <FaUserPlus />;
@@ -80,8 +67,6 @@ const Aside = () => {
     if (nombre === 'perfiles') return <FaIdBadge />;
     if (nombre === 'agregar perfil') return <FaUserShield />;
     if (nombre === 'ver perfiles') return <FaUserTag />;
-
-    // Productos
     if (nombre === 'categorias' || nombre === 'categorías') return <FaTags />;
     if (nombre === 'agregar categoria') return <FaPlusSquare />;
     if (nombre === 'ver categorias') return <FaClipboardList />;
@@ -90,8 +75,6 @@ const Aside = () => {
     if (nombre === 'utilidades productos') return <FaSlidersH />;
     if (nombre === 'aumentar precios') return <FaArrowUp />;
     if (nombre === 'notificaciones de stock') return <FaBell />;
-
-    // Gestión de ventas
     if (nombre === 'listado de ventas') return <FaListAlt />;
     if (nombre === 'agregar venta') return <FaCartPlus />;
     if (nombre === 'clientes') return <FaAddressBook />;
@@ -102,65 +85,86 @@ const Aside = () => {
     if (nombre === 'promociones') return <FaGift />;
     if (nombre === 'ofertas') return <FaPercent />;
     if (nombre === 'cupones de descuento') return <FaTicketAlt />;
-
-    // Perfil
-    if (nombre === 'perfil') return <FaUserCircle />;
-
-    // Default
     return <FaFolder />;
   };
 
-  const renderizarModulo = (modulo) => {
+  // Solo los módulos principales (nivel 1) pueden tener el active color y fondo desplegado
+  const renderizarModulo = (modulo, nivel = 1) => {
     const tieneHijos = modulo.children && modulo.children.length > 0;
     const estaAbierto = menuOpen[modulo.modulo_id];
 
+    // Determina si el módulo principal está activo (algún permiso coincide con la ruta actual)
+    const isActiveModulo = nivel === 1 && modulo.permisos && modulo.permisos.some(
+      permiso => permiso.permiso_ruta && location.pathname.startsWith(permiso.permiso_ruta)
+    );
+
     return (
-      <li key={modulo.modulo_id} className="text-white">
-        <div>
+      <li key={modulo.modulo_id}>
+        <div className={nivel === 1 && estaAbierto ? 'bg-gray-900 rounded-lg' : ''}>
           <button
             onClick={() => toggleMenu(modulo.modulo_id)}
-            className="w-full flex items-center justify-between px-4 py-2 hover:bg-purple-800 transition"
+            className={`
+              w-full flex items-center justify-between px-4 py-2 rounded-lg
+              transition-colors duration-200 font-medium text-base
+              ${nivel === 1
+                ? isActiveModulo
+                  ? 'bg-violet-700 text-white shadow'
+                  : 'text-gray-200 hover:bg-gray-800 hover:text-white'
+                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }
+            `}
           >
             <span className="flex items-center gap-2">
-              {obtenerIcono(modulo.modulo_descripcion)}
+              <span className="text-lg">{obtenerIcono(modulo.modulo_descripcion)}</span>
               {modulo.modulo_descripcion}
             </span>
             {tieneHijos || (modulo.permisos && modulo.permisos.length > 0) ? (
-              estaAbierto ? <FaAngleDown /> : <FaAngleRight />
+              <span className="ml-2">{estaAbierto ? <FaAngleDown /> : <FaAngleRight />}</span>
             ) : null}
           </button>
-          {estaAbierto && (
-            <ul className="pl-6 space-y-1">
-              {/* Renderiza submódulos */}
-              {tieneHijos && modulo.children.map(hijo => renderizarModulo(hijo))}
-              {/* Renderiza permisos como tercer nivel */}
-              {modulo.permisos && modulo.permisos.length > 0 && (
-                modulo.permisos
-                  .filter(permiso => permiso.permiso_visible_menu)
-                  .map(permiso => (
-                    <li key={permiso.permiso_id} className="text-purple-200 pl-4">
-                      {permiso.permiso_ruta ? (
-                        <Link to={permiso.permiso_ruta} className="flex items-center gap-2 hover:underline">
-                          {obtenerIcono(permiso.permiso_descripcion)}
-                          {permiso.permiso_descripcion}
-                        </Link>
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          {obtenerIcono(permiso.permiso_descripcion)}
-                          {permiso.permiso_descripcion}
-                        </span>
-                      )}
-                    </li>
-                  ))
-              )}
-            </ul>
-          )}
+          <div
+            className={`transition-all duration-300 overflow-hidden`}
+            style={{
+              maxHeight: estaAbierto ? '1000px' : '0',
+              opacity: estaAbierto ? 1 : 0.5,
+            }}
+          >
+            {estaAbierto && (
+              <ul className="pl-6 space-y-1">
+                {tieneHijos && modulo.children.map(hijo => renderizarModulo(hijo, nivel + 1))}
+                {modulo.permisos && modulo.permisos.length > 0 && (
+                  modulo.permisos
+                    .filter(permiso => permiso.permiso_visible_menu)
+                    .map(permiso => (
+                      <li key={permiso.permiso_id}>
+                        {permiso.permiso_ruta ? (
+                          <Link
+                            to={permiso.permiso_ruta}
+                            className={`
+                              flex items-center gap-2 px-2 py-1 rounded
+                              text-gray-300 hover:bg-gray-800 hover:text-white transition
+                            `}
+                          >
+                            <span className="text-base">{obtenerIcono(permiso.permiso_descripcion)}</span>
+                            {permiso.permiso_descripcion}
+                          </Link>
+                        ) : (
+                          <span className="flex items-center gap-2 px-2 py-1 text-gray-400">
+                            <span className="text-base">{obtenerIcono(permiso.permiso_descripcion)}</span>
+                            {permiso.permiso_descripcion}
+                          </span>
+                        )}
+                      </li>
+                    ))
+                )}
+              </ul>
+            )}
+          </div>
         </div>
       </li>
     );
   };
 
-  // Handler para cerrar sesión
   const handleLogout = (e) => {
     e.preventDefault();
     sessionStorage.clear();
@@ -170,24 +174,48 @@ const Aside = () => {
   };
 
   return (
-    <aside className="w-72 h-full bg-black text-white flex flex-col">
-
+    <aside
+      className={`
+        h-full bg-gradient-to-b from-black via-gray-900 to-black text-white flex flex-col fixed md:static top-0 left-0 z-30
+        transition-all duration-300
+        w-72 min-w-[18rem] max-w-[18rem]
+        shadow-2xl
+        border-r border-gray-800
+      `}
+      style={{
+        overflow: 'hidden',
+      }}
+    >
       {/* Perfil de usuario */}
       {usuario && (
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-purple-700">
-          <Link to="/perfil" className="hover:underline">
+        <div className="flex flex-col gap-1 px-5 py-4 border-b border-gray-800 bg-transparent">
+          <Link to="/perfil" className="hover:underline font-semibold text-base text-white">
             {usuario.nombre} {usuario.apellido}
           </Link>
+          <div className="text-xs text-gray-400">{usuario.usuario_email}</div>
         </div>
       )}
 
-      {/* Navegación */}
-      <nav className="flex-1 overflow-y-auto mt-2">
+      {/* Dashboard/Home */}
+      <nav className="flex-1 overflow-y-auto mt-2 custom-scrollbar pr-1">
         <ul className="space-y-1">
+          <li>
+            <Link
+              to="/"
+              className={`
+                w-full flex items-center gap-2 px-4 py-2 rounded-lg font-semibold
+                transition hover:bg-gray-800 hover:text-white
+                ${location.pathname === '/' ? 'bg-violet-700 text-white shadow' : 'text-gray-200'}
+              `}
+            >
+              <FaThLarge />
+              Dashboard
+            </Link>
+          </li>
           {modulos.length > 0 ? (
-            modulos.map(modulo => renderizarModulo(modulo))
+            modulos.map(modulo => renderizarModulo(modulo, 1))
           ) : (
-            <li className="px-4 py-2 text-sm text-purple-200">
+            <li className="px-4 py-2 text-sm text-gray-400">
               <i className="fas fa-exclamation-circle mr-1" />
               No hay módulos disponibles
             </li>
@@ -196,15 +224,14 @@ const Aside = () => {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-purple-700">
-        <a
-          href="/login"
-          className="flex items-center gap-2 text-white hover:underline"
+      <div className="p-4 border-t border-gray-800 bg-transparent">
+        <button
+          className="flex items-center gap-2 text-gray-400 hover:text-white hover:underline transition"
           onClick={handleLogout}
         >
           <LogOut size={18} />
           Cerrar sesión
-        </a>
+        </button>
       </div>
     </aside>
   );
