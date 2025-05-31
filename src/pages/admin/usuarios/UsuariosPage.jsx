@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Table from '../../../components/molecules/Table';
 import { getUsuarios, updatePerfilesUsuario } from '../../../api/usuariosApi';
 import { getPerfiles } from '../../../api/perfilesApi';
+import ModalAsignarPerfiles from '../../../components/organisms/Modals/ModalAsignarPerfiles';
 
 // Función para chequear permisos del usuario logueado
 const tienePermiso = (permisoDescripcion) => {
@@ -118,86 +119,16 @@ const UsuariosPage = () => {
       <h2 className='pl-12 text-xl font-semibold'>Listado de Usuarios</h2>
       <Table columns={columns} data={usuarios} />
 
-      {/* Modal de asignar perfiles */}
-      {modalOpen && (
-        <div>
-          <div
-            className="fixed inset-0 flex items-center justify-center z-50"
-            style={{
-              background: 'rgba(0,0,0,0.35)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)'
-            }}
-          >
-            <div className="modal-content" style={{
-              background: 'white',
-              padding: 32,
-              borderRadius: 12,
-              zIndex: 1001,
-              minWidth: 320,
-              minHeight: 180,
-              boxShadow: '0 2px 16px rgba(0,0,0,0.15)'
-            }}>
-              <h3>Asignar Perfiles a {usuarioSeleccionado.persona_nombre} {usuarioSeleccionado.persona_apellido}</h3>
-              <div style={{ margin: '10px 0' }}>
-                {/* Tags de perfiles seleccionados */}
-                {perfiles
-                  .filter(p => perfilesSeleccionados.includes(p.perfil_id))
-                  .map(p => (
-                    <span key={p.perfil_id} style={{
-                      display: 'inline-block',
-                      background: '#ede9fe',
-                      color: '#7c3aed',
-                      borderRadius: '16px',
-                      padding: '4px 12px',
-                      margin: '2px',
-                      fontWeight: 500
-                    }}>
-                      {p.perfil_descripcion}
-                      <button
-                        style={{
-                          marginLeft: 8,
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#7c3aed',
-                          cursor: 'pointer',
-                          fontWeight: 'bold'
-                        }}
-                        onClick={() => handleRemovePerfil(p.perfil_id)}
-                      >x</button>
-                    </span>
-                  ))}
-              </div>
-              {/* Select para agregar perfiles */}
-              <select onChange={handleAddPerfil} value="">
-                <option value="">Agregar perfil...</option>
-                {perfiles
-                  .filter(p => !perfilesSeleccionados.includes(p.perfil_id))
-                  .map(p => (
-                    <option key={p.perfil_id} value={p.perfil_id}>{p.perfil_descripcion}</option>
-                  ))}
-              </select>
-              <div style={{ marginTop: 20 }}>
-                <button
-                  onClick={handleGuardarPerfiles}
-                  style={{ marginRight: 10, background: '#7c3aed', color: 'white', padding: '6px 16px', border: 'none', borderRadius: '5px' }}
-                >
-                  Guardar
-                </button>
-                <button
-                  onClick={() => {
-                    setModalOpen(false);
-                    reloadUsuarios();
-                  }}
-                  style={{ background: '#ede9fe', color: '#7c3aed', padding: '6px 16px', border: 'none', borderRadius: '5px' }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalAsignarPerfiles
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onGuardar={handleGuardarPerfiles}
+        usuario={usuarioSeleccionado}
+        perfiles={perfiles}
+        perfilesSeleccionados={perfilesSeleccionados}
+        onAddPerfil={handleAddPerfil}
+        onRemovePerfil={handleRemovePerfil}
+      />
     </div>
   );
 };
