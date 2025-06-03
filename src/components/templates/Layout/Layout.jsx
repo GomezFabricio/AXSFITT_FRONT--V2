@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Aside from '../../organisms/Aside/Aside';
 import Footer from '../../organisms/Footer/Footer';
 import Header from '../../organisms/Header/Header';
 import { FaBars } from 'react-icons/fa';
 
 const Layout = ({ children }) => {
-  const [isAsideOpen, setIsAsideOpen] = useState(true);
+  const [isAsideOpen, setIsAsideOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const toggleAside = () => {
     setIsAsideOpen(!isAsideOpen);
   };
+
+  // Detectar si es pantalla móvil
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize(); // Llamar una vez al principio
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="grid grid-rows-[auto_1fr_auto] min-h-screen">
@@ -18,16 +29,16 @@ const Layout = ({ children }) => {
         <Header />
       </header>
 
-      {/* Contenedor principal (Aside + Botón + Main) */}
+      {/* Contenido principal */}
       <div className="flex flex-1 relative">
-        {/* Aside con transición */}
+        {/* Aside */}
         <div
           className={`
-            transition-all duration-300
-            h-full
-            ${isAsideOpen ? 'w-72 min-w-[18rem] max-w-[18rem]' : 'w-0 min-w-0 max-w-0'}
+            transition-transform duration-300
+            ${isMobile ? 'fixed top-0 left-0 h-full z-40 bg-white shadow-lg' : 'h-full'}
+            ${isAsideOpen ? 'translate-x-0' : '-translate-x-full'}
+            ${isMobile ? 'w-64' : 'w-72'}
             overflow-hidden
-            z-20
           `}
         >
           <Aside isAsideOpen={isAsideOpen} />
@@ -36,22 +47,21 @@ const Layout = ({ children }) => {
         {/* Botón hamburguesa */}
         <button
           onClick={toggleAside}
-          className="absolute top-4 z-30 text-black p-3 rounded-r hover:cursor-pointer shadow-md transition-all duration-300 bg-white"
-          style={{ left: isAsideOpen ? '18rem' : '0.5rem' }}
+          className="absolute top-4 z-50 text-black p-3 rounded-r hover:cursor-pointer shadow-md transition-all duration-300 bg-white"
+          style={{
+            left: isAsideOpen
+              ? isMobile
+                ? '16rem'
+                : '18rem'
+              : '0.5rem'
+          }}
         >
           <FaBars />
         </button>
 
-        {/* Contenido central con transición de margen */}
-        <main
-          className="flex-1 pt-12 transition-all duration-300"
-          style={{
-            marginLeft: isAsideOpen ? '0' : '0', // Puedes ajustar si quieres que el contenido se desplace
-          }}
-        >
-          <div className="px-4">
-            {children}
-          </div>
+        {/* Contenido principal */}
+        <main className="flex-1 pt-12 px-4 transition-all duration-300">
+          {children}
         </main>
       </div>
 
