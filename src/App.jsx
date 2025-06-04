@@ -12,6 +12,7 @@ import ModulosPage from './pages/admin/ModulosPage';
 import PerfilesPage from './pages/admin/perfiles/PerfilesPage';
 import CrearPerfilPage from './pages/admin/perfiles/CrearPerfilPage';
 import EditarPerfilPage from './pages/admin/perfiles/EditarPerfilPage';
+import CategoriasPage from './pages/product/CategoriasPage'; 
 
 // Mapea las rutas de permisos a componentes
 const permisoRutaToPage = {
@@ -20,6 +21,7 @@ const permisoRutaToPage = {
   '/admin/modulos': <ModulosPage />,
   '/admin/perfiles': <PerfilesPage />,
   '/admin/perfiles/agregar': <CrearPerfilPage />,
+  '/productos/categorias': <CategoriasPage />, // Añadir ruta para CategoriasPage
   // Las rutas con parámetros dinámicos no se incluyen aquí
 };
 
@@ -103,7 +105,7 @@ function App() {
         element={
           <ProtectedRoute>
             <Layout>
-              <HomePage />
+              <HomePage /> {/* O una página 404 específica */}
             </Layout>
           </ProtectedRoute>
         }

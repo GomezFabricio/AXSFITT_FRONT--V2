@@ -88,30 +88,19 @@ const Aside = ({ isAsideOpen = true }) => {
     return <FaFolder />;
   };
 
-  // Solo los módulos principales (nivel 1) pueden tener el active color y fondo desplegado
   const renderizarModulo = (modulo, nivel = 1) => {
     const tieneHijos = modulo.children && modulo.children.length > 0;
     const estaAbierto = menuOpen[modulo.modulo_id];
 
-    // Determina si el módulo principal está activo (algún permiso coincide con la ruta actual)
-    const isActiveModulo = nivel === 1 && modulo.permisos && modulo.permisos.some(
-      permiso => permiso.permiso_ruta && location.pathname.startsWith(permiso.permiso_ruta)
-    );
-
     return (
       <li key={modulo.modulo_id}>
-        <div className={nivel === 1 && estaAbierto ? 'bg-gray-900 rounded-lg' : ''}>
+        <div>
           <button
             onClick={() => toggleMenu(modulo.modulo_id)}
             className={`
               w-full flex items-center justify-between px-4 py-2 rounded-lg
               transition-colors duration-200 font-medium text-base
-              ${nivel === 1
-                ? isActiveModulo
-                  ? 'bg-violet-700 text-white shadow'
-                  : 'text-gray-200 hover:bg-gray-800 hover:text-white'
-                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }
+              text-gray-200 hover:bg-gray-800 hover:text-white
             `}
           >
             <span className="flex items-center gap-2">
@@ -205,7 +194,7 @@ const Aside = ({ isAsideOpen = true }) => {
               className={`
                 w-full flex items-center gap-2 px-4 py-2 rounded-lg font-semibold
                 transition hover:bg-gray-800 hover:text-white
-                ${location.pathname === '/' ? 'bg-violet-700 text-white shadow' : 'text-gray-200'}
+                text-gray-200
               `}
             >
               <FaThLarge />
