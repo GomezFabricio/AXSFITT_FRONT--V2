@@ -15,29 +15,31 @@ const Layout = ({ children }) => {
   // Detectar si es pantalla móvil
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
     };
-    handleResize(); // Llamar una vez al principio
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
-    <div className="grid grid-rows-[auto_1fr_auto] min-h-screen">
+    <div className="grid grid-rows-[auto_1fr_auto] min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="w-full z-10 relative">
+      <header className="w-full z-20 relative">
         <Header />
       </header>
 
-      {/* Contenido principal */}
-      <div className="flex flex-1 relative">
+      {/* Contenido principal y Aside */}
+      <div className="flex flex-1 relative overflow-x-hidden">
         {/* Aside */}
         <div
           className={`
-            transition-transform duration-300
-            ${isMobile ? 'fixed top-0 left-0 h-full z-40 bg-white shadow-lg' : 'h-full'}
-            ${isAsideOpen ? 'translate-x-0' : '-translate-x-full'}
-            ${isMobile ? 'w-64' : 'w-72'}
+            transition-all duration-300 ease-in-out
+            ${isMobile
+              ? `fixed top-0 left-0 h-full z-40 bg-white shadow-lg w-72 ${isAsideOpen ? 'translate-x-0' : '-translate-x-full'}` // Cambiado de w-64 a w-72
+              : `relative h-full bg-white shadow-lg ${isAsideOpen ? 'w-72' : 'w-0'}`
+            }
             overflow-hidden
           `}
         >
@@ -47,20 +49,18 @@ const Layout = ({ children }) => {
         {/* Botón hamburguesa */}
         <button
           onClick={toggleAside}
-          className="absolute top-4 z-50 text-black p-3 rounded-r hover:cursor-pointer shadow-md transition-all duration-300 bg-white"
-          style={{
-            left: isAsideOpen
-              ? isMobile
-                ? '16rem'
-                : '18rem'
-              : '0.5rem'
-          }}
+          className={`fixed top-20 z-50 text-gray-700 p-3 rounded-r-md hover:cursor-pointer shadow-md transition-all duration-300 bg-white hover:bg-gray-200
+            ${isMobile ? (isAsideOpen ? 'left-72' : 'left-0') : (isAsideOpen ? 'left-72' : 'left-0')} 
+          `} // Ajustado left-64 a left-72 para móvil
+          aria-label="Toggle menu"
         >
           <FaBars />
         </button>
 
         {/* Contenido principal */}
-        <main className="flex-1 pt-12 px-4 transition-all duration-300">
+        <main className={`flex-1 pt-16 pb-8 px-4 md:px-8 transition-all duration-300 ease-in-out overflow-y-auto
+          ${isMobile ? '' : (isAsideOpen ? 'ml-0' : 'ml-0')} 
+        `}>
           {children}
         </main>
       </div>
