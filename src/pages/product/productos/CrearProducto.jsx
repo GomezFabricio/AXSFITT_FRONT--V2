@@ -132,8 +132,8 @@ const CrearProducto = () => {
         precio_oferta: variante.precioOferta,
         stock: variante.stock,
         sku: variante.sku,
-        imagen_url: variante.imagenUrl,
-        valores: variante.valores,
+        imagen_url: formulario.imagenUrl,
+        valores: valores,
       })),
     };
 
@@ -396,6 +396,22 @@ const CrearProducto = () => {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
+                 {/* Selector de imagen para la variante */}
+                 <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Imagen:</label>
+                    <select
+                      value={formulario.imagenUrl || ''}
+                      onChange={e => handleFormularioChange(index, 'imagenUrl', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    >
+                      <option value="">Seleccionar Imagen</option>
+                      {imagenes.map((imagen, i) => (
+                        <option key={i} value={imagen}>
+                          Imagen {i + 1}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
               </div>
             ))}
             <button
@@ -463,8 +479,8 @@ const CrearProducto = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {variante.sku}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.imagenUrl}
+                       <td className="px-6 py-4 whitespace-nowrap">
+                        <img src={variante.imagenUrl} alt={`Imagen de la variante ${index + 1}`} className="w-16 h-16 object-cover" />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button

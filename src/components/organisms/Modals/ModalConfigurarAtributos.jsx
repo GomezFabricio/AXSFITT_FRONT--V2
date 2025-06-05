@@ -3,21 +3,27 @@ import ReactTagInput from '@pathofdev/react-tag-input';
 import '@pathofdev/react-tag-input/build/index.css';
 
 const ModalConfigurarAtributos = ({ isOpen, onClose, onSave, initialAtributos }) => {
-  const [atributos, setAtributos] = useState(initialAtributos || []);
+  const [atributos, setAtributos] = useState([]);
   const [atributoValores, setAtributoValores] = useState({});
   const [precioBase, setPrecioBase] = useState('');
   const [precioCostoBase, setPrecioCostoBase] = useState('');
   const [stockBase, setStockBase] = useState('');
 
   useEffect(() => {
-    setAtributos(initialAtributos || []);
-    // Inicializar valores de atributos si existen
-    if (initialAtributos) {
+    // Si initialAtributos es un array de objetos, extrae solo los nombres de los atributos
+    if (initialAtributos && Array.isArray(initialAtributos)) {
+      const nombresAtributos = initialAtributos.map(attr => attr.atributo_nombre);
+      setAtributos(nombresAtributos);
+
+      // Inicializar valores de atributos si existen
       const initialValues = {};
-      initialAtributos.forEach(attr => {
+      nombresAtributos.forEach(attr => {
         initialValues[attr] = [];
       });
       setAtributoValores(initialValues);
+    } else {
+      setAtributos([]);
+      setAtributoValores({});
     }
   }, [initialAtributos]);
 
