@@ -26,26 +26,66 @@ const CrearProducto = () => {
   const [formulariosVariantes, setFormulariosVariantes] = useState([{ }]); // Inicializamos con un formulario vacío
   const navigate = useNavigate();
 
-  useEffect(() => {
+    useEffect(() => {
     const cargarCategorias = async () => {
       try {
-        const token = sessionStorage.getItem('token');
-        const data = await getCategorias(token);
-        setCategorias(data);
+        const token = localStorage.getItem('token');
+        const categoriasData = await getCategorias(token);
+        setCategorias(categoriasData);
       } catch (error) {
         console.error('Error al cargar categorías:', error);
       }
     };
+  
+    const cargarImagenesTemporales = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const usuario_id = 1; // Reemplazar con el ID del usuario actual
+        const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
+        setImagenes(imagenesTemporales.map(img => ({ id: img.imagen_id, url: img.imagen_url })));
+      } catch (error) {
+        console.error('Error al cargar imágenes temporales:', error);
+      }
+    };
+  
     cargarCategorias();
+    cargarImagenesTemporales();
   }, []);
 
-  const handleImagenChange = (e) => {
+    const handleImagenChange = async (e) => {
     const files = Array.from(e.target.files);
     if (imagenes.length + files.length > 6) {
       alert('Solo se permiten hasta 6 imágenes.');
       return;
     }
-    const newImages = [...imagenes, ...files.map(file => URL.createObjectURL(file))];
+  
+    const token = localStorage.getItem('token'); // Obtener el token del usuario
+    const usuario_id = 1; // Reemplazar con el ID del usuario actual
+    const newImages = [...imagenes];
+  
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+  
+      try {
+        // Subir la imagen al servidor y guardar en la tabla temporal
+        const response = await guardarImagenTemporal(
+          {
+            usuario_id,
+            imagen_url: URL.createObjectURL(file), // Cambiar por la URL generada en el servidor si es necesario
+            imagen_orden: newImages.length,
+          },
+          token
+        );
+  
+        // Agregar la imagen al estado local
+        newImages.push({ id: response.imagen_id, url: response.imagen_url });
+      } catch (error) {
+        console.error('Error al guardar imagen temporal:', error);
+        alert('Error al subir la imagen.');
+      }
+    }
+  
     setImagenes(newImages);
   };
 
@@ -106,16 +146,12 @@ const CrearProducto = () => {
     setVariantes(newVariantes);
   };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!nombre || !categoriaId) {
-      alert('Por favor, complete el nombre y la categoría del producto.');
-      return;
-    }
-
+  
+    const token = localStorage.getItem('token');
     const productoData = {
-      usuario_id: 1,
+      usuario_id: 1, // Reemplazar con el ID del usuario actual
       producto_nombre: nombre,
       categoria_id: categoriaId,
       producto_descripcion: descripcion,
@@ -124,7 +160,10 @@ const CrearProducto = () => {
       producto_precio_oferta: precioOferta,
       producto_stock: stockGeneral,
       producto_sku: skuGeneral,
-      imagenes: imagenes.map((url, index) => ({ url, orden: index })),
+      imagenes: imagenes.map((imagen, index) => ({
+        id: imagen.id,
+        orden: index,
+      })),
       atributos: atributosConfigurados.atributos,
       variantes: variantes.map(variante => ({
         precio_venta: variante.precioVenta,
@@ -132,19 +171,18 @@ const CrearProducto = () => {
         precio_oferta: variante.precioOferta,
         stock: variante.stock,
         sku: variante.sku,
-        imagen_url: formulario.imagenUrl,
-        valores: valores,
+        imagen_id: variante.imagenId, // Usar el ID de la imagen seleccionada
+        valores: variante.valores,
       })),
     };
-
+  
     try {
-      const token = sessionStorage.getItem('token');
-      const response = await crearProducto(productoData, token);
-      alert(response.message);
+      await crearProducto(productoData, token);
+      alert('Producto creado exitosamente.');
       navigate('/productos');
     } catch (error) {
       console.error('Error al crear producto:', error);
-      alert(error.message);
+      alert('Error al crear producto.');
     }
   };
 
@@ -397,21 +435,21 @@ const CrearProducto = () => {
                   />
                 </div>
                  {/* Selector de imagen para la variante */}
-                 <div className="mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Imagen:</label>
-                    <select
-                      value={formulario.imagenUrl || ''}
-                      onChange={e => handleFormularioChange(index, 'imagenUrl', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value="">Seleccionar Imagen</option>
-                      {imagenes.map((imagen, i) => (
-                        <option key={i} value={imagen}>
-                          Imagen {i + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Imagen:</label>
+                  <select
+                    value={formulario.imagenId || ''}
+                    onChange={e => handleFormularioChange(index, 'imagenId', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  >
+                    <option value="">Seleccionar Imagen</option>
+                    {imagenes.map((imagen) => (
+                      <option key={imagen.id} value={imagen.id}>
+                        Imagen {imagen.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             ))}
             <button
