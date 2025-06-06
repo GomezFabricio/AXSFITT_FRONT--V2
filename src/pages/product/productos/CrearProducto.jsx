@@ -30,7 +30,7 @@ const CrearProducto = () => {
   const usuario_id = userData?.usuario_id;
 
   useEffect(() => {
-    
+
     const cargarCategorias = async () => {
       try {
         const token = sessionStorage.getItem('token');
@@ -168,17 +168,10 @@ const CrearProducto = () => {
     }
   };
 
-  const handleAgregarVariante = () => {
-    setVariantes([
-      ...variantes,
-      { precioVenta: '', precioCosto: '', precioOferta: '', stock: '', sku: '', imagenUrl: '', valores: [] },
-    ]);
-  };
-
   const handleEliminarVariante = (index) => {
-    const newVariantes = [...variantes];
-    newVariantes.splice(index, 1);
-    setVariantes(newVariantes);
+    const newFormularios = [...formulariosVariantes];
+    newFormularios.splice(index, 1); // Eliminar la variante en el índice especificado
+    setFormulariosVariantes(newFormularios); // Actualizar el estado
   };
 
   const handleSubmit = async (e) => {
@@ -364,7 +357,7 @@ const CrearProducto = () => {
           <button
             type="button"
             onClick={() => setModalAtributosOpen(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-4 py-2 border border-purple-600 text-purple-600 rounded-md text-sm hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             Configurar Atributos
           </button>
@@ -453,12 +446,21 @@ const CrearProducto = () => {
                     ))}
                   </select>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleEliminarVariante}
+                  className="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  Eliminar Variante
+                </button>
+
               </div>
             ))}
             <button
               type="button"
               onClick={handleAgregarFormulario}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 mt-4"
+              className="px-4 py-2 border border-green-500 text-green-500 rounded-md text-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 mt-2"
             >
               Agregar Variante
             </button>
@@ -468,14 +470,14 @@ const CrearProducto = () => {
         <div className="flex space-x-4">
           <button
             type="submit"
-            className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Agregar Producto
           </button>
           <button
             type="button"
             onClick={handleCancelarProceso}
-            className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 border border-red-600 text-red-600 rounded-md text-sm hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Cancelar
           </button>
