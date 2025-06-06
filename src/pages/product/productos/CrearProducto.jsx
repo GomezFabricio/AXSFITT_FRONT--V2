@@ -6,6 +6,14 @@ import ModalConfigurarAtributos from '../../../components/organisms/Modals/Modal
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
 import config from '../../../config/config';
 
+const tienePermiso = (permisoDescripcion) => {
+  const userData = JSON.parse(sessionStorage.getItem('userData'));
+  if (!userData || !userData.modulos) return false;
+  return userData.modulos.some(
+    m => m.permisos && m.permisos.some(p => p.permiso_descripcion === permisoDescripcion)
+  );
+};
+
 const CrearProducto = () => {
   const [nombre, setNombre] = useState('');
   const [categoriaId, setCategoriaId] = useState('');
@@ -270,7 +278,7 @@ const CrearProducto = () => {
           />
         </div>
 
-        {!usarAtributos && (
+        {!usarAtributos && tienePermiso('Definir Precio Producto') && ( 
           <>
             <div>
               <label className="block text-sm font-medium text-gray-700">Precio de Costo:</label>
@@ -381,55 +389,60 @@ const CrearProducto = () => {
                   </div>
                 ))}
 
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Precio Costo:</label>
-                  <input
-                    type="number"
-                    value={formulario.precioCosto || ''}
-                    onChange={e => handleFormularioChange(index, 'precioCosto', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
+                {tienePermiso('Definir Precio Producto') && (
+                  <>
 
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Precio Venta:</label>
-                  <input
-                    type="number"
-                    value={formulario.precioVenta || ''}
-                    onChange={e => handleFormularioChange(index, 'precioVenta', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Precio Costo:</label>
+                    <input
+                      type="number"
+                      value={formulario.precioCosto || ''}
+                      onChange={e => handleFormularioChange(index, 'precioCosto', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Precio Oferta:</label>
-                  <input
-                    type="number"
-                    value={formulario.precioOferta || ''}
-                    onChange={e => handleFormularioChange(index, 'precioOferta', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Precio Venta:</label>
+                    <input
+                      type="number"
+                      value={formulario.precioVenta || ''}
+                      onChange={e => handleFormularioChange(index, 'precioVenta', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Stock:</label>
-                  <input
-                    type="number"
-                    value={formulario.stock || ''}
-                    onChange={e => handleFormularioChange(index, 'stock', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Precio Oferta:</label>
+                    <input
+                      type="number"
+                      value={formulario.precioOferta || ''}
+                      onChange={e => handleFormularioChange(index, 'precioOferta', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    />
+                  </div>
 
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700">SKU:</label>
-                  <input
-                    type="text"
-                    value={formulario.sku || ''}
-                    onChange={e => handleFormularioChange(index, 'sku', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Stock:</label>
+                    <input
+                      type="number"
+                      value={formulario.stock || ''}
+                      onChange={e => handleFormularioChange(index, 'stock', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <label className="block text-sm font-medium text-gray-700">SKU:</label>
+                    <input
+                      type="text"
+                      value={formulario.sku || ''}
+                      onChange={e => handleFormularioChange(index, 'sku', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    />
+                  </div>
+                  </>
+                )}
 
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Imagen:</label>
