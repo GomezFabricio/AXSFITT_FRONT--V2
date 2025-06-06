@@ -27,9 +27,6 @@ const ModalConfigurarAtributos = ({ isOpen, onClose, onSave, initialAtributos })
     }
   }, [initialAtributos]);
 
-  const handleAtributoChange = (atributo, valores) => {
-    setAtributoValores(prev => ({ ...prev, [atributo]: valores }));
-  };
 
   const handleSave = () => {
     const atributosConfigurados = atributos.map(atributo => ({
@@ -53,37 +50,6 @@ const ModalConfigurarAtributos = ({ isOpen, onClose, onSave, initialAtributos })
               tags={atributos}
               onChange={newTags => setAtributos(newTags)}
               placeholder="Agregar atributo"
-            />
-          </div>
-
-          {/* Precios y Stock Base */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Precio Base (Opcional):</label>
-            <input
-              type="number"
-              value={precioBase}
-              onChange={e => setPrecioBase(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Precio de Costo Base (Opcional):</label>
-            <input
-              type="number"
-              value={precioCostoBase}
-              onChange={e => setPrecioCostoBase(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700">Stock Base (Opcional):</label>
-            <input
-              type="number"
-              value={stockBase}
-              onChange={e => setStockBase(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
           </div>
 

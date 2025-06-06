@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { crearProducto } from '../../../api/productosApi';
+import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
+import config from '../../../config/config';
 
 const CrearProducto = () => {
   const [nombre, setNombre] = useState('');
@@ -23,69 +22,99 @@ const CrearProducto = () => {
   const [categorias, setCategorias] = useState([]);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false);
   const [mostrarFormularioAtributos, setMostrarFormularioAtributos] = useState(false);
-  const [formulariosVariantes, setFormulariosVariantes] = useState([{ }]); // Inicializamos con un formulario vacío
+  const [formulariosVariantes, setFormulariosVariantes] = useState([{}]); // Inicializamos con un formulario vacío
   const navigate = useNavigate();
 
-    useEffect(() => {
+  useEffect(() => {
     const cargarCategorias = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const categoriasData = await getCategorias(token);
+        console.log('Categorías obtenidas:', categoriasData); // Verifica la respuesta
         setCategorias(categoriasData);
       } catch (error) {
         console.error('Error al cargar categorías:', error);
       }
     };
-  
+
     const cargarImagenesTemporales = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const usuario_id = 1; // Reemplazar con el ID del usuario actual
         const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
-        setImagenes(imagenesTemporales.map(img => ({ id: img.imagen_id, url: img.imagen_url })));
+
+        console.log('Imágenes cargadas desde el backend:', imagenesTemporales);
+
+        const imagenesProcesadas = imagenesTemporales.map(img => ({
+          id: img.imagen_id,
+          url: `${config.backendUrl}${img.imagen_url}`,
+        }));
+
+        setImagenes(imagenesProcesadas);
+
+        console.log('Estado actualizado con imágenes:', imagenesProcesadas);
       } catch (error) {
         console.error('Error al cargar imágenes temporales:', error);
       }
     };
-  
+
     cargarCategorias();
     cargarImagenesTemporales();
   }, []);
 
-    const handleImagenChange = async (e) => {
+  const handleMoverImagen = async (fromIndex, toIndex) => {
+    const token = sessionStorage.getItem('token'); // Obtener el token del usuario
+    const usuario_id = 1; // Reemplazar con el ID del usuario actual
+
+    try {
+      // Actualizar el orden en el backend
+      await moverImagenTemporal(
+        {
+          usuario_id,
+          imagen_id: imagenes[fromIndex].id,
+          nuevo_orden: toIndex,
+        },
+        token
+      );
+
+      // Recargar las imágenes desde el backend
+      const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
+      setImagenes(imagenesTemporales.map(img => ({ id: img.imagen_id, url: `${config.backendUrl}${img.imagen_url}` })));
+    } catch (error) {
+      console.error('Error al mover imagen:', error);
+      alert('Error al mover la imagen.');
+    }
+  };
+
+  const handleImagenChange = async (e) => {
     const files = Array.from(e.target.files);
     if (imagenes.length + files.length > 6) {
       alert('Solo se permiten hasta 6 imágenes.');
       return;
     }
-  
-    const token = localStorage.getItem('token'); // Obtener el token del usuario
+
+    const token = sessionStorage.getItem('token'); // Obtener el token del usuario
     const usuario_id = 1; // Reemplazar con el ID del usuario actual
     const newImages = [...imagenes];
-  
+
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
-  
+      formData.append('usuario_id', usuario_id);
+      formData.append('imagen_orden', newImages.length);
+
       try {
         // Subir la imagen al servidor y guardar en la tabla temporal
-        const response = await guardarImagenTemporal(
-          {
-            usuario_id,
-            imagen_url: URL.createObjectURL(file), // Cambiar por la URL generada en el servidor si es necesario
-            imagen_orden: newImages.length,
-          },
-          token
-        );
-  
+        const response = await guardarImagenTemporal(formData, token);
+
         // Agregar la imagen al estado local
-        newImages.push({ id: response.imagen_id, url: response.imagen_url });
+        newImages.push({ id: response.imagen_id, url: `${config.backendUrl}${response.imagen_url}` });
       } catch (error) {
         console.error('Error al guardar imagen temporal:', error);
         alert('Error al subir la imagen.');
       }
     }
-  
+
     setImagenes(newImages);
   };
 
@@ -98,7 +127,7 @@ const CrearProducto = () => {
   const handleAtributosSave = (data) => {
     setAtributosConfigurados(data);
     setMostrarFormularioAtributos(true);
-    setFormulariosVariantes([{ }]); // Reiniciamos los formularios al guardar nuevos atributos
+    setFormulariosVariantes([{}]); // Reiniciamos los formularios al guardar nuevos atributos
   };
 
   const handleFormularioChange = (index, field, value) => {
@@ -109,28 +138,6 @@ const CrearProducto = () => {
 
   const handleAgregarFormulario = () => {
     setFormulariosVariantes([...formulariosVariantes, {}]);
-  };
-
-  const generarVariantes = () => {
-    const nuevasVariantes = formulariosVariantes.map(formulario => {
-      const valores = atributosConfigurados.atributos.map(atributo => formulario[atributo.atributo_nombre] || '');
-      return {
-        precioVenta: formulario.precioVenta || atributosConfigurados.precioBase || '',
-        precioCosto: formulario.precioCosto || atributosConfigurados.precioCostoBase || '',
-        precioOferta: formulario.precioOferta || '',
-        stock: formulario.stock || atributosConfigurados.stockBase || '',
-        sku: formulario.sku || '',
-        imagenUrl: formulario.imagenUrl || '',
-        valores: valores,
-      };
-    });
-    setVariantes(nuevasVariantes);
-  };
-
-  const handleVarianteChange = (index, field, value) => {
-    const newVariantes = [...variantes];
-    newVariantes[index][field] = value;
-    setVariantes(newVariantes);
   };
 
   const handleAgregarVariante = () => {
@@ -146,36 +153,38 @@ const CrearProducto = () => {
     setVariantes(newVariantes);
   };
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    const token = localStorage.getItem('token');
+
+    const token = sessionStorage.getItem('token');
     const productoData = {
-      usuario_id: 1, // Reemplazar con el ID del usuario actual
+      usuario_id: 1,
       producto_nombre: nombre,
       categoria_id: categoriaId,
       producto_descripcion: descripcion,
       producto_precio_venta: precioVenta,
       producto_precio_costo: precioCosto,
       producto_precio_oferta: precioOferta,
-      producto_stock: stockGeneral,
+      producto_stock: usarAtributos ? null : stockGeneral, // Solo enviar stock general si no se usan atributos
       producto_sku: skuGeneral,
       imagenes: imagenes.map((imagen, index) => ({
         id: imagen.id,
         orden: index,
       })),
-      atributos: atributosConfigurados.atributos,
-      variantes: variantes.map(variante => ({
-        precio_venta: variante.precioVenta,
-        precio_costo: variante.precioCosto,
-        precio_oferta: variante.precioOferta,
-        stock: variante.stock,
-        sku: variante.sku,
-        imagen_id: variante.imagenId, // Usar el ID de la imagen seleccionada
-        valores: variante.valores,
-      })),
+      atributos: usarAtributos ? atributosConfigurados.atributos : [],
+      variantes: usarAtributos
+        ? variantes.map(variante => ({
+          precio_venta: variante.precioVenta,
+          precio_costo: variante.precioCosto,
+          precio_oferta: variante.precioOferta,
+          stock: variante.stock,
+          sku: variante.sku,
+          imagen_id: variante.imagenId,
+          valores: variante.valores,
+        }))
+        : [],
     };
-  
+
     try {
       await crearProducto(productoData, token);
       alert('Producto creado exitosamente.');
@@ -184,18 +193,6 @@ const CrearProducto = () => {
       console.error('Error al crear producto:', error);
       alert('Error al crear producto.');
     }
-  };
-
-  const onDragEnd = (result) => {
-    if (!result.destination) {
-      return;
-    }
-
-    const items = Array.from(imagenes);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    setImagenes(items);
   };
 
   return (
@@ -233,119 +230,84 @@ const CrearProducto = () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Descripción:</label>
-          <ReactQuill
+          <textarea
             value={descripcion}
-            onChange={setDescripcion}
+            onChange={e => setDescripcion(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            rows="4"
           />
         </div>
 
         {/* Subida de imágenes */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Imágenes (máx. 6):</label>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="imagenes" direction="horizontal">
-              {(provided) => (
-                <ul
-                  className="flex space-x-4"
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                >
-                  {imagenes.map((imagen, index) => (
-                    <Draggable key={index} draggableId={`imagen-${index}`} index={index}>
-                      {(provided) => (
-                        <li
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="relative w-32 h-32 border-2 border-gray-400 rounded-md overflow-hidden"
-                        >
-                          <img src={imagen} alt={`Imagen ${index + 1}`} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => handleEliminarImagen(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700"
-                          >
-                            X
-                          </button>
-                        </li>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                  {imagenes.length < 6 && (
-                    <li className="w-32 h-32 border-2 border-dashed border-gray-400 rounded-md flex items-center justify-center">
-                      <label htmlFor="imagen-upload" className="cursor-pointer">
-                        <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        <input
-                          type="file"
-                          id="imagen-upload"
-                          accept="image/*"
-                          multiple
-                          onChange={handleImagenChange}
-                          className="hidden"
-                        />
-                      </label>
-                    </li>
-                  )}
-                </ul>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
-
-        {/* Precio, stock y SKU general */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Precio de Venta:</label>
-          <input
-            type="number"
-            value={precioVenta}
-            onChange={e => setPrecioVenta(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          <GaleriaImagenesProducto
+            imagenes={imagenes}
+            onMoverImagen={handleMoverImagen}
+            onEliminarImagen={handleEliminarImagen}
+            onImagenChange={handleImagenChange}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Precio de Costo:</label>
-          <input
-            type="number"
-            value={precioCosto}
-            onChange={e => setPrecioCosto(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
+        {!usarAtributos && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Precio de Costo:</label>
+              <input
+                type="number"
+                value={precioCosto}
+                onChange={e => setPrecioCosto(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Precio de Oferta (Opcional):</label>
-          <input
-            type="number"
-            value={precioOferta}
-            onChange={e => setPrecioOferta(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Stock General:</label>
-          <input
-            type="number"
-            value={stockGeneral}
-            onChange={e => setStockGeneral(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Precio de Venta:</label>
+              <input
+                type="number"
+                value={precioVenta}
+                onChange={e => setPrecioVenta(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">SKU General:</label>
-          <input
-            type="text"
-            value={skuGeneral}
-            onChange={e => setSkuGeneral(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-        </div>
+
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Precio de Oferta (Opcional):</label>
+              <input
+                type="number"
+                value={precioOferta}
+                onChange={e => setPrecioOferta(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Stock General:</label>
+              <input
+                type="number"
+                value={stockGeneral}
+                onChange={e => setStockGeneral(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">SKU General:</label>
+              <input
+                type="text"
+                value={skuGeneral}
+                onChange={e => setSkuGeneral(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              />
+            </div>
+          </>
+        )}
+
 
         {/* Activar atributos */}
         <div>
@@ -380,8 +342,7 @@ const CrearProducto = () => {
           </button>
         )}
 
-        {/* Formularios de variantes */}
-        {mostrarFormularioAtributos && (
+        {usarAtributos && mostrarFormularioAtributos && (
           <div>
             <h3 className="text-lg font-medium text-gray-900">Valores de Atributos:</h3>
             {formulariosVariantes.map((formulario, index) => (
@@ -398,15 +359,7 @@ const CrearProducto = () => {
                     />
                   </div>
                 ))}
-                <div className="mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Precio Venta:</label>
-                  <input
-                    type="number"
-                    value={formulario.precioVenta || ''}
-                    onChange={e => handleFormularioChange(index, 'precioVenta', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-                </div>
+
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Precio Costo:</label>
                   <input
@@ -416,6 +369,27 @@ const CrearProducto = () => {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
+
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Precio Venta:</label>
+                  <input
+                    type="number"
+                    value={formulario.precioVenta || ''}
+                    onChange={e => handleFormularioChange(index, 'precioVenta', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Precio Oferta:</label>
+                  <input
+                    type="number"
+                    value={formulario.precioOferta || ''}
+                    onChange={e => handleFormularioChange(index, 'precioOferta', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                </div>
+
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Stock:</label>
                   <input
@@ -425,6 +399,7 @@ const CrearProducto = () => {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
+
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">SKU:</label>
                   <input
@@ -434,7 +409,7 @@ const CrearProducto = () => {
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
-                 {/* Selector de imagen para la variante */}
+
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Imagen:</label>
                   <select
@@ -462,89 +437,6 @@ const CrearProducto = () => {
           </div>
         )}
 
-        {/* Variantes */}
-        {variantes.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">Variantes:</h3>
-            <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Atributos
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Precio Venta
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Precio Costo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Precio Oferta
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Stock
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      SKU
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Imagen
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {variantes.map((variante, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.valores.join(', ')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.precioVenta}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.precioCosto}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.precioOferta}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.stock}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {variante.sku}
-                      </td>
-                       <td className="px-6 py-4 whitespace-nowrap">
-                        <img src={variante.imagenUrl} alt={`Imagen de la variante ${index + 1}`} className="w-16 h-16 object-cover" />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => handleEliminarVariante(index)}
-                          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button
-              type="button"
-              onClick={handleAgregarVariante}
-              className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300"
-            >
-              Agregar Variante
-            </button>
-          </div>
-        )}
-
-        {/* Botón de submit */}
         <div>
           <button
             type="submit"
