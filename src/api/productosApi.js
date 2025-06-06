@@ -57,3 +57,17 @@ export const moverImagenTemporal = async (data, token) => {
     throw error.response?.data || new Error('Error al mover la imagen temporal');
   }
 };
+
+export const eliminarImagenTemporal = async (data, token) => {
+  try {
+    const response = await axios.delete(`${config.backendUrl}/api/productos/imagenes-temporales`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      data,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al eliminar imagen temporal');
+  }
+};

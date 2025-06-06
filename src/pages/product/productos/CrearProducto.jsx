@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal } from '../../../api/productosApi';
+import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal, eliminarImagenTemporal } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
@@ -25,6 +25,10 @@ const CrearProducto = () => {
   const [formulariosVariantes, setFormulariosVariantes] = useState([{}]); // Inicializamos con un formulario vacío
   const navigate = useNavigate();
 
+  // Obtener el usuario_id desde sessionStorage
+  const userData = JSON.parse(sessionStorage.getItem('userData'));
+  const usuario_id = userData?.usuario_id;
+
   useEffect(() => {
     const cargarCategorias = async () => {
       try {
@@ -40,7 +44,6 @@ const CrearProducto = () => {
     const cargarImagenesTemporales = async () => {
       try {
         const token = sessionStorage.getItem('token');
-        const usuario_id = 1; // Reemplazar con el ID del usuario actual
         const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
 
         console.log('Imágenes cargadas desde el backend:', imagenesTemporales);
@@ -60,11 +63,10 @@ const CrearProducto = () => {
 
     cargarCategorias();
     cargarImagenesTemporales();
-  }, []);
+  }, [usuario_id]);
 
   const handleMoverImagen = async (fromIndex, toIndex) => {
-    const token = sessionStorage.getItem('token'); // Obtener el token del usuario
-    const usuario_id = 1; // Reemplazar con el ID del usuario actual
+    const token = sessionStorage.getItem('token');
 
     try {
       // Actualizar el orden en el backend
@@ -93,8 +95,7 @@ const CrearProducto = () => {
       return;
     }
 
-    const token = sessionStorage.getItem('token'); // Obtener el token del usuario
-    const usuario_id = 1; // Reemplazar con el ID del usuario actual
+    const token = sessionStorage.getItem('token');
     const newImages = [...imagenes];
 
     for (const file of files) {
@@ -118,12 +119,25 @@ const CrearProducto = () => {
     setImagenes(newImages);
   };
 
-  const handleEliminarImagen = (index) => {
-    const newImages = [...imagenes];
-    newImages.splice(index, 1);
-    setImagenes(newImages);
-  };
+  const handleEliminarImagen = async (index) => {
+    const token = sessionStorage.getItem('token');
+    const imagen = imagenes[index];
 
+    try {
+      // Solicitud al backend para eliminar la imagen
+      await eliminarImagenTemporal({ usuario_id, imagen_id: imagen.id }, token);
+
+      // Actualizar el estado local eliminando la imagen
+      const newImages = [...imagenes];
+      newImages.splice(index, 1);
+      setImagenes(newImages);
+
+      alert('Imagen eliminada correctamente.');
+    } catch (error) {
+      console.error('Error al eliminar la imagen:', error);
+      alert('Error al eliminar la imagen.');
+    }
+  };
   const handleAtributosSave = (data) => {
     setAtributosConfigurados(data);
     setMostrarFormularioAtributos(true);
@@ -158,7 +172,7 @@ const CrearProducto = () => {
 
     const token = sessionStorage.getItem('token');
     const productoData = {
-      usuario_id: 1,
+      usuario_id,
       producto_nombre: nombre,
       categoria_id: categoriaId,
       producto_descripcion: descripcion,
