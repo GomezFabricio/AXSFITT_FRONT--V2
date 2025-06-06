@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal, eliminarImagenTemporal } from '../../../api/productosApi';
+import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal, eliminarImagenTemporal, cancelarProcesoAltaProducto } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
@@ -30,6 +30,7 @@ const CrearProducto = () => {
   const usuario_id = userData?.usuario_id;
 
   useEffect(() => {
+    
     const cargarCategorias = async () => {
       try {
         const token = sessionStorage.getItem('token');
@@ -152,6 +153,19 @@ const CrearProducto = () => {
 
   const handleAgregarFormulario = () => {
     setFormulariosVariantes([...formulariosVariantes, {}]);
+  };
+
+  const handleCancelarProceso = async () => {
+    const token = sessionStorage.getItem('token');
+
+    try {
+      await cancelarProcesoAltaProducto({ usuario_id }, token);
+      alert('Proceso de alta cancelado correctamente.');
+      navigate('/productos'); // Redirigir al listado de productos
+    } catch (error) {
+      console.error('Error al cancelar el proceso de alta:', error);
+      alert('Error al cancelar el proceso de alta.');
+    }
   };
 
   const handleAgregarVariante = () => {
@@ -451,12 +465,19 @@ const CrearProducto = () => {
           </div>
         )}
 
-        <div>
+        <div className="flex space-x-4">
           <button
             type="submit"
             className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             Agregar Producto
+          </button>
+          <button
+            type="button"
+            onClick={handleCancelarProceso}
+            className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            Cancelar
           </button>
         </div>
       </form>

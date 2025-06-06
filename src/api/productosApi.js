@@ -71,3 +71,16 @@ export const eliminarImagenTemporal = async (data, token) => {
     throw error.response?.data || new Error('Error al eliminar imagen temporal');
   }
 };
+
+export const cancelarProcesoAltaProducto = async (data, token) => {
+  try {
+    const response = await axios.post(`${config.backendUrl}/api/productos/cancelar-proceso-alta`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al cancelar el proceso de alta del producto');
+  }
+};
