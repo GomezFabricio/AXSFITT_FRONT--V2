@@ -4,6 +4,7 @@ import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverI
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
+import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
 import config from '../../../config/config';
 
@@ -190,26 +191,26 @@ const CrearProducto = () => {
       usuario_id,
       producto_nombre: nombre,
       categoria_id: categoriaId,
-      producto_descripcion: descripcion,
-      producto_precio_venta: precioVenta ? parseFloat(precioVenta) : undefined,
-      producto_precio_costo: precioCosto ? parseFloat(precioCosto) : undefined,
-      producto_precio_oferta: precioOferta ? parseFloat(precioOferta) : undefined,
-      producto_stock: usarAtributos ? null : stockGeneral ? parseInt(stockGeneral, 10) : undefined,
-      producto_sku: skuGeneral,
+      producto_descripcion: descripcion || null, // Cambiar undefined por null
+      producto_precio_venta: precioVenta ? parseFloat(precioVenta) : null, // Cambiar undefined por null
+      producto_precio_costo: precioCosto ? parseFloat(precioCosto) : null, // Cambiar undefined por null
+      producto_precio_oferta: precioOferta ? parseFloat(precioOferta) : null, // Cambiar undefined por null
+      producto_stock: usarAtributos ? null : stockGeneral ? parseInt(stockGeneral, 10) : null, // Cambiar undefined por null
+      producto_sku: skuGeneral || null, // Cambiar undefined por null
       imagenes: imagenes.map((imagen, index) => ({
         id: imagen.id,
         orden: index,
       })),
       atributos: usarAtributos ? atributosConfigurados.atributos : [],
       variantes: usarAtributos
-        ? variantes.map(variante => ({
-          precio_venta: variante.precioVenta,
-          precio_costo: variante.precioCosto,
-          precio_oferta: variante.precioOferta,
-          stock: variante.stock,
-          sku: variante.sku,
-          imagen_id: variante.imagenId,
-          valores: variante.valores,
+        ? formulariosVariantes.map(variante => ({
+          precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
+          precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
+          precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
+          stock: variante.stock ? parseInt(variante.stock, 10) : null,
+          sku: variante.sku || null,
+          imagen_id: variante.imagenId || null,
+          valores: atributosConfigurados.atributos.map(attr => variante[attr.atributo_nombre] || null),
         }))
         : [],
     };
@@ -324,6 +325,8 @@ const CrearProducto = () => {
             </div>
 
 
+
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Stock General:</label>
               <input
@@ -333,7 +336,6 @@ const CrearProducto = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               />
             </div>
-
 
             <div>
               <label className="block text-sm font-medium text-gray-700">SKU General:</label>
@@ -431,28 +433,28 @@ const CrearProducto = () => {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
-
-                    <div className="mb-2">
-                      <label className="block text-sm font-medium text-gray-700">Stock:</label>
-                      <input
-                        type="number"
-                        value={formulario.stock || ''}
-                        onChange={e => handleFormularioChange(index, 'stock', e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </div>
-
-                    <div className="mb-2">
-                      <label className="block text-sm font-medium text-gray-700">SKU:</label>
-                      <input
-                        type="text"
-                        value={formulario.sku || ''}
-                        onChange={e => handleFormularioChange(index, 'sku', e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      />
-                    </div>
                   </>
                 )}
+
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Stock:</label>
+                  <input
+                    type="number"
+                    value={formulario.stock || ''}
+                    onChange={e => handleFormularioChange(index, 'stock', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700">SKU:</label>
+                  <input
+                    type="text"
+                    value={formulario.sku || ''}
+                    onChange={e => handleFormularioChange(index, 'sku', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                </div>
 
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Imagen:</label>
