@@ -28,7 +28,6 @@ const CrearProducto = () => {
   const [skuGeneral, setSkuGeneral] = useState('');
   const [usarAtributos, setUsarAtributos] = useState(false);
   const [atributosConfigurados, setAtributosConfigurados] = useState({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
-  const [variantes, setVariantes] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false);
   const [mostrarFormularioAtributos, setMostrarFormularioAtributos] = useState(false);
@@ -56,16 +55,16 @@ const CrearProducto = () => {
       try {
         const token = sessionStorage.getItem('token');
         const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
-
+    
         console.log('Imágenes cargadas desde el backend:', imagenesTemporales);
-
+    
         const imagenesProcesadas = imagenesTemporales.map(img => ({
           id: img.imagen_id,
-          url: `${config.backendUrl}${img.imagen_url}`,
+          url: img.imagen_url, // Usar directamente la ruta relativa
         }));
-
+    
         setImagenes(imagenesProcesadas);
-
+    
         console.log('Estado actualizado con imágenes:', imagenesProcesadas);
       } catch (error) {
         console.error('Error al cargar imágenes temporales:', error);
@@ -78,7 +77,7 @@ const CrearProducto = () => {
 
   const handleMoverImagen = async (fromIndex, toIndex) => {
     const token = sessionStorage.getItem('token');
-
+  
     try {
       // Actualizar el orden en el backend
       await moverImagenTemporal(
@@ -89,10 +88,13 @@ const CrearProducto = () => {
         },
         token
       );
-
-      // Recargar las imágenes desde el backend
-      const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
-      setImagenes(imagenesTemporales.map(img => ({ id: img.imagen_id, url: `${config.backendUrl}${img.imagen_url}` })));
+  
+      // Actualizar el estado local directamente
+      const newImages = [...imagenes];
+      const [movedImage] = newImages.splice(fromIndex, 1); // Remover la imagen del índice actual
+      newImages.splice(toIndex, 0, movedImage); // Insertar la imagen en el nuevo índice
+  
+      setImagenes(newImages); // Actualizar el estado para forzar la re-renderización
     } catch (error) {
       console.error('Error al mover imagen:', error);
       alert('Error al mover la imagen.');
@@ -105,28 +107,28 @@ const CrearProducto = () => {
       alert('Solo se permiten hasta 6 imágenes.');
       return;
     }
-
+  
     const token = sessionStorage.getItem('token');
     const newImages = [...imagenes];
-
+  
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('usuario_id', usuario_id);
       formData.append('imagen_orden', newImages.length);
-
+  
       try {
         // Subir la imagen al servidor y guardar en la tabla temporal
         const response = await guardarImagenTemporal(formData, token);
-
+  
         // Agregar la imagen al estado local
-        newImages.push({ id: response.imagen_id, url: `${config.backendUrl}${response.imagen_url}` });
+        newImages.push({ id: response.imagen_id, url: response.imagen_url }); // Usar la ruta relativa
       } catch (error) {
         console.error('Error al guardar imagen temporal:', error);
         alert('Error al subir la imagen.');
       }
     }
-
+  
     setImagenes(newImages);
   };
 
@@ -158,6 +160,7 @@ const CrearProducto = () => {
   const handleFormularioChange = (index, field, value) => {
     const newFormularios = [...formulariosVariantes];
     newFormularios[index][field] = value;
+    console.log(`Formulario actualizado:`, newFormularios); // Depuración
     setFormulariosVariantes(newFormularios);
   };
 
@@ -187,31 +190,35 @@ const CrearProducto = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const productoData = {
+      const productoData = {
       usuario_id,
       producto_nombre: nombre,
       categoria_id: categoriaId,
-      producto_descripcion: descripcion || null, // Cambiar undefined por null
-      producto_precio_venta: precioVenta ? parseFloat(precioVenta) : null, // Cambiar undefined por null
-      producto_precio_costo: precioCosto ? parseFloat(precioCosto) : null, // Cambiar undefined por null
-      producto_precio_oferta: precioOferta ? parseFloat(precioOferta) : null, // Cambiar undefined por null
-      producto_stock: usarAtributos ? null : stockGeneral ? parseInt(stockGeneral, 10) : null, // Cambiar undefined por null
-      producto_sku: skuGeneral || null, // Cambiar undefined por null
+      producto_descripcion: descripcion || null,
+      producto_precio_venta: precioVenta ? parseFloat(precioVenta) : null,
+      producto_precio_costo: precioCosto ? parseFloat(precioCosto) : null,
+      producto_precio_oferta: precioOferta ? parseFloat(precioOferta) : null,
+      producto_stock: usarAtributos ? null : stockGeneral ? parseInt(stockGeneral, 10) : null,
+      producto_sku: skuGeneral || null,
       imagenes: imagenes.map((imagen, index) => ({
         id: imagen.id,
         orden: index,
       })),
       atributos: usarAtributos ? atributosConfigurados.atributos : [],
       variantes: usarAtributos
-        ? formulariosVariantes.map(variante => ({
-          precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
-          precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
-          precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
-          stock: variante.stock ? parseInt(variante.stock, 10) : null,
-          sku: variante.sku || null,
-          imagen_id: variante.imagenId || null,
-          valores: atributosConfigurados.atributos.map(attr => variante[attr.atributo_nombre] || null),
-        }))
+        ? formulariosVariantes.map(variante => {
+            console.log('Variante imagen_url:', variante.imagen_url); // Depuración
+      
+            return {
+              precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
+              precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
+              precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
+              stock: variante.stock ? parseInt(variante.stock, 10) : null,
+              sku: variante.sku || null,
+              imagen_url: variante.imagen_url || null, // Usar directamente la ruta relativa
+              valores: atributosConfigurados.atributos.map(attr => variante[attr.atributo_nombre] || null),
+            };
+          })
         : [],
     };
 
@@ -459,13 +466,13 @@ const CrearProducto = () => {
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Imagen:</label>
                   <select
-                    value={formulario.imagenId || ''}
-                    onChange={e => handleFormularioChange(index, 'imagenId', e.target.value)}
+                    value={formulario.imagen_url || ''}
+                    onChange={e => handleFormularioChange(index, 'imagen_url', e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   >
                     <option value="">Seleccionar Imagen</option>
                     {imagenes.map((imagen) => (
-                      <option key={imagen.id} value={imagen.id}>
+                      <option key={imagen.id} value={imagen.url}>
                         Imagen {imagen.id}
                       </option>
                     ))}

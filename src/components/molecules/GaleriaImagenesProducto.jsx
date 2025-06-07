@@ -1,13 +1,17 @@
 import React from 'react';
+import config from '../../config/config';
 
 const GaleriaImagenesProducto = ({ imagenes, onMoverImagen, onEliminarImagen, onImagenChange }) => {
-    console.log('Imágenes recibidas en GaleriaImagenesProducto:', imagenes);
   return (
     <div className="flex space-x-4">
       {/* Mostrar las imágenes actuales */}
       {imagenes.map((imagen, index) => (
         <div key={imagen.id} className="relative w-32 h-32 border-2 border-gray-400 rounded-md overflow-hidden">
-          <img src={imagen.url} alt={`Imagen ${index + 1}`} className="w-full h-full object-cover" />
+          <img
+            src={`${config.backendUrl}${imagen.url}`} // Concatenar la URL base con la ruta relativa
+            alt={`Imagen ${index + 1}`}
+            className="w-full h-full object-cover"
+          />
           <button
             type="button"
             onClick={() => onEliminarImagen(index)}
@@ -36,7 +40,6 @@ const GaleriaImagenesProducto = ({ imagenes, onMoverImagen, onEliminarImagen, on
         </div>
       ))}
 
-      {/* Mostrar un recuadro vacío para agregar imágenes si no se ha alcanzado el límite */}
       {imagenes.length < 6 && (
         <div className="relative w-32 h-32 border-2 border-dashed border-gray-400 rounded-md flex items-center justify-center">
           <label htmlFor="imagen-upload" className="cursor-pointer flex flex-col items-center justify-center">
