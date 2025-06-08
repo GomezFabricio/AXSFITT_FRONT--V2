@@ -13,7 +13,8 @@ import PerfilesPage from './pages/admin/perfiles/PerfilesPage';
 import CrearPerfilPage from './pages/admin/perfiles/CrearPerfilPage';
 import EditarPerfilPage from './pages/admin/perfiles/EditarPerfilPage';
 import CategoriasPage from './pages/product/CategoriasPage';
-import CrearProducto from './pages/product/productos/CrearProducto'; // Importa el componente CrearProducto
+import CrearProducto from './pages/product/productos/CrearProducto';
+import VerProductos from './pages/product/productos/VerProductos';
 
 // Mapea las rutas de permisos a componentes
 const permisoRutaToPage = {
@@ -24,6 +25,7 @@ const permisoRutaToPage = {
   '/admin/perfiles/agregar': <CrearPerfilPage />,
   '/productos/categorias': <CategoriasPage />, // Añadir ruta para CategoriasPage
   '/productos/agregar': <CrearProducto />, // Añadir ruta para CrearProducto
+  '/productos': <VerProductos />, // Añadir ruta para VerProductos
   // Las rutas con parámetros dinámicos no se incluyen aquí
 };
 
