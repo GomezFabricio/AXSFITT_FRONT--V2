@@ -97,3 +97,32 @@ export const obtenerProductos = async (token) => {
     throw error.response?.data || new Error('Error al obtener productos');
   }
 };
+
+export const eliminarProducto = async (producto_id, token) => {
+  try {
+    const response = await axios.delete(`${config.backendUrl}/api/productos/${producto_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al eliminar producto');
+  }
+};
+
+export const cambiarVisibilidadProducto = async (producto_id, visible, token) => {
+  try {
+    const response = await axios.put(`${config.backendUrl}/api/productos/cambiar-visibilidad`, 
+      { producto_id, visible }, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al cambiar visibilidad del producto');
+  }
+};
