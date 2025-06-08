@@ -84,3 +84,16 @@ export const cancelarProcesoAltaProducto = async (data, token) => {
     throw error.response?.data || new Error('Error al cancelar el proceso de alta del producto');
   }
 };
+
+export const obtenerProductos = async (token) => {
+  try {
+    const response = await axios.get(`${config.backendUrl}/api/productos`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al obtener productos');
+  }
+};

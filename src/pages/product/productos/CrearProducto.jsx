@@ -6,7 +6,6 @@ import ModalConfigurarAtributos from '../../../components/organisms/Modals/Modal
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
 import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
-import config from '../../../config/config';
 
 const tienePermiso = (permisoDescripcion) => {
   const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -44,8 +43,23 @@ const CrearProducto = () => {
       try {
         const token = sessionStorage.getItem('token');
         const categoriasData = await getCategorias(token);
-        console.log('Categorías obtenidas:', categoriasData); // Verifica la respuesta
-        setCategorias(categoriasData);
+    
+        // Procesar las categorías para construir el formato jerárquico y plano
+        const procesarCategorias = (categorias, padreId = null, nivel = 0) => {
+          return categorias
+            .filter(categoria => categoria.categoria_padre_id === padreId)
+            .reduce((acumulador, categoria) => {
+              acumulador.push({
+                categoria_id: categoria.categoria_id,
+                nombreJerarquico: `${'>'.repeat(nivel)} ${categoria.categoria_nombre}`,
+              });
+              acumulador.push(...procesarCategorias(categorias, categoria.categoria_id, nivel + 1));
+              return acumulador;
+            }, []);
+        };
+    
+        const categoriasPlanas = procesarCategorias(categoriasData);
+        setCategorias(categoriasPlanas);
       } catch (error) {
         console.error('Error al cargar categorías:', error);
       }
@@ -103,8 +117,16 @@ const CrearProducto = () => {
 
   const handleImagenChange = async (e) => {
     const files = Array.from(e.target.files);
+    const validExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+  
     if (imagenes.length + files.length > 6) {
       alert('Solo se permiten hasta 6 imágenes.');
+      return;
+    }
+  
+    const invalidFiles = files.filter(file => !validExtensions.includes(file.type));
+    if (invalidFiles.length > 0) {
+      alert('Solo se permiten archivos de imagen (JPEG, PNG, JPG).');
       return;
     }
   
@@ -118,11 +140,8 @@ const CrearProducto = () => {
       formData.append('imagen_orden', newImages.length);
   
       try {
-        // Subir la imagen al servidor y guardar en la tabla temporal
         const response = await guardarImagenTemporal(formData, token);
-  
-        // Agregar la imagen al estado local
-        newImages.push({ id: response.imagen_id, url: response.imagen_url }); // Usar la ruta relativa
+        newImages.push({ id: response.imagen_id, url: response.imagen_url });
       } catch (error) {
         console.error('Error al guardar imagen temporal:', error);
         alert('Error al subir la imagen.');
@@ -269,7 +288,7 @@ const CrearProducto = () => {
             <option value="">Seleccionar Categoría</option>
             {categorias.map(categoria => (
               <option key={categoria.categoria_id} value={categoria.categoria_id}>
-                {categoria.categoria_nombre}
+                {categoria.nombreJerarquico} {/* Mostrar el formato jerárquico */}
               </option>
             ))}
           </select>
