@@ -3,6 +3,7 @@ import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto } from '
 import config from '../../../config/config';
 import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
+import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
 
 const VerProductos = () => {
   const [productos, setProductos] = useState([]); // Estado para la lista de productos
@@ -10,6 +11,9 @@ const VerProductos = () => {
   const [error, setError] = useState(null); // Estado para manejar errores
   const [modalOpen, setModalOpen] = useState(false); // Estado para controlar el modal de eliminación
   const [productoAEliminar, setProductoAEliminar] = useState(null); // Estado para el producto a eliminar
+  const [modalMensajeOpen, setModalMensajeOpen] = useState(false); // Estado para controlar el modal de mensaje
+  const [tipoMensaje, setTipoMensaje] = useState('error'); // Tipo de mensaje: 'error' o 'exito'
+  const [mensaje, setMensaje] = useState(''); // Mensaje a mostrar en el modal
 
   // Cargar productos al montar el componente
   useEffect(() => {
@@ -29,6 +33,9 @@ const VerProductos = () => {
         setProductos(productosConUrlCompleta);
       } catch (err) {
         setError('Error al cargar los productos.');
+        setTipoMensaje('error');
+        setMensaje('Error al cargar los productos.');
+        setModalMensajeOpen(true);
         console.error(err);
       } finally {
         setLoading(false);
@@ -53,9 +60,14 @@ const VerProductos = () => {
       );
       setModalOpen(false); // Cerrar el modal después de eliminar
       setProductoAEliminar(null); // Limpiar el producto a eliminar
+      setTipoMensaje('exito');
+      setMensaje('Producto eliminado exitosamente.');
+      setModalMensajeOpen(true);
     } catch (error) {
       console.error('Error al eliminar producto:', error);
-      alert('No se pudo eliminar el producto.');
+      setTipoMensaje('error');
+      setMensaje('No se pudo eliminar el producto.');
+      setModalMensajeOpen(true);
     }
   };
 
@@ -69,9 +81,14 @@ const VerProductos = () => {
           producto.producto_id === productoId ? { ...producto, visible: !visible } : producto
         )
       );
+      setTipoMensaje('exito');
+      setMensaje('Visibilidad del producto actualizada.');
+      setModalMensajeOpen(true);
     } catch (error) {
       console.error('Error al cambiar visibilidad del producto:', error);
-      alert('No se pudo cambiar la visibilidad del producto.');
+      setTipoMensaje('error');
+      setMensaje('No se pudo cambiar la visibilidad del producto.');
+      setModalMensajeOpen(true);
     }
   };
 
@@ -133,6 +150,13 @@ const VerProductos = () => {
         onClose={cerrarModalEliminar} // Usar la función para cerrar el modal
         onConfirm={handleEliminar} // Usar la función para confirmar la eliminación
         nombreEntidad={productoAEliminar?.nombre || 'producto'}
+      />
+      {/* Modal para mostrar mensajes */}
+      <ModalMensaje
+        isOpen={modalMensajeOpen}
+        onClose={() => setModalMensajeOpen(false)} // Cerrar el modal de mensaje
+        tipo={tipoMensaje} // Tipo de mensaje: 'error' o 'exito'
+        mensaje={mensaje} // Mensaje a mostrar
       />
     </div>
   );
