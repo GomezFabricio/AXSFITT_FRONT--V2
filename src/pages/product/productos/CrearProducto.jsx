@@ -6,6 +6,7 @@ import ModalConfigurarAtributos from '../../../components/organisms/Modals/Modal
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
 import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
+import config from '../../../config/config';
 
 const tienePermiso = (permisoDescripcion) => {
   const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -484,18 +485,27 @@ const CrearProducto = () => {
 
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Imagen:</label>
-                  <select
-                    value={formulario.imagen_url || ''}
-                    onChange={e => handleFormularioChange(index, 'imagen_url', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  >
-                    <option value="">Seleccionar Imagen</option>
+                  <div className="grid grid-cols-3 gap-4 mt-2">
                     {imagenes.map((imagen) => (
-                      <option key={imagen.id} value={imagen.url}>
-                        Imagen {imagen.id}
-                      </option>
+                      <div
+                        key={imagen.id}
+                        className={`cursor-pointer border rounded-md p-1 ${
+                          formulario.imagen_url === imagen.url ? 'border-blue-500' : 'border-gray-300'
+                        }`}
+                        onClick={() => handleFormularioChange(index, 'imagen_url', imagen.url)}
+                        style={{ width: '100px', height: '100px' }} // Contenedor cuadrado
+                      >
+                        <img
+                          src={`${config.backendUrl}${imagen.url}`}
+                          alt={`Imagen ${imagen.id}`}
+                          className="w-full h-full object-cover rounded-md" // Imagen ajustada al contenedor
+                        />
+                      </div>
                     ))}
-                  </select>
+                  </div>
+                  {formulario.imagen_url && (
+                    <p className="text-sm text-gray-600 mt-2">Imagen seleccionada: {formulario.imagen_url}</p>
+                  )}
                 </div>
 
                 <button
