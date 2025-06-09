@@ -126,3 +126,16 @@ export const cambiarVisibilidadProducto = async (producto_id, visible, token) =>
     throw error.response?.data || new Error('Error al cambiar visibilidad del producto');
   }
 };
+
+export const obtenerDetallesStock = async (producto_id, token) => {
+  try {
+    const response = await axios.get(`${config.backendUrl}/api/productos/detalles-stock/${producto_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al obtener detalles de stock');
+  }
+};

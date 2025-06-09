@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto } from '../../../api/productosApi';
+import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto, obtenerDetallesStock } from '../../../api/productosApi';
 import config from '../../../config/config';
 import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
 import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
+import DetallesStock from '../../../components/molecules/DetallesStock'; // Importar el componente de detalle
 
 const VerProductos = () => {
   const [productos, setProductos] = useState([]); // Estado para la lista de productos
@@ -14,6 +15,7 @@ const VerProductos = () => {
   const [modalMensajeOpen, setModalMensajeOpen] = useState(false); // Estado para controlar el modal de mensaje
   const [tipoMensaje, setTipoMensaje] = useState('error'); // Tipo de mensaje: 'error' o 'exito'
   const [mensaje, setMensaje] = useState(''); // Mensaje a mostrar en el modal
+  const [detallesStock, setDetallesStock] = useState(null); // Estado para los detalles de stock
 
   // Cargar productos al montar el componente
   useEffect(() => {
@@ -104,16 +106,38 @@ const VerProductos = () => {
     setProductoAEliminar(null); // Limpiar el producto a eliminar
   };
 
-  // Handler para editar un producto
-  const handleEditar = (productoId) => {
-    console.log(`Editar producto con ID: ${productoId}`);
-    // Implementar lógica de edición
+  // Handler para ver el stock de un producto
+  const handleVerStock = async (productoId) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      const detalles = await obtenerDetallesStock(productoId, token);
+
+      // Concatenar backendUrl con las URLs de las imágenes
+      const productoConUrlCompleta = {
+        ...detalles.producto,
+        imagen_url: `${config.backendUrl}${detalles.producto.imagen_url}`,
+      };
+
+      const variantesConUrlCompleta = detalles.variantes.map((variante) => ({
+        ...variante,
+        imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
+      }));
+
+      setDetallesStock({
+        producto: productoConUrlCompleta,
+        variantes: variantesConUrlCompleta,
+      });
+    } catch (error) {
+      console.error('Error al obtener detalles de stock:', error);
+      setTipoMensaje('error');
+      setMensaje('No se pudo obtener los detalles de stock.');
+      setModalMensajeOpen(true);
+    }
   };
 
-  // Handler para ver el stock de un producto
-  const handleVerStock = (productoId) => {
-    console.log(`Ver stock del producto con ID: ${productoId}`);
-    // Implementar lógica para ver detalle de stock
+  // Handler para cerrar los detalles de stock
+  const cerrarDetallesStock = () => {
+    setDetallesStock(null);
   };
 
   if (loading) {
@@ -134,30 +158,30 @@ const VerProductos = () => {
             nombre={producto.nombre}
             categoria={producto.categoria}
             marca={producto.marca || null}
-            stockTotal={producto.stock_total} // stock_total ahora es un número
+            stockTotal={producto.stock_total}
             imagenUrl={producto.imagen_url}
-            visible={producto.visible} // visible ahora tiene un valor por defecto
-            onEditar={() => handleEditar(producto.producto_id)}
-            onEliminar={() => abrirModalEliminar(producto)} // Abrir el modal al intentar eliminar
+            visible={producto.visible}
+            onEditar={() => console.log(`Editar producto con ID: ${producto.producto_id}`)}
+            onEliminar={() => abrirModalEliminar(producto)}
             onToggleVisible={() => handleToggleVisible(producto.producto_id, producto.visible)}
             onVerStock={() => handleVerStock(producto.producto_id)}
           />
         ))}
       </div>
-      {/* Modal para confirmar eliminación */}
       <ModalEliminar
         isOpen={modalOpen}
-        onClose={cerrarModalEliminar} // Usar la función para cerrar el modal
-        onConfirm={handleEliminar} // Usar la función para confirmar la eliminación
+        onClose={cerrarModalEliminar}
+        onConfirm={handleEliminar}
         nombreEntidad={productoAEliminar?.nombre || 'producto'}
       />
-      {/* Modal para mostrar mensajes */}
       <ModalMensaje
         isOpen={modalMensajeOpen}
-        onClose={() => setModalMensajeOpen(false)} // Cerrar el modal de mensaje
-        tipo={tipoMensaje} // Tipo de mensaje: 'error' o 'exito'
-        mensaje={mensaje} // Mensaje a mostrar
+        onClose={() => setModalMensajeOpen(false)}
+        tipo={tipoMensaje}
+        mensaje={mensaje}
       />
+      {/* Usar el componente DetallesStock */}
+      <DetallesStock detallesStock={detallesStock} onClose={cerrarDetallesStock} />
     </div>
   );
 };
