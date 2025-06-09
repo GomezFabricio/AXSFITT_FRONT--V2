@@ -31,6 +31,7 @@ const CrearProducto = () => {
   const [categorias, setCategorias] = useState([]);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false);
   const [mostrarFormularioAtributos, setMostrarFormularioAtributos] = useState(false);
+  const [errores, setErrores] = useState({});
   const [formulariosVariantes, setFormulariosVariantes] = useState([{}]); // Inicializamos con un formulario vacío
   const navigate = useNavigate();
 
@@ -44,7 +45,7 @@ const CrearProducto = () => {
       try {
         const token = sessionStorage.getItem('token');
         const categoriasData = await getCategorias(token);
-    
+
         // Procesar las categorías para construir el formato jerárquico y plano
         const procesarCategorias = (categorias, padreId = null, nivel = 0) => {
           return categorias
@@ -58,7 +59,7 @@ const CrearProducto = () => {
               return acumulador;
             }, []);
         };
-    
+
         const categoriasPlanas = procesarCategorias(categoriasData);
         setCategorias(categoriasPlanas);
       } catch (error) {
@@ -70,16 +71,16 @@ const CrearProducto = () => {
       try {
         const token = sessionStorage.getItem('token');
         const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
-    
+
         console.log('Imágenes cargadas desde el backend:', imagenesTemporales);
-    
+
         const imagenesProcesadas = imagenesTemporales.map(img => ({
           id: img.imagen_id,
           url: img.imagen_url, // Usar directamente la ruta relativa
         }));
-    
+
         setImagenes(imagenesProcesadas);
-    
+
         console.log('Estado actualizado con imágenes:', imagenesProcesadas);
       } catch (error) {
         console.error('Error al cargar imágenes temporales:', error);
@@ -92,7 +93,7 @@ const CrearProducto = () => {
 
   const handleMoverImagen = async (fromIndex, toIndex) => {
     const token = sessionStorage.getItem('token');
-  
+
     try {
       // Actualizar el orden en el backend
       await moverImagenTemporal(
@@ -103,12 +104,12 @@ const CrearProducto = () => {
         },
         token
       );
-  
+
       // Actualizar el estado local directamente
       const newImages = [...imagenes];
       const [movedImage] = newImages.splice(fromIndex, 1); // Remover la imagen del índice actual
       newImages.splice(toIndex, 0, movedImage); // Insertar la imagen en el nuevo índice
-  
+
       setImagenes(newImages); // Actualizar el estado para forzar la re-renderización
     } catch (error) {
       console.error('Error al mover imagen:', error);
@@ -119,27 +120,27 @@ const CrearProducto = () => {
   const handleImagenChange = async (e) => {
     const files = Array.from(e.target.files);
     const validExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
-  
+
     if (imagenes.length + files.length > 6) {
       alert('Solo se permiten hasta 6 imágenes.');
       return;
     }
-  
+
     const invalidFiles = files.filter(file => !validExtensions.includes(file.type));
     if (invalidFiles.length > 0) {
       alert('Solo se permiten archivos de imagen (JPEG, PNG, JPG).');
       return;
     }
-  
+
     const token = sessionStorage.getItem('token');
     const newImages = [...imagenes];
-  
+
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('usuario_id', usuario_id);
       formData.append('imagen_orden', newImages.length);
-  
+
       try {
         const response = await guardarImagenTemporal(formData, token);
         newImages.push({ id: response.imagen_id, url: response.imagen_url });
@@ -148,7 +149,7 @@ const CrearProducto = () => {
         alert('Error al subir la imagen.');
       }
     }
-  
+
     setImagenes(newImages);
   };
 
@@ -202,15 +203,20 @@ const CrearProducto = () => {
   };
 
   const handleEliminarVariante = (index) => {
+    // Crear una copia del estado actual de los formularios
     const newFormularios = [...formulariosVariantes];
-    newFormularios.splice(index, 1); // Eliminar la variante en el índice especificado
-    setFormulariosVariantes(newFormularios); // Actualizar el estado
+
+    // Eliminar solo el formulario en el índice especificado
+    newFormularios.splice(index, 1);
+
+    // Actualizar el estado con los formularios restantes
+    setFormulariosVariantes(newFormularios);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-      const productoData = {
+    const productoData = {
       usuario_id,
       producto_nombre: nombre,
       categoria_id: categoriaId,
@@ -226,19 +232,15 @@ const CrearProducto = () => {
       })),
       atributos: usarAtributos ? atributosConfigurados.atributos : [],
       variantes: usarAtributos
-        ? formulariosVariantes.map(variante => {
-            console.log('Variante imagen_url:', variante.imagen_url); // Depuración
-      
-            return {
-              precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
-              precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
-              precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
-              stock: variante.stock ? parseInt(variante.stock, 10) : null,
-              sku: variante.sku || null,
-              imagen_url: variante.imagen_url || null, // Usar directamente la ruta relativa
-              valores: atributosConfigurados.atributos.map(attr => variante[attr.atributo_nombre] || null),
-            };
-          })
+        ? formulariosVariantes.map(variante => ({
+          precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
+          precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
+          precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
+          stock: variante.stock ? parseInt(variante.stock, 10) : null,
+          sku: variante.sku || null,
+          imagen_url: variante.imagen_url || null,
+          valores: atributosConfigurados.atributos.map(attr => variante[attr.atributo_nombre] || null),
+        }))
         : [],
     };
 
@@ -253,8 +255,12 @@ const CrearProducto = () => {
       navigate('/productos');
     } catch (error) {
       if (error instanceof z.ZodError) {
-        // Mostrar mensajes de error de validación
-        alert(error.errors.map(err => err.message).join('\n'));
+        // Mapear errores al estado
+        const erroresMapeados = error.errors.reduce((acc, err) => {
+          acc[err.path[0]] = err.message;
+          return acc;
+        }, {});
+        setErrores(erroresMapeados);
       } else {
         console.error('Error al crear producto:', error);
         alert('Error al crear producto.');
@@ -273,9 +279,13 @@ const CrearProducto = () => {
             type="text"
             value={nombre}
             onChange={e => setNombre(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_nombre ? 'border-red-500' : ''
+              }`}
             required
           />
+          {errores.producto_nombre && (
+            <p className="text-sm text-red-500 mt-1">{errores.producto_nombre}</p>
+          )}
         </div>
 
         <div>
@@ -283,7 +293,8 @@ const CrearProducto = () => {
           <select
             value={categoriaId}
             onChange={e => setCategoriaId(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.categoria_id ? 'border-red-500' : ''
+              }`}
             required
           >
             <option value="">Seleccionar Categoría</option>
@@ -293,6 +304,9 @@ const CrearProducto = () => {
               </option>
             ))}
           </select>
+          {errores.categoria_id && (
+            <p className="text-sm text-red-500 mt-1">{errores.categoria_id}</p>
+          )}
         </div>
 
         <div>
@@ -300,9 +314,13 @@ const CrearProducto = () => {
           <textarea
             value={descripcion}
             onChange={e => setDescripcion(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_descripcion ? 'border-red-500' : ''
+              }`}
             rows="4"
           />
+          {errores.producto_descripcion && (
+            <p className="text-sm text-red-500 mt-1">{errores.producto_descripcion}</p>
+          )}
         </div>
 
         {/* Subida de imágenes */}
@@ -324,10 +342,13 @@ const CrearProducto = () => {
                 type="number"
                 value={precioCosto}
                 onChange={e => setPrecioCosto(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_precio_costo ? 'border-red-500' : ''
+                  }`}
               />
+              {errores.producto_precio_costo && (
+                <p className="text-sm text-red-500 mt-1">{errores.producto_precio_costo}</p>
+              )}
             </div>
-
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Precio de Venta:</label>
@@ -335,11 +356,13 @@ const CrearProducto = () => {
                 type="number"
                 value={precioVenta}
                 onChange={e => setPrecioVenta(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_precio_venta ? 'border-red-500' : ''
+                  }`}
               />
+              {errores.producto_precio_venta && (
+                <p className="text-sm text-red-500 mt-1">{errores.producto_precio_venta}</p>
+              )}
             </div>
-
-
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Precio de Oferta (Opcional):</label>
@@ -347,12 +370,13 @@ const CrearProducto = () => {
                 type="number"
                 value={precioOferta}
                 onChange={e => setPrecioOferta(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_precio_oferta ? 'border-red-500' : ''
+                  }`}
               />
+              {errores.producto_precio_oferta && (
+                <p className="text-sm text-red-500 mt-1">{errores.producto_precio_oferta}</p>
+              )}
             </div>
-
-
-
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Stock General:</label>
@@ -360,8 +384,12 @@ const CrearProducto = () => {
                 type="number"
                 value={stockGeneral}
                 onChange={e => setStockGeneral(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_stock ? 'border-red-500' : ''
+                  }`}
               />
+              {errores.producto_stock && (
+                <p className="text-sm text-red-500 mt-1">{errores.producto_stock}</p>
+              )}
             </div>
 
             <div>
@@ -370,8 +398,12 @@ const CrearProducto = () => {
                 type="text"
                 value={skuGeneral}
                 onChange={e => setSkuGeneral(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores.producto_sku ? 'border-red-500' : ''
+                  }`}
               />
+              {errores.producto_sku && (
+                <p className="text-sm text-red-500 mt-1">{errores.producto_sku}</p>
+              )}
             </div>
           </>
         )}
@@ -437,8 +469,12 @@ const CrearProducto = () => {
                         type="number"
                         value={formulario.precioCosto || ''}
                         onChange={e => handleFormularioChange(index, 'precioCosto', e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores[`formulario_${index}_precioCosto`] ? 'border-red-500' : ''
+                          }`}
                       />
+                      {errores[`formulario_${index}_precioCosto`] && (
+                        <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_precioCosto`]}</p>
+                      )}
                     </div>
 
                     <div className="mb-2">
@@ -447,8 +483,12 @@ const CrearProducto = () => {
                         type="number"
                         value={formulario.precioVenta || ''}
                         onChange={e => handleFormularioChange(index, 'precioVenta', e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores[`formulario_${index}_precioVenta`] ? 'border-red-500' : ''
+                          }`}
                       />
+                      {errores[`formulario_${index}_precioVenta`] && (
+                        <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_precioVenta`]}</p>
+                      )}
                     </div>
 
                     <div className="mb-2">
@@ -457,8 +497,12 @@ const CrearProducto = () => {
                         type="number"
                         value={formulario.precioOferta || ''}
                         onChange={e => handleFormularioChange(index, 'precioOferta', e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores[`formulario_${index}_precioOferta`] ? 'border-red-500' : ''
+                          }`}
                       />
+                      {errores[`formulario_${index}_precioOferta`] && (
+                        <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_precioOferta`]}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -469,8 +513,12 @@ const CrearProducto = () => {
                     type="number"
                     value={formulario.stock || ''}
                     onChange={e => handleFormularioChange(index, 'stock', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores[`formulario_${index}_stock`] ? 'border-red-500' : ''
+                      }`}
                   />
+                  {errores[`formulario_${index}_stock`] && (
+                    <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_stock`]}</p>
+                  )}
                 </div>
 
                 <div className="mb-2">
@@ -479,8 +527,12 @@ const CrearProducto = () => {
                     type="text"
                     value={formulario.sku || ''}
                     onChange={e => handleFormularioChange(index, 'sku', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errores[`formulario_${index}_sku`] ? 'border-red-500' : ''
+                      }`}
                   />
+                  {errores[`formulario_${index}_sku`] && (
+                    <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_sku`]}</p>
+                  )}
                 </div>
 
                 <div className="mb-2">
@@ -489,9 +541,8 @@ const CrearProducto = () => {
                     {imagenes.map((imagen) => (
                       <div
                         key={imagen.id}
-                        className={`cursor-pointer border rounded-md p-1 ${
-                          formulario.imagen_url === imagen.url ? 'border-blue-500' : 'border-gray-300'
-                        }`}
+                        className={`cursor-pointer border rounded-md p-1 ${formulario.imagen_url === imagen.url ? 'border-blue-500' : 'border-gray-300'
+                          }`}
                         onClick={() => handleFormularioChange(index, 'imagen_url', imagen.url)}
                         style={{ width: '100px', height: '100px' }} // Contenedor cuadrado
                       >
@@ -510,7 +561,7 @@ const CrearProducto = () => {
 
                 <button
                   type="button"
-                  onClick={handleEliminarVariante}
+                  onClick={() => handleEliminarVariante(index)}
                   className="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   Eliminar Variante
