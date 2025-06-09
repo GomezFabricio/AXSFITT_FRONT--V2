@@ -178,6 +178,7 @@ const ModificarProducto = () => {
     try {
       productoSchema.parse(productoData);
       const token = sessionStorage.getItem('token');
+      console.log(productoData)
       await actualizarProducto(producto_id, productoData, token);
       alert('Producto actualizado exitosamente.');
       navigate('/productos');
@@ -339,7 +340,7 @@ const ModificarProducto = () => {
           <div>
             <h3 className="text-lg font-medium text-gray-900">Valores de Atributos:</h3>
             {formulariosVariantes.map((formulario, index) => (
-              <div key={index} className="mt-4 border p-4 rounded">
+              <div key={`variante-${index}`} className="mt-4 border p-4 rounded">
                 <h4 className="text-md font-semibold">Variante {index + 1}</h4>
                 {Object.keys(formulario || {}).map((atributo) => (
                   atributo !== 'precioVenta' &&
@@ -438,18 +439,17 @@ const ModificarProducto = () => {
                 <div className="mb-2">
                   <label className="block text-sm font-medium text-gray-700">Imagen:</label>
                   <div className="grid grid-cols-3 gap-4 mt-2">
-                    {imagenes.map((imagen) => (
+                    {imagenes.map((imagen, index) => (
                       <div
-                        key={imagen.id}
-                        className={`cursor-pointer border rounded-md p-1 ${formulario.imagen_url === imagen.url ? 'border-blue-500' : 'border-gray-300'
-                          }`}
+                        key={`${imagen.id}-${index}`} // Clave única basada en id e índice
+                        className={`cursor-pointer border rounded-md p-1 ${formulario.imagen_url === imagen.url ? 'border-blue-500' : 'border-gray-300'}`}
                         onClick={() => handleFormularioChange(index, 'imagen_url', imagen.url)}
-                        style={{ width: '100px', height: '100px' }} // Contenedor cuadrado
+                        style={{ width: '100px', height: '100px' }}
                       >
                         <img
                           src={`${config.backendUrl}${imagen.url}`}
                           alt={`Imagen ${imagen.id}`}
-                          className="w-full h-full object-cover rounded-md" // Imagen ajustada al contenedor
+                          className="w-full h-full object-cover rounded-md"
                         />
                       </div>
                     ))}
