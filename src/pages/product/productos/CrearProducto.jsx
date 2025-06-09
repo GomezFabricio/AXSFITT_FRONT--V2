@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal, eliminarImagenTemporal, cancelarProcesoAltaProducto } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
+import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
 import GaleriaImagenesProducto from '../../../components/molecules/GaleriaImagenesProducto';
 import FormularioDatosProducto from '../../../components/molecules/FormularioDatosProducto';
 import FormularioAtributos from '../../../components/molecules/FormularioAtributos';
+import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
 import config from '../../../config/config';
 
@@ -29,6 +31,8 @@ const CrearProducto = () => {
   const [usarAtributos, setUsarAtributos] = useState(false);
   const [atributosConfigurados, setAtributosConfigurados] = useState({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
   const [categorias, setCategorias] = useState([]);
+  const [modalAtributosOpen, setModalAtributosOpen] = useState(false);
+  const [mostrarFormularioAtributos, setMostrarFormularioAtributos] = useState(false);
   const [formulariosVariantes, setFormulariosVariantes] = useState([{}]);
   const [errores, setErrores] = useState({});
   const navigate = useNavigate();
@@ -82,6 +86,119 @@ const CrearProducto = () => {
     cargarImagenesTemporales();
   }, [usuario_id]);
 
+  const handleMoverImagen = async (fromIndex, toIndex) => {
+    const token = sessionStorage.getItem('token');
+
+    try {
+      await moverImagenTemporal(
+        {
+          usuario_id,
+          imagen_id: imagenes[fromIndex].id,
+          nuevo_orden: toIndex,
+        },
+        token
+      );
+
+      const newImages = [...imagenes];
+      const [movedImage] = newImages.splice(fromIndex, 1);
+      newImages.splice(toIndex, 0, movedImage);
+
+      setImagenes(newImages);
+    } catch (error) {
+      console.error('Error al mover imagen:', error);
+      alert('Error al mover la imagen.');
+    }
+  };
+
+  const handleEliminarImagen = async (index) => {
+    const token = sessionStorage.getItem('token');
+    const imagen = imagenes[index];
+  
+    try {
+      await eliminarImagenTemporal({ usuario_id, imagen_id: imagen.id }, token);
+  
+      const newImages = [...imagenes];
+      newImages.splice(index, 1);
+      setImagenes(newImages);
+  
+      alert('Imagen eliminada correctamente.');
+    } catch (error) {
+      console.error('Error al eliminar la imagen:', error);
+      alert('Error al eliminar la imagen.');
+    }
+  };
+
+  const handleImagenChange = async (e) => {
+    const files = Array.from(e.target.files);
+    const validExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+  
+    if (imagenes.length + files.length > 6) {
+      alert('Solo se permiten hasta 6 imágenes.');
+      return;
+    }
+  
+    const invalidFiles = files.filter((file) => !validExtensions.includes(file.type));
+    if (invalidFiles.length > 0) {
+      alert('Solo se permiten archivos de imagen (JPEG, PNG, JPG).');
+      return;
+    }
+  
+    const token = sessionStorage.getItem('token');
+    const newImages = [...imagenes];
+  
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('usuario_id', usuario_id);
+      formData.append('imagen_orden', newImages.length);
+  
+      try {
+        const response = await guardarImagenTemporal(formData, token);
+        newImages.push({ id: response.imagen_id, url: response.imagen_url });
+      } catch (error) {
+        console.error('Error al guardar imagen temporal:', error);
+        alert('Error al subir la imagen.');
+      }
+    }
+  
+    setImagenes(newImages);
+  };
+
+  const handleCancelarProceso = async () => {
+    const token = sessionStorage.getItem('token');
+
+    try {
+      await cancelarProcesoAltaProducto({ usuario_id }, token);
+      alert('Proceso de alta cancelado correctamente.');
+      navigate('/productos'); // Redirigir al listado de productos
+    } catch (error) {
+      console.error('Error al cancelar el proceso de alta:', error);
+      alert('Error al cancelar el proceso de alta.');
+    }
+  };
+
+  const handleAtributosSave = (data) => {
+    setAtributosConfigurados(data);
+    setMostrarFormularioAtributos(true);
+    setFormulariosVariantes([{}]); // Reiniciamos los formularios al guardar nuevos atributos
+  };
+
+  const handleFormularioChange = (index, field, value) => {
+    const newFormularios = [...formulariosVariantes];
+    newFormularios[index][field] = value;
+    setFormulariosVariantes(newFormularios);
+  };
+
+  const handleAgregarFormulario = () => {
+    setFormulariosVariantes([...formulariosVariantes, {}]);
+  };
+
+  const handleEliminarVariante = (index) => {
+    const newFormularios = [...formulariosVariantes];
+    newFormularios.splice(index, 1); // Eliminar el formulario en el índice especificado
+    setFormulariosVariantes(newFormularios); // Actualizar el estado con los formularios restantes
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -132,19 +249,6 @@ const CrearProducto = () => {
     }
   };
 
-  const handleCancelarProceso = async () => {
-    const token = sessionStorage.getItem('token');
-
-    try {
-      await cancelarProcesoAltaProducto({ usuario_id }, token);
-      alert('Proceso de alta cancelado correctamente.');
-      navigate('/productos');
-    } catch (error) {
-      console.error('Error al cancelar el proceso de alta:', error);
-      alert('Error al cancelar el proceso de alta.');
-    }
-  };
-
   return (
     <div className="container mx-auto mt-8">
       <h2 className="text-2xl font-semibold mb-4">Crear Nuevo Producto</h2>
@@ -168,26 +272,52 @@ const CrearProducto = () => {
           setSkuGeneral={setSkuGeneral}
           categorias={categorias}
           errores={errores}
+          tienePermiso={tienePermiso} // Pasar la función tienePermiso
         />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">¿Usar Atributos?</label>
+          <select
+            value={usarAtributos}
+            onChange={(e) => setUsarAtributos(e.target.value === 'true')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="false">No</option>
+            <option value="true">Sí</option>
+          </select>
+        </div>
+
+        {usarAtributos && (
+          <button
+            type="button"
+            onClick={() => setModalAtributosOpen(true)}
+            className="px-4 py-2 border border-purple-600 text-purple-600 rounded-md text-sm hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-500 mt-4"
+          >
+            Configurar Atributos
+          </button>
+        )}
+
         <GaleriaImagenesProducto
           imagenes={imagenes}
-          onMoverImagen={() => {}}
-          onEliminarImagen={() => {}}
-          onImagenChange={() => {}}
+          onMoverImagen={handleMoverImagen}
+          onEliminarImagen={handleEliminarImagen}
+          onImagenChange={handleImagenChange}
         />
-        <FormularioAtributos
-          usarAtributos={usarAtributos}
-          setUsarAtributos={setUsarAtributos}
-          atributosConfigurados={atributosConfigurados}
-          setAtributosConfigurados={setAtributosConfigurados}
-          formulariosVariantes={formulariosVariantes}
-          setFormulariosVariantes={setFormulariosVariantes}
-          handleFormularioChange={() => {}}
-          handleAgregarFormulario={() => {}}
-          handleEliminarVariante={() => {}}
-          imagenes={imagenes}
-          errores={errores}
-        />
+
+        {usarAtributos && mostrarFormularioAtributos && (
+          <FormularioAtributos
+            atributosConfigurados={atributosConfigurados}
+            formulariosVariantes={formulariosVariantes}
+            setFormulariosVariantes={setFormulariosVariantes}
+            handleFormularioChange={handleFormularioChange}
+            handleAgregarFormulario={handleAgregarFormulario}
+            handleEliminarVariante={handleEliminarVariante}
+            imagenes={imagenes}
+            errores={errores}
+            tienePermiso={tienePermiso} // Pasar la función tienePermiso
+          />
+        )}
+
         <div className="flex space-x-4">
           <button
             type="submit"
@@ -204,6 +334,12 @@ const CrearProducto = () => {
           </button>
         </div>
       </form>
+      <ModalConfigurarAtributos
+        isOpen={modalAtributosOpen}
+        onClose={() => setModalAtributosOpen(false)}
+        onSave={handleAtributosSave}
+        initialAtributos={atributosConfigurados.atributos}
+      />
     </div>
   );
 };
