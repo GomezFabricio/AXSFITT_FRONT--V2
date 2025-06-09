@@ -4,7 +4,8 @@ import config from '../../../config/config';
 import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
 import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
-import DetallesStock from '../../../components/molecules/DetallesStock'; // Importar el componente de detalle
+import DetallesStock from '../../../components/molecules/DetallesStock'; 
+import { useNavigate } from 'react-router-dom';
 
 const VerProductos = () => {
   const [productos, setProductos] = useState([]); // Estado para la lista de productos
@@ -16,6 +17,7 @@ const VerProductos = () => {
   const [tipoMensaje, setTipoMensaje] = useState('error'); // Tipo de mensaje: 'error' o 'exito'
   const [mensaje, setMensaje] = useState(''); // Mensaje a mostrar en el modal
   const [detallesStock, setDetallesStock] = useState(null); // Estado para los detalles de stock
+  const navigate = useNavigate()
 
   // Cargar productos al montar el componente
   useEffect(() => {
@@ -94,6 +96,10 @@ const VerProductos = () => {
     }
   };
 
+  const handleModificar = (productoId) => {
+    navigate(`/productos/modificar/${productoId}`); // Redirigir a la página de modificación del producto
+  };
+
   // Handler para abrir el modal de eliminación
   const abrirModalEliminar = (producto) => {
     setProductoAEliminar(producto); // Establecer el producto a eliminar
@@ -107,24 +113,24 @@ const VerProductos = () => {
   };
 
   // Handler para ver el stock de un producto
-    const handleVerStock = async (productoId) => {
+  const handleVerStock = async (productoId) => {
     try {
       const token = sessionStorage.getItem('token');
       const detalles = await obtenerDetallesStock(productoId, token);
-  
+
       // Convertir stock_total a número y concatenar backendUrl con las URLs de las imágenes
       const productoConUrlCompleta = {
         ...detalles.producto,
         imagen_url: `${config.backendUrl}${detalles.producto.imagen_url}`,
         stock_total: Number(detalles.producto.stock_total), // Convertir stock_total a número
       };
-  
+
       const variantesConUrlCompleta = detalles.variantes.map((variante) => ({
         ...variante,
         imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
         stock_total: Number(variante.stock_total), // Convertir stock_total a número
       }));
-  
+
       setDetallesStock({
         producto: productoConUrlCompleta,
         variantes: variantesConUrlCompleta,
@@ -162,7 +168,7 @@ const VerProductos = () => {
               stockTotal={producto.stock_total}
               imagenUrl={producto.imagen_url}
               visible={producto.visible}
-              onEditar={() => console.log(`Editar producto con ID: ${producto.producto_id}`)}
+              onEditar={() => handleModificar(producto.producto_id)} // Usar el handler para modificar
               onEliminar={() => abrirModalEliminar(producto)}
               onToggleVisible={() => handleToggleVisible(producto.producto_id, producto.visible)}
               onVerStock={() => handleVerStock(producto.producto_id)}

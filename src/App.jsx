@@ -15,6 +15,7 @@ import EditarPerfilPage from './pages/admin/perfiles/EditarPerfilPage';
 import CategoriasPage from './pages/product/CategoriasPage';
 import CrearProducto from './pages/product/productos/CrearProducto';
 import VerProductos from './pages/product/productos/VerProductos';
+import ModificarProducto from './pages/product/productos/ModificarProducto';
 
 // Mapea las rutas de permisos a componentes
 const permisoRutaToPage = {
@@ -86,6 +87,18 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <EditarPerfilPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Ruta para modificar producto */}
+      <Route
+        path="/productos/modificar/:producto_id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ModificarProducto />
             </Layout>
           </ProtectedRoute>
         }

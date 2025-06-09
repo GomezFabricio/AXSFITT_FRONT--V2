@@ -139,3 +139,29 @@ export const obtenerDetallesStock = async (producto_id, token) => {
     throw error.response?.data || new Error('Error al obtener detalles de stock');
   }
 };
+
+export const obtenerProductoPorId = async (producto_id, token) => {
+  try {
+    const response = await axios.get(`${config.backendUrl}/api/productos/${producto_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al obtener producto por ID');
+  }
+};
+
+export const actualizarProducto = async (producto_id, productoData, token) => {
+  try {
+    const response = await axios.put(`${config.backendUrl}/api/productos/${producto_id}`, productoData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al actualizar producto');
+  }
+};
