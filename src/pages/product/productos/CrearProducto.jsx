@@ -273,6 +273,7 @@ const CrearProducto = () => {
           categorias={categorias}
           errores={errores}
           tienePermiso={tienePermiso} // Pasar la función tienePermiso
+          usarAtributos={usarAtributos} // Pasar el estado de atributos activados
         />
 
         <div>

@@ -20,6 +20,7 @@ const FormularioDatosProducto = ({
   categorias,
   errores,
   tienePermiso, // Recibir la función tienePermiso
+  usarAtributos, // Recibir el estado de atributos activados
 }) => {
   return (
     <div>
@@ -76,84 +77,88 @@ const FormularioDatosProducto = ({
         )}
       </div>
 
-      {tienePermiso('Definir Precio Producto') && (
+      {!usarAtributos && (
         <>
+          {tienePermiso('Definir Precio Producto') && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Precio de Costo:</label>
+                <input
+                  type="number"
+                  value={precioCosto}
+                  onChange={(e) => setPrecioCosto(e.target.value)}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errores.producto_precio_costo ? 'border-red-500' : ''
+                  }`}
+                />
+                {errores.producto_precio_costo && (
+                  <p className="text-sm text-red-500 mt-1">{errores.producto_precio_costo}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Precio de Venta:</label>
+                <input
+                  type="number"
+                  value={precioVenta}
+                  onChange={(e) => setPrecioVenta(e.target.value)}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errores.producto_precio_venta ? 'border-red-500' : ''
+                  }`}
+                />
+                {errores.producto_precio_venta && (
+                  <p className="text-sm text-red-500 mt-1">{errores.producto_precio_venta}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Precio de Oferta:</label>
+                <input
+                  type="number"
+                  value={precioOferta}
+                  onChange={(e) => setPrecioOferta(e.target.value)}
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                    errores.producto_precio_oferta ? 'border-red-500' : ''
+                  }`}
+                />
+                {errores.producto_precio_oferta && (
+                  <p className="text-sm text-red-500 mt-1">{errores.producto_precio_oferta}</p>
+                )}
+              </div>
+            </>
+          )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Precio de Costo:</label>
+            <label className="block text-sm font-medium text-gray-700">Stock General:</label>
             <input
               type="number"
-              value={precioCosto}
-              onChange={(e) => setPrecioCosto(e.target.value)}
+              value={stockGeneral}
+              onChange={(e) => setStockGeneral(e.target.value)}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores.producto_precio_costo ? 'border-red-500' : ''
+                errores.producto_stock ? 'border-red-500' : ''
               }`}
             />
-            {errores.producto_precio_costo && (
-              <p className="text-sm text-red-500 mt-1">{errores.producto_precio_costo}</p>
+            {errores.producto_stock && (
+              <p className="text-sm text-red-500 mt-1">{errores.producto_stock}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Precio de Venta:</label>
+            <label className="block text-sm font-medium text-gray-700">SKU General:</label>
             <input
-              type="number"
-              value={precioVenta}
-              onChange={(e) => setPrecioVenta(e.target.value)}
+              type="text"
+              value={skuGeneral}
+              onChange={(e) => setSkuGeneral(e.target.value)}
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores.producto_precio_venta ? 'border-red-500' : ''
+                errores.producto_sku ? 'border-red-500' : ''
               }`}
             />
-            {errores.producto_precio_venta && (
-              <p className="text-sm text-red-500 mt-1">{errores.producto_precio_venta}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Precio de Oferta:</label>
-            <input
-              type="number"
-              value={precioOferta}
-              onChange={(e) => setPrecioOferta(e.target.value)}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores.producto_precio_oferta ? 'border-red-500' : ''
-              }`}
-            />
-            {errores.producto_precio_oferta && (
-              <p className="text-sm text-red-500 mt-1">{errores.producto_precio_oferta}</p>
+            {errores.producto_sku && (
+              <p className="text-sm text-red-500 mt-1">{errores.producto_sku}</p>
             )}
           </div>
         </>
       )}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Stock General:</label>
-        <input
-          type="number"
-          value={stockGeneral}
-          onChange={(e) => setStockGeneral(e.target.value)}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores.producto_stock ? 'border-red-500' : ''
-          }`}
-        />
-        {errores.producto_stock && (
-          <p className="text-sm text-red-500 mt-1">{errores.producto_stock}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">SKU General:</label>
-        <input
-          type="text"
-          value={skuGeneral}
-          onChange={(e) => setSkuGeneral(e.target.value)}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores.producto_sku ? 'border-red-500' : ''
-          }`}
-        />
-        {errores.producto_sku && (
-          <p className="text-sm text-red-500 mt-1">{errores.producto_sku}</p>
-        )}
-      </div>
     </div>
   );
 };
