@@ -107,22 +107,24 @@ const VerProductos = () => {
   };
 
   // Handler para ver el stock de un producto
-  const handleVerStock = async (productoId) => {
+    const handleVerStock = async (productoId) => {
     try {
       const token = sessionStorage.getItem('token');
       const detalles = await obtenerDetallesStock(productoId, token);
-
-      // Concatenar backendUrl con las URLs de las imágenes
+  
+      // Convertir stock_total a número y concatenar backendUrl con las URLs de las imágenes
       const productoConUrlCompleta = {
         ...detalles.producto,
         imagen_url: `${config.backendUrl}${detalles.producto.imagen_url}`,
+        stock_total: Number(detalles.producto.stock_total), // Convertir stock_total a número
       };
-
+  
       const variantesConUrlCompleta = detalles.variantes.map((variante) => ({
         ...variante,
         imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
+        stock_total: Number(variante.stock_total), // Convertir stock_total a número
       }));
-
+  
       setDetallesStock({
         producto: productoConUrlCompleta,
         variantes: variantesConUrlCompleta,
@@ -134,7 +136,6 @@ const VerProductos = () => {
       setModalMensajeOpen(true);
     }
   };
-
   // Handler para cerrar los detalles de stock
   const cerrarDetallesStock = () => {
     setDetallesStock(null);
@@ -153,19 +154,24 @@ const VerProductos = () => {
       <h2 className="text-2xl font-semibold mb-4">Lista de Productos</h2>
       <div className="space-y-4">
         {productos.map((producto) => (
-          <TarjetaProducto
-            key={producto.producto_id}
-            nombre={producto.nombre}
-            categoria={producto.categoria}
-            marca={producto.marca || null}
-            stockTotal={producto.stock_total}
-            imagenUrl={producto.imagen_url}
-            visible={producto.visible}
-            onEditar={() => console.log(`Editar producto con ID: ${producto.producto_id}`)}
-            onEliminar={() => abrirModalEliminar(producto)}
-            onToggleVisible={() => handleToggleVisible(producto.producto_id, producto.visible)}
-            onVerStock={() => handleVerStock(producto.producto_id)}
-          />
+          <div key={producto.producto_id}>
+            <TarjetaProducto
+              nombre={producto.nombre}
+              categoria={producto.categoria}
+              marca={producto.marca || null}
+              stockTotal={producto.stock_total}
+              imagenUrl={producto.imagen_url}
+              visible={producto.visible}
+              onEditar={() => console.log(`Editar producto con ID: ${producto.producto_id}`)}
+              onEliminar={() => abrirModalEliminar(producto)}
+              onToggleVisible={() => handleToggleVisible(producto.producto_id, producto.visible)}
+              onVerStock={() => handleVerStock(producto.producto_id)}
+            />
+            {/* Renderizar DetallesStock justo debajo del producto seleccionado */}
+            {detallesStock?.producto?.producto_id === producto.producto_id && (
+              <DetallesStock detallesStock={detallesStock} onClose={cerrarDetallesStock} />
+            )}
+          </div>
         ))}
       </div>
       <ModalEliminar
@@ -180,8 +186,6 @@ const VerProductos = () => {
         tipo={tipoMensaje}
         mensaje={mensaje}
       />
-      {/* Usar el componente DetallesStock */}
-      <DetallesStock detallesStock={detallesStock} onClose={cerrarDetallesStock} />
     </div>
   );
 };
