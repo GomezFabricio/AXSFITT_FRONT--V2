@@ -165,19 +165,19 @@ const ModificarProducto = () => {
   const handleMoverImagen = async (indexActual, indexNuevo) => {
     const token = sessionStorage.getItem('token');
     const imagenActual = imagenes[indexActual];
-  
+
     if (!imagenActual || imagenActual.id === undefined) {
       console.error('La imagen actual no tiene un ID válido:', imagenActual);
       alert('Error al mover la imagen. La imagen no tiene un ID válido.');
       return;
     }
-  
+
     console.log('Datos enviados a la API moverImagenProducto:', {
       producto_id,
       imagen_id: imagenActual.id,
       nuevo_orden: indexNuevo,
     });
-  
+
     try {
       await moverImagenProducto(
         {
@@ -187,12 +187,12 @@ const ModificarProducto = () => {
         },
         token
       );
-  
+
       const nuevasImagenes = [...imagenes];
       nuevasImagenes.splice(indexActual, 1);
       nuevasImagenes.splice(indexNuevo, 0, imagenActual);
       setImagenes(nuevasImagenes);
-  
+
       alert('Orden de la imagen actualizado correctamente.');
     } catch (error) {
       console.error('Error al mover la imagen:', error.response?.data || error);
@@ -203,6 +203,17 @@ const ModificarProducto = () => {
   const handleEliminarImagen = async (index) => {
     const token = sessionStorage.getItem('token');
     const imagen = imagenes[index];
+  
+    if (!imagen || !imagen.id) {
+      console.error('La imagen no tiene un ID válido:', imagen);
+      alert('Error al eliminar la imagen. La imagen no tiene un ID válido.');
+      return;
+    }
+  
+    console.log('Datos enviados a la API eliminarImagenProducto:', {
+      producto_id,
+      imagen_id: imagen.id,
+    });
   
     try {
       // Llamar a la API para eliminar la imagen
@@ -221,17 +232,17 @@ const ModificarProducto = () => {
   
       alert('Imagen eliminada correctamente.');
     } catch (error) {
-      console.error('Error al eliminar la imagen:', error);
+      console.error('Error al eliminar la imagen:', error.response?.data || error);
       alert('Error al eliminar la imagen.');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Filtrar imágenes con URLs válidas
     const imagenesValidas = imagenes.filter((imagen) => imagen.url && imagen.url.trim() !== '');
-  
+
     const productoData = {
       producto_nombre: nombre,
       categoria_id: categoriaId,
@@ -248,41 +259,44 @@ const ModificarProducto = () => {
       })),
       variantes: usarAtributos
         ? formulariosVariantes.map((variante) => ({
-            precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
-            precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
-            precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
-            stock: variante.stock ? parseInt(variante.stock, 10) : null,
-            sku: variante.sku || null,
-            imagen_url: variante.imagen_url || null,
-            valores: atributosConfigurados.atributos.map((attr) => ({
-              atributo_nombre: attr.atributo_nombre,
-              valor_nombre: variante[attr.atributo_nombre] || null,
-            })),
-          }))
+          precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
+          precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
+          precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
+          stock: variante.stock ? parseInt(variante.stock, 10) : null,
+          sku: variante.sku || null,
+          imagen_url: variante.imagen_url || null,
+          valores: atributosConfigurados.atributos.map((attr) => ({
+            atributo_nombre: attr.atributo_nombre,
+            valor_nombre: variante[attr.atributo_nombre] || null,
+          })),
+        }))
         : [],
     };
-  
-    // Agregar un console.log para verificar los datos enviados
+
     console.log('Datos enviados a la API de modificar producto:', productoData);
-  
+
     try {
+      // Validación con Zod
       productoSchema.parse(productoData);
-  
+
       const token = sessionStorage.getItem('token');
       await actualizarProducto(producto_id, productoData, token);
-  
+
       alert('Producto actualizado exitosamente.');
-      navigate('/productos');
+      navigate('/productos'); // Redirigir a la lista de productos
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const erroresMapeados = error.errors.reduce((acc, err) => {
-          acc[err.path[0]] = err.message;
+        // Errores de validación Zod
+        const erroresFormateados = error.errors.reduce((acc, curr) => {
+          acc[curr.path[0]] = curr.message;
           return acc;
         }, {});
-        setErrores(erroresMapeados);
+        setErrores(erroresFormateados);
+        console.error('Errores de validación:', erroresFormateados);
       } else {
-        console.error('Error al actualizar producto:', error);
-        alert('Error al actualizar producto.');
+        // Errores de la API u otros
+        console.error('Error al actualizar producto:', error.response?.data || error);
+        alert('Error al actualizar el producto.');
       }
     }
   };
@@ -343,7 +357,7 @@ const ModificarProducto = () => {
           imagenes={imagenes}
           onMoverImagen={handleMoverImagen}
           onEliminarImagen={handleEliminarImagen}
-          onImagenChange={() => { }} 
+          onImagenChange={() => { }}
         />
 
         {usarAtributos && (

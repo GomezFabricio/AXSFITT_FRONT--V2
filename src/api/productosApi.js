@@ -180,13 +180,12 @@ export const moverImagenProducto = async (data, token) => {
   }
 };
 
-export const eliminarImagenProducto = async (data, token) => {
+export const eliminarImagenProducto = async ({ producto_id, imagen_id }, token) => {
   try {
-    const response = await axios.delete(`${config.backendUrl}/api/productos/imagenes`, {
+    const response = await axios.delete(`${config.backendUrl}/api/productos/${producto_id}/imagenes/${imagen_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      data,
     });
     return response.data;
   } catch (error) {
