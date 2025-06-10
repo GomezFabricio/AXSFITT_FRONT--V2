@@ -165,3 +165,32 @@ export const actualizarProducto = async (producto_id, productoData, token) => {
     throw error.response?.data || new Error('Error al actualizar producto');
   }
 };
+
+export const moverImagenProducto = async (data, token) => {
+  try {
+    const response = await axios.put(`${config.backendUrl}/api/productos/imagenes/mover`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error en la API moverImagenProducto:', error);
+    throw error.response?.data || new Error('Error al mover la imagen del producto');
+  }
+};
+
+export const eliminarImagenProducto = async (data, token) => {
+  try {
+    const response = await axios.delete(`${config.backendUrl}/api/productos/imagenes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      data,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error en la API eliminarImagenProducto:', error);
+    throw error.response?.data || new Error('Error al eliminar la imagen del producto');
+  }
+};

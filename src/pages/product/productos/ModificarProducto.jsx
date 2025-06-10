@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   obtenerProductoPorId,
   actualizarProducto,
+  moverImagenProducto,
+  eliminarImagenProducto,
 } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
@@ -159,6 +161,64 @@ const ModificarProducto = () => {
     setFormulariosVariantes(newFormularios);
   };
 
+  const handleMoverImagen = async (indexActual, indexNuevo) => {
+    const token = sessionStorage.getItem('token');
+    const imagenActual = imagenes[indexActual];
+  
+    console.log('Datos enviados a la API moverImagenProducto:', {
+      producto_id,
+      imagen_id: imagenActual?.id,
+      nuevo_orden: indexNuevo,
+    });
+  
+    try {
+      await moverImagenProducto(
+        {
+          producto_id,
+          imagen_id: imagenActual.id,
+          nuevo_orden: indexNuevo,
+        },
+        token
+      );
+  
+      const nuevasImagenes = [...imagenes];
+      nuevasImagenes.splice(indexActual, 1);
+      nuevasImagenes.splice(indexNuevo, 0, imagenActual);
+      setImagenes(nuevasImagenes);
+  
+      alert('Orden de la imagen actualizado correctamente.');
+    } catch (error) {
+      console.error('Error al mover la imagen:', error.response?.data || error);
+      alert('Error al mover la imagen.');
+    }
+  };
+
+  const handleEliminarImagen = async (index) => {
+    const token = sessionStorage.getItem('token');
+    const imagen = imagenes[index];
+  
+    try {
+      // Llamar a la API para eliminar la imagen
+      await eliminarImagenProducto(
+        {
+          producto_id,
+          imagen_id: imagen.id,
+        },
+        token
+      );
+  
+      // Actualizar el estado local de las imágenes
+      const nuevasImagenes = [...imagenes];
+      nuevasImagenes.splice(index, 1);
+      setImagenes(nuevasImagenes);
+  
+      alert('Imagen eliminada correctamente.');
+    } catch (error) {
+      console.error('Error al eliminar la imagen:', error);
+      alert('Error al eliminar la imagen.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -219,7 +279,7 @@ const ModificarProducto = () => {
       }
     }
   };
-  
+
   if (cargando) {
     return <p>Cargando datos del producto...</p>;
   }
@@ -274,9 +334,9 @@ const ModificarProducto = () => {
 
         <GaleriaImagenesProducto
           imagenes={imagenes}
-          onMoverImagen={() => { }}
-          onEliminarImagen={() => { }}
-          onImagenChange={() => { }}
+          onMoverImagen={handleMoverImagen}
+          onEliminarImagen={handleEliminarImagen}
+          onImagenChange={() => { }} 
         />
 
         {usarAtributos && (
