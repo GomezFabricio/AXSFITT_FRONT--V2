@@ -86,26 +86,40 @@ const CrearProducto = () => {
     cargarImagenesTemporales();
   }, [usuario_id]);
 
-  const handleMoverImagen = async (fromIndex, toIndex) => {
+  const handleMoverImagen = async (indexActual, indexNuevo) => {
     const token = sessionStorage.getItem('token');
-
+    const imagenActual = imagenes[indexActual];
+  
+    if (!imagenActual || imagenActual.id === undefined) {
+      console.error('La imagen actual no tiene un ID válido:', imagenActual);
+      alert('Error al mover la imagen. La imagen no tiene un ID válido.');
+      return;
+    }
+  
+    console.log('Datos enviados a la API moverImagenProducto:', {
+      producto_id,
+      imagen_id: imagenActual.id,
+      nuevo_orden: indexNuevo,
+    });
+  
     try {
-      await moverImagenTemporal(
+      await moverImagenProducto(
         {
-          usuario_id,
-          imagen_id: imagenes[fromIndex].id,
-          nuevo_orden: toIndex,
+          producto_id,
+          imagen_id: imagenActual.id,
+          nuevo_orden: indexNuevo,
         },
         token
       );
-
-      const newImages = [...imagenes];
-      const [movedImage] = newImages.splice(fromIndex, 1);
-      newImages.splice(toIndex, 0, movedImage);
-
-      setImagenes(newImages);
+  
+      const nuevasImagenes = [...imagenes];
+      nuevasImagenes.splice(indexActual, 1);
+      nuevasImagenes.splice(indexNuevo, 0, imagenActual);
+      setImagenes(nuevasImagenes);
+  
+      alert('Orden de la imagen actualizado correctamente.');
     } catch (error) {
-      console.error('Error al mover imagen:', error);
+      console.error('Error al mover la imagen:', error.response?.data || error);
       alert('Error al mover la imagen.');
     }
   };

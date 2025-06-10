@@ -67,10 +67,11 @@ const ModificarProducto = () => {
         setSkuGeneral(producto.producto.producto_sku || '');
 
         // Cargar imágenes
-        const imagenesProcesadas = producto.producto.imagenes.map((url, index) => ({
-          id: index, // Usar el índice como ID temporal
-          url, // La URL ya viene procesada desde el backend
+        const imagenesProcesadas = producto.producto.imagenes.map((imagen) => ({
+          id: imagen.imagen_id, // Usar el ID real de la base de datos
+          url: imagen.imagen_url, // La URL ya viene procesada desde el backend
         }));
+        console.log('Imágenes procesadas:', imagenesProcesadas);
         setImagenes(imagenesProcesadas);
 
         // Cargar variantes
@@ -165,9 +166,15 @@ const ModificarProducto = () => {
     const token = sessionStorage.getItem('token');
     const imagenActual = imagenes[indexActual];
   
+    if (!imagenActual || imagenActual.id === undefined) {
+      console.error('La imagen actual no tiene un ID válido:', imagenActual);
+      alert('Error al mover la imagen. La imagen no tiene un ID válido.');
+      return;
+    }
+  
     console.log('Datos enviados a la API moverImagenProducto:', {
       producto_id,
-      imagen_id: imagenActual?.id,
+      imagen_id: imagenActual.id,
       nuevo_orden: indexNuevo,
     });
   
@@ -175,7 +182,7 @@ const ModificarProducto = () => {
       await moverImagenProducto(
         {
           producto_id,
-          imagen_id: imagenActual.id,
+          imagen_id: imagenActual.id, // Asegúrate de enviar el ID real de la imagen
           nuevo_orden: indexNuevo,
         },
         token
