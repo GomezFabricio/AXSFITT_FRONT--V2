@@ -1,130 +1,54 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+// Layout general
 import Layout from './components/templates/Layout/Layout';
+
+// Página pública
 import LoginPage from './pages/auth/LoginPage';
+
+// Página por defecto para fallback
 import HomePage from './pages/HomePage';
+
+// Ruta protegida
 import ProtectedRoute from './pages/common/ProtectedRoute';
 
-// Importa los componentes de páginas
-import UsuariosPage from './pages/admin/usuarios/UsuariosPage';
-import CrearUsuarioPage from './pages/admin/usuarios/CrearUsuarioPage';
-import ModulosPage from './pages/admin/ModulosPage';
-import PerfilesPage from './pages/admin/perfiles/PerfilesPage';
-import CrearPerfilPage from './pages/admin/perfiles/CrearPerfilPage';
-import EditarPerfilPage from './pages/admin/perfiles/EditarPerfilPage';
-import CategoriasPage from './pages/product/CategoriasPage';
-import CrearProducto from './pages/product/productos/CrearProducto';
-import VerProductos from './pages/product/productos/VerProductos';
-import ModificarProducto from './pages/product/productos/ModificarProducto';
-
-// Mapea las rutas de permisos a componentes
-const permisoRutaToPage = {
-  '/admin/usuarios': <UsuariosPage />,
-  '/admin/usuarios/agregar': <CrearUsuarioPage />,
-  '/admin/modulos': <ModulosPage />,
-  '/admin/perfiles': <PerfilesPage />,
-  '/admin/perfiles/agregar': <CrearPerfilPage />,
-  '/productos/categorias': <CategoriasPage />, // Añadir ruta para CategoriasPage
-  '/productos/agregar': <CrearProducto />, // Añadir ruta para CrearProducto
-  '/productos': <VerProductos />, // Añadir ruta para VerProductos
-  // Las rutas con parámetros dinámicos no se incluyen aquí
-};
-
-function extraerPermisos(modulos) {
-  // Extrae todos los permisos de todos los módulos/submódulos en un array plano
-  let permisos = [];
-  modulos.forEach(modulo => {
-    if (modulo.permisos && modulo.permisos.length > 0) {
-      permisos = permisos.concat(modulo.permisos);
-    }
-    if (modulo.children && modulo.children.length > 0) {
-      permisos = permisos.concat(extraerPermisos(modulo.children));
-    }
-  });
-  return permisos;
-}
+// Rutas protegidas definidas aparte
+import { rutasProtegidas } from './rutasProtegidas';
 
 function App() {
-  const [permisos, setPermisos] = useState([]);
-  const location = useLocation();
-
-  useEffect(() => {
-    const userData = JSON.parse(sessionStorage.getItem('userData') || localStorage.getItem('userData'));
-    if (userData && userData.modulos) {
-      setPermisos(extraerPermisos(userData.modulos));
-    }
-  }, []);
-
   return (
     <Routes>
       {/* Página pública */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Rutas dinámicas protegidas por permisos */}
-      {permisos
-        .filter(permiso => permiso.permiso_ruta)
-        .map(permiso => (
+      {/* Rutas protegidas dinámicas */}
+      {rutasProtegidas.map(({ path, permiso, componente }) => {
+        if (!path || !componente) {
+          console.warn('Ruta inválida en rutasProtegidas:', { path, permiso, componente });
+          return null;
+        }
+
+        return (
           <Route
-            key={permiso.permiso_id}
-            path={permiso.permiso_ruta}
+            key={path}
+            path={path}
             element={
-              <ProtectedRoute>
-                <Layout>
-                  {/* Forzar remount de PerfilesPage usando key */}
-                  {permiso.permiso_ruta === '/admin/perfiles'
-                    ? <PerfilesPage key={location.key} />
-                    : permisoRutaToPage[permiso.permiso_ruta] || <HomePage />}
-                </Layout>
+              <ProtectedRoute permisoRequerido={permiso}>
+                <Layout>{componente}</Layout> {/* Envolver siempre en Layout */}
               </ProtectedRoute>
             }
           />
-        ))}
+        );
+      })}
 
-      {/* Ruta para editar perfil (con parámetro dinámico) */}
-      <Route
-        path="/admin/perfiles/editar/:perfil_id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <EditarPerfilPage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Ruta para modificar producto */}
-      <Route
-        path="/productos/modificar/:producto_id"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <ModificarProducto />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Ruta raíz protegida */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <HomePage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Ruta por defecto para no encontrados */}
+      {/* Ruta fallback por defecto */}
       <Route
         path="*"
         element={
-          <ProtectedRoute>
-            <Layout>
-              <HomePage /> {/* O una página 404 específica */}
-            </Layout>
-          </ProtectedRoute>
+          <Layout>
+            <HomePage /> {/* Cambiar a una página 404 si es necesario */}
+          </Layout>
         }
       />
     </Routes>
