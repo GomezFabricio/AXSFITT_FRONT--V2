@@ -199,9 +199,9 @@ const CrearProducto = () => {
     setFormulariosVariantes(newFormularios); // Actualizar el estado con los formularios restantes
   };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const productoData = {
       usuario_id,
       producto_nombre: nombre,
@@ -226,15 +226,29 @@ const CrearProducto = () => {
           }))
         : [],
     };
-
+  
     try {
       productoSchema.parse(productoData);
-
+  
       const token = sessionStorage.getItem('token');
       await crearProducto(productoData, token);
-
+  
       alert('Producto creado exitosamente.');
-      navigate('/productos');
+  
+      // Limpiar el formulario para permitir la creación de un nuevo producto
+      setNombre('');
+      setCategoriaId('');
+      setDescripcion('');
+      setPrecioVenta('');
+      setPrecioCosto('');
+      setPrecioOferta('');
+      setStockGeneral('');
+      setSkuGeneral('');
+      setImagenes([]);
+      setUsarAtributos(false);
+      setAtributosConfigurados({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
+      setFormulariosVariantes([{}]);
+      setErrores({});
     } catch (error) {
       if (error instanceof z.ZodError) {
         const erroresMapeados = error.errors.reduce((acc, err) => {
