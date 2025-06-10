@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
 import { Routes, Route } from 'react-router-dom';
 
 // Layout general
@@ -17,6 +18,22 @@ import ProtectedRoute from './pages/common/ProtectedRoute';
 import { rutasProtegidas } from './rutasProtegidas';
 
 function App() {
+  useEffect(() => {
+    const actualizarDatosUsuario = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (!token) return;
+
+        const usuarioActualizado = await obtenerUsuarioActual(token);
+        sessionStorage.setItem('userData', JSON.stringify(usuarioActualizado));
+      } catch (error) {
+        console.error('Error al actualizar los datos del usuario:', error);
+      }
+    };
+
+    actualizarDatosUsuario();
+  }, []);
+
   return (
     <Routes>
       {/* Página pública */}

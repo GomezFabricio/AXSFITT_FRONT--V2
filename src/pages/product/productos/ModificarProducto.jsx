@@ -161,7 +161,10 @@ const ModificarProducto = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    // Filtrar imágenes con URLs válidas
+    const imagenesValidas = imagenes.filter((imagen) => imagen.url && imagen.url.trim() !== '');
+  
     const productoData = {
       producto_nombre: nombre,
       categoria_id: categoriaId,
@@ -171,26 +174,36 @@ const ModificarProducto = () => {
       producto_precio_oferta: precioOferta ? parseFloat(precioOferta) : null,
       producto_stock: usarAtributos ? null : stockGeneral ? parseInt(stockGeneral, 10) : null,
       producto_sku: skuGeneral || null,
-      imagenes: imagenes.map((imagen, index) => ({ id: imagen.id, orden: index })),
+      imagenes: imagenesValidas.map((imagen, index) => ({
+        id: imagen.id,
+        url: imagen.url,
+        orden: index,
+      })),
       variantes: usarAtributos
         ? formulariosVariantes.map((variante) => ({
-          precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
-          precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
-          precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
-          stock: variante.stock ? parseInt(variante.stock, 10) : null,
-          sku: variante.sku || null,
-          imagen_url: variante.imagen_url || null,
-          valores: atributosConfigurados.atributos.map((attr) => variante[attr.atributo_nombre] || null),
-        }))
+            precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
+            precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
+            precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,
+            stock: variante.stock ? parseInt(variante.stock, 10) : null,
+            sku: variante.sku || null,
+            imagen_url: variante.imagen_url || null,
+            valores: atributosConfigurados.atributos.map((attr) => ({
+              atributo_nombre: attr.atributo_nombre,
+              valor_nombre: variante[attr.atributo_nombre] || null,
+            })),
+          }))
         : [],
     };
-
+  
+    // Agregar un console.log para verificar los datos enviados
+    console.log('Datos enviados a la API de modificar producto:', productoData);
+  
     try {
       productoSchema.parse(productoData);
-
+  
       const token = sessionStorage.getItem('token');
       await actualizarProducto(producto_id, productoData, token);
-
+  
       alert('Producto actualizado exitosamente.');
       navigate('/productos');
     } catch (error) {
@@ -206,7 +219,7 @@ const ModificarProducto = () => {
       }
     }
   };
-
+  
   if (cargando) {
     return <p>Cargando datos del producto...</p>;
   }
