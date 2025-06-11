@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 // Layout general
@@ -8,32 +7,16 @@ import Layout from './components/templates/Layout/Layout';
 // Página pública
 import LoginPage from './pages/auth/LoginPage';
 
-// Página por defecto para fallback
-import HomePage from './pages/HomePage';
-
 // Ruta protegida
 import ProtectedRoute from './pages/common/ProtectedRoute';
 
 // Rutas protegidas definidas aparte
 import { rutasProtegidas } from './rutasProtegidas';
 
+// Opcional: Página 404
+import NotFoundPage from './pages/common/NotFound'; 
+
 function App() {
-  useEffect(() => {
-    const actualizarDatosUsuario = async () => {
-      try {
-        const token = sessionStorage.getItem('token');
-        if (!token) return;
-
-        const usuarioActualizado = await obtenerUsuarioActual(token);
-        sessionStorage.setItem('userData', JSON.stringify(usuarioActualizado));
-      } catch (error) {
-        console.error('Error al actualizar los datos del usuario:', error);
-      }
-    };
-
-    actualizarDatosUsuario();
-  }, []);
-
   return (
     <Routes>
       {/* Página pública */}
@@ -52,19 +35,19 @@ function App() {
             path={path}
             element={
               <ProtectedRoute permisoRequerido={permiso}>
-                <Layout>{componente}</Layout> {/* Envolver siempre en Layout */}
+                <Layout>{componente}</Layout>
               </ProtectedRoute>
             }
           />
         );
       })}
 
-      {/* Ruta fallback por defecto */}
+      {/* Ruta fallback para páginas no encontradas */}
       <Route
         path="*"
         element={
           <Layout>
-            <HomePage /> {/* Cambiar a una página 404 si es necesario */}
+            <NotFoundPage /> 
           </Layout>
         }
       />

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import Layout from '../../components/templates/Layout/Layout';
 import Error403Page from './Error403Page';
+import axios from 'axios';
+import config from '../../config/config';
 
 const ProtectedRoute = ({ children, permisoRequerido }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -9,31 +11,61 @@ const ProtectedRoute = ({ children, permisoRequerido }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-      const userData = JSON.parse(sessionStorage.getItem('userData') || localStorage.getItem('userData'));
 
-      if (!token || !userData) {
+      if (!token) {
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
 
-      setIsAuthenticated(true);
+      try {
+        const response = await axios.get(`${config.backendUrl}/api/login/verify-token`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      const permisoValido = userData?.modulos?.some((modulo) =>
-        modulo.permisos?.some((permiso) => permiso.permiso_descripcion === permisoRequerido)
-      );
+        if (response.status !== 200) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
 
-      setTienePermiso(permisoValido);
-      setIsLoading(false);
+        const userData = JSON.parse(sessionStorage.getItem('userData') || localStorage.getItem('userData'));
+
+        if (!userData) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+
+        // ✅ Nueva validación: si no se requiere permiso, es válido automáticamente
+        const permisoValido = !permisoRequerido || userData?.modulos?.some((modulo) =>
+          modulo.permisos?.some((permiso) => permiso.permiso_descripcion === permisoRequerido)
+        );
+
+        setTienePermiso(permisoValido);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error al verificar el token:', error);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('userData');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+      }
     };
 
     checkAuth();
   }, [permisoRequerido]);
 
   if (isLoading) {
-    return <div>Loading...</div>; // Mostrar un indicador de carga mientras se verifica
+    return <div>Loading...</div>;
   }
 
   if (!isAuthenticated) {
@@ -43,7 +75,7 @@ const ProtectedRoute = ({ children, permisoRequerido }) => {
   if (!tienePermiso) {
     return (
       <Layout>
-        <Error403Page /> {/* Mostrar la página 403 con el Layout */}
+        <Error403Page />
       </Layout>
     );
   }

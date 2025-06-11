@@ -8,9 +8,15 @@ import CategoriasPage from './pages/product/CategoriasPage';
 import CrearProducto from './pages/product/productos/CrearProducto';
 import VerProductos from './pages/product/productos/VerProductos';
 import ModificarProducto from './pages/product/productos/ModificarProducto';
-import Stock from './pages/product/Stock'; // Importa el componente Stock
+import Stock from './pages/product/Stock'; 
+import HomePage from './pages/HomePage';
 
 export const rutasProtegidas = [
+  {
+    path: '/',
+    permiso: '', 
+    componente: <HomePage />,
+  },
   {
     path: '/admin/usuarios',
     permiso: 'Ver Usuarios',
