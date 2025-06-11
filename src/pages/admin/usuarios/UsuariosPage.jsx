@@ -3,15 +3,7 @@ import Table from '../../../components/molecules/Table';
 import { getUsuarios, updatePerfilesUsuario } from '../../../api/usuariosApi';
 import { getPerfiles } from '../../../api/perfilesApi';
 import ModalAsignarPerfiles from '../../../components/organisms/Modals/ModalAsignarPerfiles';
-
-// Función para chequear permisos del usuario logueado
-const tienePermiso = (permisoDescripcion) => {
-  const userData = JSON.parse(sessionStorage.getItem('userData'));
-  if (!userData || !userData.modulos) return false;
-  return userData.modulos.some(
-    m => m.permisos && m.permisos.some(p => p.permiso_descripcion === permisoDescripcion)
-  );
-};
+import tienePermiso from '../../../utils/tienePermiso'; 
 
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState([]);

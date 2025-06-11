@@ -4,14 +4,7 @@ import { getPerfiles, eliminarPerfil } from '../../../api/perfilesApi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ModalDetalleModulosYPermisos from '../../../components/organisms/Modals/ModalDetalleModulosYPermisos';
 import ModalEliminar from '../../../components/organisms/Modals/ModalEliminar';
-
-const tienePermiso = (permisoDescripcion) => {
-  const userData = JSON.parse(sessionStorage.getItem('userData'));
-  if (!userData || !userData.modulos) return false;
-  return userData.modulos.some(
-    m => m.permisos && m.permisos.some(p => p.permiso_descripcion === permisoDescripcion)
-  );
-};
+import tienePermiso from '../../../utils/tienePermiso';
 
 const PerfilesPage = () => {
   const [perfiles, setPerfiles] = useState([]);

@@ -9,18 +9,7 @@ import {
 import { FaPlus, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
 import ModalGestionCategoria from '../../components/organisms/Modals/ModalGestionCategoria';
 import ModalEliminar from '../../components/organisms/Modals/ModalEliminar';
-
-// --- FUNCIÓN DE UTILIDAD: tienePermiso ---
-const tienePermiso = (permisoDescripcion) => {
-  try {
-    const userData = JSON.parse(sessionStorage.getItem('userData'));
-    return userData?.modulos?.some(
-      m => m.permisos?.some(p => p.permiso_descripcion === permisoDescripcion)
-    ) || false;
-  } catch {
-    return false;
-  }
-};
+import tienePermiso from '../../utils/tienePermiso'; // Importa la función tienePermiso
 
 // --- COMPONENTE PRINCIPAL ---
 const CategoriasPage = () => {

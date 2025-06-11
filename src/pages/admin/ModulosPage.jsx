@@ -3,6 +3,7 @@ import Table from '../../components/molecules/Table';
 import { getModulos, updateModulo } from '../../api/modulosApi';
 import ModalDetalleModulosYPermisos from '../../components/organisms/Modals/ModalDetalleModulosYPermisos';
 import ModalEditarModulo from '../../components/organisms/Modals/ModalEditarModulo';
+import tienePermiso from '../../utils/tienePermiso'; 
 
 const ModulosPage = () => {
   const [modulos, setModulos] = useState([]);
@@ -10,15 +11,6 @@ const ModulosPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [moduloSeleccionado, setModuloSeleccionado] = useState(null);
   const [modalPermisosOpen, setModalPermisosOpen] = useState(false);
-
-  const userData = JSON.parse(sessionStorage.getItem('userData'));
-
-  const tienePermisoModificarModulo = () => {
-    if (!userData || !userData.modulos) return false;
-    return userData.modulos.some(
-      m => m.permisos?.some(p => p.permiso_descripcion === 'Modificar Modulo')
-    );
-  };
 
   // useMemo para que columns no cambie de referencia en cada render
   const columns = useMemo(() => [
@@ -39,14 +31,14 @@ const ModulosPage = () => {
       data: null,
       orderable: false,
       render: (data, type, row) => {
-        if (tienePermisoModificarModulo()) {
+        if (tienePermiso('Modificar Modulo')) { // Usa la función tienePermiso importada
           return `<button class="btn-modificar-modulo" data-id="${row.modulo_id}" data-nombre="${row.modulo_descripcion}" style="background:#e0e7ff;color:#2563eb;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;">Modificar</button>`;
         }
         return '';
       },
       responsivePriority: 5
     }
-  ], [userData]);
+  ], []); // Elimina userData de las dependencias, ya que tienePermiso ya lo usa internamente
 
   const reloadModulos = async () => {
     setLoading(true);

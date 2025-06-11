@@ -8,6 +8,7 @@ import CategoriasPage from './pages/product/CategoriasPage';
 import CrearProducto from './pages/product/productos/CrearProducto';
 import VerProductos from './pages/product/productos/VerProductos';
 import ModificarProducto from './pages/product/productos/ModificarProducto';
+import Stock from './pages/product/Stock'; // Importa el componente Stock
 
 export const rutasProtegidas = [
   {
@@ -59,5 +60,10 @@ export const rutasProtegidas = [
     path: '/productos/modificar/:producto_id',
     permiso: 'Modificar Producto',
     componente: <ModificarProducto />,
+  },
+  {
+    path: '/productos/stock',
+    permiso: '',
+    componente: <Stock />,
   },
 ];
