@@ -5,6 +5,8 @@ import {
   actualizarProducto,
   moverImagenProducto,
   eliminarImagenProducto,
+  subirImagenProducto,
+  cancelarImagenesNuevas,
 } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
@@ -141,6 +143,27 @@ const ModificarProducto = () => {
     cargarProducto();
   }, [producto_id, navigate]);
 
+  useEffect(() => {
+    return () => {
+      // Al desmontarse el componente (cuando se sale de la pantalla de edición)
+      const cancelarSiHayImagenesNuevas = async () => {
+        const nuevas = imagenes.filter((img) => img.nueva === true || (!img.id)); // Filtramos imágenes sin ID o marcadas como nuevas
+        if (nuevas.length === 0) return;
+
+        try {
+          const token = sessionStorage.getItem('token');
+          const imagenIds = nuevas.map((img) => img.id).filter(Boolean);
+          await cancelarImagenesNuevas(producto_id, imagenIds, token);
+          console.log('Imágenes nuevas eliminadas automáticamente al salir');
+        } catch (error) {
+          console.error('Error al cancelar imágenes nuevas automáticamente:', error);
+        }
+      };
+
+      cancelarSiHayImagenesNuevas();
+    };
+  }, [imagenes, producto_id]);
+
   const handleAtributosSave = (data) => {
     setAtributosConfigurados(data);
     setFormulariosVariantes([{}]); // Reiniciar las variantes al guardar nuevos atributos
@@ -203,18 +226,18 @@ const ModificarProducto = () => {
   const handleEliminarImagen = async (index) => {
     const token = sessionStorage.getItem('token');
     const imagen = imagenes[index];
-  
+
     if (!imagen || !imagen.id) {
       console.error('La imagen no tiene un ID válido:', imagen);
       alert('Error al eliminar la imagen. La imagen no tiene un ID válido.');
       return;
     }
-  
+
     console.log('Datos enviados a la API eliminarImagenProducto:', {
       producto_id,
       imagen_id: imagen.id,
     });
-  
+
     try {
       // Llamar a la API para eliminar la imagen
       await eliminarImagenProducto(
@@ -224,18 +247,50 @@ const ModificarProducto = () => {
         },
         token
       );
-  
+
       // Actualizar el estado local de las imágenes
       const nuevasImagenes = [...imagenes];
       nuevasImagenes.splice(index, 1);
       setImagenes(nuevasImagenes);
-  
+
       alert('Imagen eliminada correctamente.');
     } catch (error) {
       console.error('Error al eliminar la imagen:', error.response?.data || error);
       alert('Error al eliminar la imagen.');
     }
   };
+
+  const handleSubirImagen = async (file) => {
+    const token = sessionStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    console.log('Subiendo imagen:', file);
+
+    try {
+      const nuevaImagen = await subirImagenProducto(producto_id, formData, token);
+      setImagenes((prev) => [
+        ...prev,
+        { id: nuevaImagen.imagen_id, url: nuevaImagen.imagen_url, nueva: true },
+      ]);
+    } catch (error) {
+      console.error('Error al subir imagen (completo):', error);
+      alert(error?.response?.data?.message || error.message || 'No se pudo subir la imagen.');
+    }
+  };
+
+  const handleCancelar = async () => {
+    const token = sessionStorage.getItem('token');
+    const imagenesNuevas = imagenes.filter((img) => img.id === null).map((img) => img.id);
+
+    try {
+      await cancelarImagenesNuevas(producto_id, imagenesNuevas, token);
+      navigate('/productos');
+    } catch (error) {
+      console.error('Error al cancelar imágenes nuevas:', error);
+    }
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -357,7 +412,12 @@ const ModificarProducto = () => {
           imagenes={imagenes}
           onMoverImagen={handleMoverImagen}
           onEliminarImagen={handleEliminarImagen}
-          onImagenChange={() => { }}
+          onImagenChange={(e) => {
+            const file = e.target?.files?.[0];
+            if (file) {
+              handleSubirImagen(file);
+            }
+          }}
         />
 
         {usarAtributos && (
@@ -383,7 +443,7 @@ const ModificarProducto = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/productos')}
+            onClick={handleCancelar}
             className="px-4 py-2 border border-red-600 text-red-600 rounded-md text-sm hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Cancelar

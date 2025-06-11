@@ -193,3 +193,33 @@ export const eliminarImagenProducto = async ({ producto_id, imagen_id }, token) 
     throw error.response?.data || new Error('Error al eliminar la imagen del producto');
   }
 };
+
+// Subir una nueva imagen al producto
+export const subirImagenProducto = async (producto_id, formData, token) => {
+  console.log('Subiendo imagen al producto:', producto_id, formData);
+  try {
+    const response = await axios.post(`${config.backendUrl}/api/productos/${producto_id}/imagenes`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al subir la imagen del producto');
+  }
+};
+
+// Eliminar imágenes nuevas al cancelar
+export const cancelarImagenesNuevas = async (producto_id, imagenes, token) => {
+  try {
+    const response = await axios.post(`${config.backendUrl}/api/productos/${producto_id}/cancelar-imagenes`, { producto_id, imagenes }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al cancelar imágenes nuevas');
+  }
+};
