@@ -7,6 +7,8 @@ import {
   eliminarImagenProducto,
   subirImagenProducto,
   cancelarImagenesNuevas,
+  verificarVentasVariante,
+  cambiarEstadoVariante
 } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
@@ -41,6 +43,7 @@ const ModificarProducto = () => {
   const [categorias, setCategorias] = useState([]);
   const [atributosConfigurados, setAtributosConfigurados] = useState({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
   const [formulariosVariantes, setFormulariosVariantes] = useState([]);
+  const [ventasPorVariante, setVentasPorVariante] = useState({});
   const [errores, setErrores] = useState({});
   const [cargando, setCargando] = useState(true);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false); // Estado para el modal
@@ -81,6 +84,8 @@ const ModificarProducto = () => {
           setUsarAtributos(true);
           setFormulariosVariantes(
             producto.variantes.map((variante) => ({
+              variante_id: variante.variante_id, 
+              estado: variante.variante_estado || 'activo',
               precioVenta: variante.variante_precio_venta || '',
               precioCosto: variante.variante_precio_costo || '',
               precioOferta: variante.variante_precio_oferta || '',
@@ -104,7 +109,11 @@ const ModificarProducto = () => {
               }))
               : [],
           });
+
+          // Llamar a verificarVentas después de cargar las variantes
+          verificarVentas(producto.variantes);
         }
+
 
         setCargando(false);
       } catch (error) {
@@ -291,6 +300,47 @@ const ModificarProducto = () => {
     }
   };
 
+  const verificarVentas = async (variantes) => {
+    const token = sessionStorage.getItem('token');
+    const ventasInfo = {};
+
+    // Crear un array de promesas para verificar las ventas de cada variante
+    const ventasPromises = variantes.map(async (variante) => {
+      try {
+        const { tieneVentas } = await verificarVentasVariante(variante.variante_id, token);
+        ventasInfo[variante.variante_id] = tieneVentas;
+      } catch (error) {
+        console.error(`Error al verificar ventas para variante ${variante.variante_id}:`, error);
+        ventasInfo[variante.variante_id] = false;
+      }
+    });
+
+    // Esperar a que todas las promesas se resuelvan
+    await Promise.all(ventasPromises);
+
+    // Actualizar el estado con la información de ventas
+    setVentasPorVariante(ventasInfo);
+  };
+
+  const handleToggleEstadoVariante = async (variante_id, nuevoEstado) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      await cambiarEstadoVariante(variante_id, nuevoEstado, token);
+
+      // Actualizar estado local del formulario
+      setFormulariosVariantes((prev) =>
+        prev.map((v, index) =>
+          v.variante_id === variante_id
+            ? { ...v, estado: nuevoEstado }
+            : v
+        )
+      );
+    } catch (error) {
+      console.error('Error al cambiar estado de variante:', error);
+      alert('No se pudo cambiar el estado de la variante.');
+    }
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -430,7 +480,9 @@ const ModificarProducto = () => {
             handleEliminarVariante={handleEliminarVariante}
             imagenes={imagenes}
             errores={errores}
-            tienePermiso={tienePermiso} // Pasar la función tienePermiso
+            tienePermiso={tienePermiso}
+            ventasPorVariante={ventasPorVariante}
+            onToggleEstadoVariante={handleToggleEstadoVariante}
           />
         )}
 

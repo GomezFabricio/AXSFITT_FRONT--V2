@@ -223,3 +223,23 @@ export const cancelarImagenesNuevas = async (producto_id, imagenes, token) => {
     throw error.response?.data || new Error('Error al cancelar imágenes nuevas');
   }
 };
+
+export const cambiarEstadoVariante = async (variante_id, estado, token) => {
+  return axios.put(`${config.backendUrl}/api/productos/variantes/estado`, {
+    variante_id,
+    estado,
+  }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const verificarVentasVariante = async (variante_id, token) => {
+  console.log('Verificando ventas para variante:', variante_id);
+  if (!variante_id) {
+    throw new Error('El ID de la variante es requerido para verificar ventas');
+  }
+  const response = await axios.get(`${config.backendUrl}/api/productos/variantes/${variante_id}/ventas`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
