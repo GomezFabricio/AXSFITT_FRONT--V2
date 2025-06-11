@@ -8,7 +8,7 @@ import FormularioDatosProducto from '../../../components/molecules/FormularioDat
 import FormularioAtributos from '../../../components/molecules/FormularioAtributos';
 import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
-import config from '../../../config/config';
+
 
 const tienePermiso = (permisoDescripcion) => {
   const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -103,9 +103,9 @@ const CrearProducto = () => {
     });
   
     try {
-      await moverImagenProducto(
+      await moverImagenTemporal(
         {
-          producto_id,
+          usuario_id,
           imagen_id: imagenActual.id,
           nuevo_orden: indexNuevo,
         },
@@ -213,17 +213,17 @@ const CrearProducto = () => {
     setFormulariosVariantes(newFormularios); // Actualizar el estado con los formularios restantes
   };
 
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
   
     const productoData = {
       usuario_id,
       producto_nombre: nombre,
-      categoria_id: categoriaId,
+      categoria_id: parseInt(categoriaId, 10), // Convertir a número entero
       producto_descripcion: descripcion || null,
-      producto_precio_venta: precioVenta ? parseFloat(precioVenta) : null,
-      producto_precio_costo: precioCosto ? parseFloat(precioCosto) : null,
-      producto_precio_oferta: precioOferta ? parseFloat(precioOferta) : null,
+      producto_precio_venta: usarAtributos ? null : precioVenta ? parseFloat(precioVenta) : null,
+      producto_precio_costo: usarAtributos ? null : precioCosto ? parseFloat(precioCosto) : null,
+      producto_precio_oferta: usarAtributos ? null : precioOferta ? parseFloat(precioOferta) : null,
       producto_stock: usarAtributos ? null : stockGeneral ? parseInt(stockGeneral, 10) : null,
       producto_sku: skuGeneral || null,
       imagenes: imagenes.map((imagen, index) => ({ id: imagen.id, orden: index })),
@@ -241,13 +241,25 @@ const CrearProducto = () => {
         : [],
     };
   
+    console.log('Datos del producto a enviar:', productoData);
+  
     try {
       productoSchema.parse(productoData);
   
       const token = sessionStorage.getItem('token');
-      await crearProducto(productoData, token);
+      console.log('Token a enviar:', token);
   
-      alert('Producto creado exitosamente.');
+      console.log('Llamando a la API crearProducto con:', productoData, token);
+      const response = await crearProducto(productoData, token);
+  
+      console.log('Respuesta de la API crearProducto:', response);
+  
+      if (response && response.producto_id) {
+        alert('Producto creado exitosamente.');
+        navigate('/productos');
+      } else {
+        alert('Error al crear producto: No se recibió el ID del producto.');
+      }
   
       // Limpiar el formulario para permitir la creación de un nuevo producto
       setNombre('');
@@ -264,12 +276,14 @@ const CrearProducto = () => {
       setFormulariosVariantes([{}]);
       setErrores({});
     } catch (error) {
+      console.error('Error en la función handleSubmit:', error);
       if (error instanceof z.ZodError) {
         const erroresMapeados = error.errors.reduce((acc, err) => {
           acc[err.path[0]] = err.message;
           return acc;
         }, {});
         setErrores(erroresMapeados);
+        console.error('Errores de validación:', erroresMapeados);
       } else {
         console.error('Error al crear producto:', error);
         alert('Error al crear producto.');

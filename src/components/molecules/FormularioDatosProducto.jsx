@@ -74,52 +74,52 @@ const FormularioDatosProducto = ({
         ></textarea>
       </div>
 
-      <div className="mb-4">
-        <label htmlFor="precioVenta" className="block text-sm font-medium text-gray-700">
-          Precio de Venta
-        </label>
-        <input
-          type="number"
-          id="precioVenta"
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores?.producto_precio_venta ? 'border-red-500' : ''
-          }`}
-          value={precioVenta}
-          onChange={(e) => setPrecioVenta(e.target.value)}
-        />
-        {errores?.producto_precio_venta && (
-          <p className="mt-2 text-sm text-red-600">{errores.producto_precio_venta}</p>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="precioCosto" className="block text-sm font-medium text-gray-700">
-          Precio de Costo
-        </label>
-        <input
-          type="number"
-          id="precioCosto"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          value={precioCosto}
-          onChange={(e) => setPrecioCosto(e.target.value)}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="precioOferta" className="block text-sm font-medium text-gray-700">
-          Precio de Oferta
-        </label>
-        <input
-          type="number"
-          id="precioOferta"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          value={precioOferta}
-          onChange={(e) => setPrecioOferta(e.target.value)}
-        />
-      </div>
-
       {!usarAtributos && (
         <>
+          <div className="mb-4">
+            <label htmlFor="precioVenta" className="block text-sm font-medium text-gray-700">
+              Precio de Venta
+            </label>
+            <input
+              type="number"
+              id="precioVenta"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                errores?.producto_precio_venta ? 'border-red-500' : ''
+              }`}
+              value={precioVenta}
+              onChange={(e) => setPrecioVenta(e.target.value)}
+            />
+            {errores?.producto_precio_venta && (
+              <p className="mt-2 text-sm text-red-600">{errores.producto_precio_venta}</p>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="precioCosto" className="block text-sm font-medium text-gray-700">
+              Precio de Costo
+            </label>
+            <input
+              type="number"
+              id="precioCosto"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              value={precioCosto}
+              onChange={(e) => setPrecioCosto(e.target.value)}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="precioOferta" className="block text-sm font-medium text-gray-700">
+              Precio de Oferta
+            </label>
+            <input
+              type="number"
+              id="precioOferta"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              value={precioOferta}
+              onChange={(e) => setPrecioOferta(e.target.value)}
+            />
+          </div>
+
           <div className="mb-4">
             <label htmlFor="stockGeneral" className="block text-sm font-medium text-gray-700">
               Stock General
