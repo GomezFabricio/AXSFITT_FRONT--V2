@@ -12,7 +12,6 @@ const FormularioAtributos = ({
   errores,
   tienePermiso,
   ventasPorVariante, // Prop opcional
-  onToggleEstadoVariante, // Prop opcional
 }) => {
   return (
     <div>
@@ -20,7 +19,6 @@ const FormularioAtributos = ({
       {formulariosVariantes.map((formulario, index) => {
         const variante_id = formulario.variante_id; // Obtener el ID de la variante
         const tieneVentas = ventasPorVariante && variante_id ? ventasPorVariante[variante_id] : false;
-        const estado = formulario.estado;
 
         return (
           <div key={index} className="mt-4 border p-4 rounded">
@@ -147,21 +145,6 @@ const FormularioAtributos = ({
 
             {/* Botones de acción */}
             <div className="flex space-x-2">
-              {/* Botón Deshabilitar/Activar */}
-              {onToggleEstadoVariante && variante_id && (
-                <button
-                  type="button"
-                  onClick={() => onToggleEstadoVariante(variante_id, estado === 'activo' ? 'inactivo' : 'activo')}
-                  className={`px-2 py-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    estado === 'activo'
-                      ? 'bg-yellow-500 text-white hover:bg-yellow-700'
-                      : 'bg-blue-500 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {estado === 'activo' ? 'Deshabilitar' : 'Activar'}
-                </button>
-              )}
-
               {/* Botón Eliminar (solo si no tiene ventas) */}
               {!tieneVentas && (
                 <button

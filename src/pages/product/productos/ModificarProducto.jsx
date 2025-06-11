@@ -8,7 +8,6 @@ import {
   subirImagenProducto,
   cancelarImagenesNuevas,
   verificarVentasVariante,
-  cambiarEstadoVariante
 } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
@@ -322,25 +321,6 @@ const ModificarProducto = () => {
     setVentasPorVariante(ventasInfo);
   };
 
-  const handleToggleEstadoVariante = async (variante_id, nuevoEstado) => {
-    try {
-      const token = sessionStorage.getItem('token');
-      await cambiarEstadoVariante(variante_id, nuevoEstado, token);
-
-      // Actualizar estado local del formulario
-      setFormulariosVariantes((prev) =>
-        prev.map((v, index) =>
-          v.variante_id === variante_id
-            ? { ...v, estado: nuevoEstado }
-            : v
-        )
-      );
-    } catch (error) {
-      console.error('Error al cambiar estado de variante:', error);
-      alert('No se pudo cambiar el estado de la variante.');
-    }
-  };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -482,7 +462,6 @@ const ModificarProducto = () => {
             errores={errores}
             tienePermiso={tienePermiso}
             ventasPorVariante={ventasPorVariante}
-            onToggleEstadoVariante={handleToggleEstadoVariante}
           />
         )}
 

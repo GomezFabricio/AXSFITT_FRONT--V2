@@ -46,13 +46,17 @@ const TarjetaProducto = ({
       <div className="flex items-center space-x-2 ml-4">
         {/* Si el producto está inactivo, mostrar solo el botón para reactivar */}
         {producto_estado === 'inactivo' ? (
-          <button
-            onClick={onReactivar}
-            className="p-2 rounded-full bg-green-500 text-white hover:opacity-80"
-            title="Reactivar producto"
-          >
-            Reactivar
-          </button>
+          <>
+            {onReactivar && (
+              <button
+                onClick={onReactivar}
+                className="p-2 rounded-full bg-green-500 text-white hover:opacity-80"
+                title="Reactivar producto"
+              >
+                Reactivar
+              </button>
+            )}
+          </>
         ) : (
           <>
             {/* Icono de visibilidad */}

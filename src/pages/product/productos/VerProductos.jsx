@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto, obtenerDetallesStock, reactivarProducto } from '../../../api/productosApi';
+import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto, obtenerDetallesStock, reactivarProducto, cambiarEstadoVariante } from '../../../api/productosApi';
 import config from '../../../config/config';
 import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
@@ -182,6 +182,36 @@ const VerProductos = () => {
     fetchProductos(); // Refrescar la lista de productos
   };
 
+  const handleToggleEstadoVariante = async (varianteId, nuevoEstado) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      await cambiarEstadoVariante(varianteId, nuevoEstado, token);
+
+      // Actualizar el estado local de las variantes en detallesStock
+      setDetallesStock(prevDetallesStock => {
+        if (!prevDetallesStock || !prevDetallesStock.variantes) return prevDetallesStock;
+
+        const updatedVariantes = prevDetallesStock.variantes.map(variante => {
+          if (variante.variante_id === varianteId) {
+            return { ...variante, variante_estado: nuevoEstado };
+          }
+          return variante;
+        });
+
+        return { ...prevDetallesStock, variantes: updatedVariantes };
+      });
+
+      setTipoMensaje('exito');
+      setMensaje(`Variante ${nuevoEstado === 'activo' ? 'activada' : 'deshabilitada'} correctamente.`);
+      setModalMensajeOpen(true);
+    } catch (error) {
+      console.error('Error al cambiar estado de variante:', error);
+      setTipoMensaje('error');
+      setMensaje('No se pudo cambiar el estado de la variante.');
+      setModalMensajeOpen(true);
+    }
+  };
+
   if (loading) {
     return <p>Cargando productos...</p>;
   }
@@ -227,12 +257,17 @@ const VerProductos = () => {
               producto_estado={producto.producto_estado}
               onEditar={tienePermiso('Modificar Producto') ? () => handleModificar(producto.producto_id) : null}
               onEliminar={tienePermiso('Eliminar Producto') ? () => abrirModalEliminar(producto) : null}
-              onReactivar={() => handleReactivarProducto(producto.producto_id)} // Pasar la función reactivar
+              onReactivar={tienePermiso('Modificar Producto') ? () => handleReactivarProducto(producto.producto_id) : null}
               onToggleVisible={tienePermiso('Modificar Producto') ? () => handleToggleVisible(producto.producto_id, producto.visible) : null}
               onVerStock={() => handleVerStock(producto.producto_id)}
             />
             {detallesStock?.producto?.producto_id === producto.producto_id && (
-              <DetallesStock detallesStock={detallesStock} onClose={cerrarDetallesStock} />
+              <DetallesStock
+                detallesStock={detallesStock}
+                onClose={cerrarDetallesStock}
+                onToggleEstadoVariante={handleToggleEstadoVariante} // Pasar la función al componente
+                tienePermiso={tienePermiso}
+              />
             )}
           </div>
         ))}
