@@ -4,8 +4,16 @@ import config from '../../../config/config';
 import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
 import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
-import DetallesStock from '../../../components/molecules/DetallesStock'; 
+import DetallesStock from '../../../components/molecules/DetallesStock';
 import { useNavigate } from 'react-router-dom';
+
+const tienePermiso = (permisoDescripcion) => {
+  const userData = JSON.parse(sessionStorage.getItem('userData'));
+  if (!userData || !userData.modulos) return false;
+  return userData.modulos.some(
+    m => m.permisos && m.permisos.some(p => p.permiso_descripcion === permisoDescripcion)
+  );
+};
 
 const VerProductos = () => {
   const [productos, setProductos] = useState([]); // Estado para la lista de productos
@@ -168,9 +176,9 @@ const VerProductos = () => {
               stockTotal={producto.stock_total}
               imagenUrl={producto.imagen_url}
               visible={producto.visible}
-              onEditar={() => handleModificar(producto.producto_id)} // Usar el handler para modificar
-              onEliminar={() => abrirModalEliminar(producto)}
-              onToggleVisible={() => handleToggleVisible(producto.producto_id, producto.visible)}
+              onEditar={tienePermiso('Modificar Producto') ? () => handleModificar(producto.producto_id) : null} // Usar el handler para modificar
+              onEliminar={tienePermiso('Eliminar Producto') ? () => abrirModalEliminar(producto) : null}
+              onToggleVisible={tienePermiso('Modificar Producto') ? () => handleToggleVisible(producto.producto_id, producto.visible) : null}
               onVerStock={() => handleVerStock(producto.producto_id)}
             />
             {/* Renderizar DetallesStock justo debajo del producto seleccionado */}

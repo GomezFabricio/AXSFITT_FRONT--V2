@@ -43,33 +43,39 @@ const TarjetaProducto = ({
       {/* Acciones */}
       <div className="flex items-center space-x-2 ml-4">
         {/* Icono de visibilidad */}
-        <button
-          onClick={onToggleVisible}
-          className={`p-2 rounded-full ${
-            visible ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
-          } hover:opacity-80`}
-          title={visible ? 'Ocultar producto' : 'Mostrar producto'}
-        >
-          {visible ? <FaEye className="w-5 h-5" /> : <FaEyeSlash className="w-5 h-5" />}
-        </button>
+        {onToggleVisible && (
+          <button
+            onClick={onToggleVisible}
+            className={`p-2 rounded-full ${
+              visible ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+            } hover:opacity-80`}
+            title={visible ? 'Ocultar producto' : 'Mostrar producto'}
+          >
+            {visible ? <FaEye className="w-5 h-5" /> : <FaEyeSlash className="w-5 h-5" />}
+          </button>
+        )}
 
         {/* Icono de editar */}
-        <button
-          onClick={onEditar}
-          className="p-2 rounded-full bg-yellow-500 text-white hover:opacity-80"
-          title="Editar producto"
-        >
-          <FaEdit className="w-5 h-5" />
-        </button>
+        {onEditar && (
+          <button
+            onClick={onEditar}
+            className="p-2 rounded-full bg-yellow-500 text-white hover:opacity-80"
+            title="Editar producto"
+          >
+            <FaEdit className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Icono de eliminar */}
-        <button
-          onClick={onEliminar}
-          className="p-2 rounded-full bg-red-500 text-white hover:opacity-80"
-          title="Eliminar producto"
-        >
-          <FaTrash className="w-5 h-5" />
-        </button>
+        {onEliminar && (
+          <button
+            onClick={onEliminar}
+            className="p-2 rounded-full bg-red-500 text-white hover:opacity-80"
+            title="Eliminar producto"
+          >
+            <FaTrash className="w-5 h-5" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -82,9 +88,9 @@ TarjetaProducto.propTypes = {
   stockTotal: PropTypes.number.isRequired,
   imagenUrl: PropTypes.string.isRequired,
   visible: PropTypes.bool.isRequired,
-  onEditar: PropTypes.func.isRequired,
-  onEliminar: PropTypes.func.isRequired,
-  onToggleVisible: PropTypes.func.isRequired,
+  onEditar: PropTypes.func,
+  onEliminar: PropTypes.func,
+  onToggleVisible: PropTypes.func,
   onVerStock: PropTypes.func.isRequired,
 };
 
