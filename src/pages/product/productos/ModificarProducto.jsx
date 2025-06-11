@@ -51,27 +51,29 @@ const ModificarProducto = () => {
     const cargarProducto = async () => {
       try {
         const token = sessionStorage.getItem('token');
-        const producto = await obtenerProductoPorId(producto_id, token);
+        const productoData = await obtenerProductoPorId(producto_id, token);
 
-        if (!producto || !producto.producto) {
-          console.error('El producto no tiene datos válidos:', producto);
+        if (!productoData || !productoData.producto) {
+          console.error('El producto no tiene datos válidos:', productoData);
           alert('Error al cargar los datos del producto.');
           navigate('/productos');
           return;
         }
 
+        const producto = productoData.producto;
         // Cargar datos del producto
-        setNombre(producto.producto.nombre);
-        setCategoriaId(producto.producto.categoria_id);
-        setDescripcion(producto.producto.producto_descripcion || '');
-        setPrecioVenta(producto.producto.producto_precio_venta || '');
-        setPrecioCosto(producto.producto.producto_precio_costo || '');
-        setPrecioOferta(producto.producto.producto_precio_oferta || '');
-        setStockGeneral(producto.producto.stock_total || '');
-        setSkuGeneral(producto.producto.producto_sku || '');
+        setNombre(producto.nombre);
+        setCategoriaId(producto.categoria_id);
+        setDescripcion(producto.producto_descripcion || '');
+        setPrecioVenta(producto.producto_precio_venta || '');
+        setPrecioCosto(producto.producto_precio_costo || '');
+        setPrecioOferta(producto.producto_precio_oferta || '');
+        setStockGeneral(producto.stock_total || '');
+        setSkuGeneral(producto.producto_sku || '');
+        setUsarAtributos(productoData.variantes && productoData.variantes.length > 0);
 
         // Cargar imágenes
-        const imagenesProcesadas = producto.producto.imagenes.map((imagen) => ({
+        const imagenesProcesadas = producto.imagenes.map((imagen) => ({
           id: imagen.imagen_id, // Usar el ID real de la base de datos
           url: imagen.imagen_url, // La URL ya viene procesada desde el backend
         }));
@@ -79,11 +81,10 @@ const ModificarProducto = () => {
         setImagenes(imagenesProcesadas);
 
         // Cargar variantes
-        if (producto.variantes && producto.variantes.length > 0) {
-          setUsarAtributos(true);
+        if (productoData.variantes && productoData.variantes.length > 0) {
           setFormulariosVariantes(
-            producto.variantes.map((variante) => ({
-              variante_id: variante.variante_id, 
+            productoData.variantes.map((variante) => ({
+              variante_id: variante.variante_id,
               estado: variante.variante_estado || 'activo',
               precioVenta: variante.variante_precio_venta || '',
               precioCosto: variante.variante_precio_costo || '',
@@ -101,8 +102,8 @@ const ModificarProducto = () => {
           );
 
           setAtributosConfigurados({
-            atributos: Array.isArray(producto.variantes[0]?.atributos)
-              ? producto.variantes[0].atributos.map((attr) => ({
+            atributos: Array.isArray(productoData.variantes[0]?.atributos)
+              ? productoData.variantes[0].atributos.map((attr) => ({
                 atributo_nombre: attr.atributo_nombre,
                 valores: [],
               }))
@@ -110,7 +111,11 @@ const ModificarProducto = () => {
           });
 
           // Llamar a verificarVentas después de cargar las variantes
-          verificarVentas(producto.variantes);
+          verificarVentas(productoData.variantes);
+        } else {
+          // Si no hay variantes, inicializar los formulariosVariantes con un objeto vacío
+          setFormulariosVariantes([]);
+          setAtributosConfigurados({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
         }
 
 

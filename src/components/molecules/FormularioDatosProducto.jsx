@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const FormularioDatosProducto = ({
   nombre,
@@ -19,148 +20,167 @@ const FormularioDatosProducto = ({
   setSkuGeneral,
   categorias,
   errores,
-  tienePermiso, // Recibir la función tienePermiso
-  usarAtributos, // Recibir el estado de atributos activados
+  usarAtributos,
 }) => {
   return (
     <div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Nombre del Producto:</label>
+      <div className="mb-4">
+        <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
+          Nombre del Producto
+        </label>
         <input
           type="text"
+          id="nombre"
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+            errores?.producto_nombre ? 'border-red-500' : ''
+          }`}
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores.producto_nombre ? 'border-red-500' : ''
-          }`}
-          required
         />
-        {errores.producto_nombre && (
-          <p className="text-sm text-red-500 mt-1">{errores.producto_nombre}</p>
+        {errores?.producto_nombre && (
+          <p className="mt-2 text-sm text-red-600">{errores.producto_nombre}</p>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Categoría:</label>
+      <div className="mb-4">
+        <label htmlFor="categoria" className="block text-sm font-medium text-gray-700">
+          Categoría
+        </label>
         <select
+          id="categoria"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           value={categoriaId}
-          onChange={(e) => setCategoriaId(parseInt(e.target.value, 10))} // Convertir a número
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores.categoria_id ? 'border-red-500' : ''
-          }`}
-          required
+          onChange={(e) => setCategoriaId(e.target.value)}
         >
-          <option value="">Seleccionar Categoría</option>
-          {categorias.map((categoria) => (
+          <option value="">Seleccione una categoría</option>
+          {categorias && categorias.map((categoria) => (
             <option key={categoria.categoria_id} value={categoria.categoria_id}>
               {categoria.nombreJerarquico}
             </option>
           ))}
         </select>
-        {errores.categoria_id && (
-          <p className="text-sm text-red-500 mt-1">{errores.categoria_id}</p>
+      </div>
+
+      <div className="mb-4">
+        <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700">
+          Descripción
+        </label>
+        <textarea
+          id="descripcion"
+          rows="3"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+        ></textarea>
+      </div>
+
+      <div className="mb-4">
+        <label htmlFor="precioVenta" className="block text-sm font-medium text-gray-700">
+          Precio de Venta
+        </label>
+        <input
+          type="number"
+          id="precioVenta"
+          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+            errores?.producto_precio_venta ? 'border-red-500' : ''
+          }`}
+          value={precioVenta}
+          onChange={(e) => setPrecioVenta(e.target.value)}
+        />
+        {errores?.producto_precio_venta && (
+          <p className="mt-2 text-sm text-red-600">{errores.producto_precio_venta}</p>
         )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Descripción:</label>
-        <textarea
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores.producto_descripcion ? 'border-red-500' : ''
-          }`}
-          rows="4"
+      <div className="mb-4">
+        <label htmlFor="precioCosto" className="block text-sm font-medium text-gray-700">
+          Precio de Costo
+        </label>
+        <input
+          type="number"
+          id="precioCosto"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          value={precioCosto}
+          onChange={(e) => setPrecioCosto(e.target.value)}
         />
-        {errores.producto_descripcion && (
-          <p className="text-sm text-red-500 mt-1">{errores.producto_descripcion}</p>
-        )}
+      </div>
+
+      <div className="mb-4">
+        <label htmlFor="precioOferta" className="block text-sm font-medium text-gray-700">
+          Precio de Oferta
+        </label>
+        <input
+          type="number"
+          id="precioOferta"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          value={precioOferta}
+          onChange={(e) => setPrecioOferta(e.target.value)}
+        />
       </div>
 
       {!usarAtributos && (
         <>
-          {tienePermiso('Definir Precio Producto') && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Precio de Costo:</label>
-                <input
-                  type="number"
-                  value={precioCosto}
-                  onChange={(e) => setPrecioCosto(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                    errores.producto_precio_costo ? 'border-red-500' : ''
-                  }`}
-                />
-                {errores.producto_precio_costo && (
-                  <p className="text-sm text-red-500 mt-1">{errores.producto_precio_costo}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Precio de Venta:</label>
-                <input
-                  type="number"
-                  value={precioVenta}
-                  onChange={(e) => setPrecioVenta(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                    errores.producto_precio_venta ? 'border-red-500' : ''
-                  }`}
-                />
-                {errores.producto_precio_venta && (
-                  <p className="text-sm text-red-500 mt-1">{errores.producto_precio_venta}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Precio de Oferta:</label>
-                <input
-                  type="number"
-                  value={precioOferta}
-                  onChange={(e) => setPrecioOferta(e.target.value)}
-                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                    errores.producto_precio_oferta ? 'border-red-500' : ''
-                  }`}
-                />
-                {errores.producto_precio_oferta && (
-                  <p className="text-sm text-red-500 mt-1">{errores.producto_precio_oferta}</p>
-                )}
-              </div>
-            </>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Stock General:</label>
+          <div className="mb-4">
+            <label htmlFor="stockGeneral" className="block text-sm font-medium text-gray-700">
+              Stock General
+            </label>
             <input
               type="number"
+              id="stockGeneral"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                errores?.producto_stock ? 'border-red-500' : ''
+              }`}
               value={stockGeneral}
               onChange={(e) => setStockGeneral(e.target.value)}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores.producto_stock ? 'border-red-500' : ''
-              }`}
             />
-            {errores.producto_stock && (
-              <p className="text-sm text-red-500 mt-1">{errores.producto_stock}</p>
+            {errores?.producto_stock && (
+              <p className="mt-2 text-sm text-red-600">{errores.producto_stock}</p>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">SKU General:</label>
+          <div className="mb-4">
+            <label htmlFor="skuGeneral" className="block text-sm font-medium text-gray-700">
+              SKU General
+            </label>
             <input
               type="text"
+              id="skuGeneral"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               value={skuGeneral}
               onChange={(e) => setSkuGeneral(e.target.value)}
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores.producto_sku ? 'border-red-500' : ''
-              }`}
             />
-            {errores.producto_sku && (
-              <p className="text-sm text-red-500 mt-1">{errores.producto_sku}</p>
-            )}
           </div>
         </>
       )}
     </div>
   );
+};
+
+FormularioDatosProducto.propTypes = {
+  nombre: PropTypes.string.isRequired,
+  setNombre: PropTypes.func.isRequired,
+  categoriaId: PropTypes.string.isRequired,
+  setCategoriaId: PropTypes.func.isRequired,
+  descripcion: PropTypes.string,
+  setDescripcion: PropTypes.func.isRequired,
+  precioVenta: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  setPrecioVenta: PropTypes.func.isRequired,
+  precioCosto: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  setPrecioCosto: PropTypes.func.isRequired,
+  precioOferta: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  setPrecioOferta: PropTypes.func.isRequired,
+  stockGeneral: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  setStockGeneral: PropTypes.func.isRequired,
+  skuGeneral: PropTypes.string,
+  setSkuGeneral: PropTypes.func.isRequired,
+  categorias: PropTypes.arrayOf(
+    PropTypes.shape({
+      categoria_id: PropTypes.number.isRequired,
+      nombreJerarquico: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  errores: PropTypes.object,
+  usarAtributos: PropTypes.bool.isRequired,
 };
 
 export default FormularioDatosProducto;
