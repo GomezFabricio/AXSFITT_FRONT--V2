@@ -85,11 +85,14 @@ export const cancelarProcesoAltaProducto = async (data, token) => {
   }
 };
 
-export const obtenerProductos = async (token) => {
+export const obtenerProductos = async (token, estado) => {
   try {
     const response = await axios.get(`${config.backendUrl}/api/productos`, {
       headers: {
         Authorization: `Bearer ${token}`,
+      },
+      params: { 
+        estado: estado,
       },
     });
     return response.data;
@@ -124,6 +127,19 @@ export const cambiarVisibilidadProducto = async (producto_id, visible, token) =>
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error('Error al cambiar visibilidad del producto');
+  }
+};
+
+export const reactivarProducto = async (producto_id, token) => {
+  try {
+    const response = await axios.put(`${config.backendUrl}/api/productos/${producto_id}/reactivar`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al reactivar producto');
   }
 };
 

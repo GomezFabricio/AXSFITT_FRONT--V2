@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto, obtenerDetallesStock } from '../../../api/productosApi';
+import React, { useEffect, useState, useCallback } from 'react';
+import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto, obtenerDetallesStock, reactivarProducto } from '../../../api/productosApi';
 import config from '../../../config/config';
 import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
 import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
 import DetallesStock from '../../../components/molecules/DetallesStock';
 import { useNavigate } from 'react-router-dom';
+import { RadioGroup } from '@headlessui/react'
 
 const tienePermiso = (permisoDescripcion) => {
   const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -15,49 +16,59 @@ const tienePermiso = (permisoDescripcion) => {
   );
 };
 
+const estados = [
+  { name: 'Activos', value: 'activos' },
+  { name: 'Inactivos', value: 'inactivos' },
+  { name: 'Pendientes', value: 'pendientes' },
+]
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ')
+}
+
 const VerProductos = () => {
-  const [productos, setProductos] = useState([]); // Estado para la lista de productos
-  const [loading, setLoading] = useState(true); // Estado para mostrar el indicador de carga
-  const [error, setError] = useState(null); // Estado para manejar errores
-  const [modalOpen, setModalOpen] = useState(false); // Estado para controlar el modal de eliminación
-  const [productoAEliminar, setProductoAEliminar] = useState(null); // Estado para el producto a eliminar
-  const [modalMensajeOpen, setModalMensajeOpen] = useState(false); // Estado para controlar el modal de mensaje
-  const [tipoMensaje, setTipoMensaje] = useState('error'); // Tipo de mensaje: 'error' o 'exito'
-  const [mensaje, setMensaje] = useState(''); // Mensaje a mostrar en el modal
-  const [detallesStock, setDetallesStock] = useState(null); // Estado para los detalles de stock
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [productoAEliminar, setProductoAEliminar] = useState(null);
+  const [modalMensajeOpen, setModalMensajeOpen] = useState(false);
+  const [tipoMensaje, setTipoMensaje] = useState('error');
+  const [mensaje, setMensaje] = useState('');
+  const [detallesStock, setDetallesStock] = useState(null);
+  const [estadoFiltro, setEstadoFiltro] = useState('activos'); // 'activos', 'inactivos', 'pendientes'
   const navigate = useNavigate()
 
-  // Cargar productos al montar el componente
+  const fetchProductos = useCallback(async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      // Pasar el estado seleccionado a la API
+      const productosData = await obtenerProductos(token, estadoFiltro);
+
+      const productosConUrlCompleta = productosData.map((producto) => ({
+        ...producto,
+        imagen_url: `${config.backendUrl}${producto.imagen_url}`,
+        stock_total: Number(producto.stock_total),
+        visible: producto.visible ?? true,
+        precio_venta: producto.producto_precio_venta || null, // Asegúrate de tener el precio de venta
+      }));
+
+      setProductos(productosConUrlCompleta);
+    } catch (err) {
+      setError('Error al cargar los productos.');
+      setTipoMensaje('error');
+      setMensaje('Error al cargar los productos.');
+      setModalMensajeOpen(true);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [estadoFiltro]);
+
   useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const token = sessionStorage.getItem('token'); // Obtener el token de sesión
-        const productosData = await obtenerProductos(token);
-
-        // Concatenar backendUrl con la ruta relativa de las imágenes y corregir tipos
-        const productosConUrlCompleta = productosData.map((producto) => ({
-          ...producto,
-          imagen_url: `${config.backendUrl}${producto.imagen_url}`,
-          stock_total: Number(producto.stock_total), // Convertir stock_total a número
-          visible: producto.visible ?? true, // Asignar valor por defecto si visible es undefined
-        }));
-
-        setProductos(productosConUrlCompleta);
-      } catch (err) {
-        setError('Error al cargar los productos.');
-        setTipoMensaje('error');
-        setMensaje('Error al cargar los productos.');
-        setModalMensajeOpen(true);
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProductos();
-  }, []);
+  }, [fetchProductos]);
 
-  // Handler para eliminar un producto
   const handleEliminar = async () => {
     if (!productoAEliminar) {
       console.error('No hay producto seleccionado para eliminar.');
@@ -70,8 +81,8 @@ const VerProductos = () => {
       setProductos((prevProductos) =>
         prevProductos.filter((producto) => producto.producto_id !== productoAEliminar.producto_id)
       );
-      setModalOpen(false); // Cerrar el modal después de eliminar
-      setProductoAEliminar(null); // Limpiar el producto a eliminar
+      setModalOpen(false);
+      setProductoAEliminar(null);
       setTipoMensaje('exito');
       setMensaje('Producto eliminado exitosamente.');
       setModalMensajeOpen(true);
@@ -83,7 +94,6 @@ const VerProductos = () => {
     }
   };
 
-  // Handler para cambiar la visibilidad de un producto
   const handleToggleVisible = async (productoId, visible) => {
     try {
       const token = sessionStorage.getItem('token');
@@ -105,38 +115,34 @@ const VerProductos = () => {
   };
 
   const handleModificar = (productoId) => {
-    navigate(`/productos/modificar/${productoId}`); // Redirigir a la página de modificación del producto
+    navigate(`/productos/modificar/${productoId}`);
   };
 
-  // Handler para abrir el modal de eliminación
   const abrirModalEliminar = (producto) => {
-    setProductoAEliminar(producto); // Establecer el producto a eliminar
-    setModalOpen(true); // Abrir el modal
+    setProductoAEliminar(producto);
+    setModalOpen(true);
   };
 
-  // Handler para cerrar el modal de eliminación
   const cerrarModalEliminar = () => {
-    setModalOpen(false); // Cerrar el modal
-    setProductoAEliminar(null); // Limpiar el producto a eliminar
+    setModalOpen(false);
+    setProductoAEliminar(null);
   };
 
-  // Handler para ver el stock de un producto
   const handleVerStock = async (productoId) => {
     try {
       const token = sessionStorage.getItem('token');
       const detalles = await obtenerDetallesStock(productoId, token);
 
-      // Convertir stock_total a número y concatenar backendUrl con las URLs de las imágenes
       const productoConUrlCompleta = {
         ...detalles.producto,
         imagen_url: `${config.backendUrl}${detalles.producto.imagen_url}`,
-        stock_total: Number(detalles.producto.stock_total), // Convertir stock_total a número
+        stock_total: Number(detalles.producto.stock_total),
       };
 
       const variantesConUrlCompleta = detalles.variantes.map((variante) => ({
         ...variante,
         imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
-        stock_total: Number(variante.stock_total), // Convertir stock_total a número
+        stock_total: Number(variante.stock_total),
       }));
 
       setDetallesStock({
@@ -150,9 +156,30 @@ const VerProductos = () => {
       setModalMensajeOpen(true);
     }
   };
-  // Handler para cerrar los detalles de stock
+
   const cerrarDetallesStock = () => {
     setDetallesStock(null);
+  };
+
+  // Handler para reactivar un producto
+  const handleReactivarProducto = async (productoId) => {
+    try {
+      const token = sessionStorage.getItem('token');
+      await reactivarProducto(productoId, token);
+      setTipoMensaje('exito');
+      setMensaje('Producto reactivado exitosamente.');
+      setModalMensajeOpen(true);
+    } catch (error) {
+      console.error('Error al reactivar producto:', error);
+      setTipoMensaje('error');
+      setMensaje('No se pudo reactivar el producto.');
+      setModalMensajeOpen(true);
+    }
+  };
+
+  const cerrarModalMensaje = () => {
+    setModalMensajeOpen(false);
+    fetchProductos(); // Refrescar la lista de productos
   };
 
   if (loading) {
@@ -166,6 +193,27 @@ const VerProductos = () => {
   return (
     <div className="container mx-auto mt-8">
       <h2 className="text-2xl font-semibold mb-4">Lista de Productos</h2>
+
+      {/* Selector de estado */}
+      <div className="mb-4">
+        <RadioGroup value={estadoFiltro} onChange={setEstadoFiltro} className="flex space-x-4">
+          {estados.map((estado) => (
+            <RadioGroup.Option
+              key={estado.value}
+              value={estado.value}
+              className={({ active, checked }) =>
+                classNames(
+                  checked ? 'bg-indigo-100 text-indigo-700' : 'bg-white text-gray-500 hover:bg-gray-100',
+                  'relative flex items-center rounded-md px-4 py-2 cursor-pointer focus:outline-none'
+                )
+              }
+            >
+              <span className="text-sm font-medium">{estado.name}</span>
+            </RadioGroup.Option>
+          ))}
+        </RadioGroup>
+      </div>
+
       <div className="space-y-4">
         {productos.map((producto) => (
           <div key={producto.producto_id}>
@@ -176,12 +224,13 @@ const VerProductos = () => {
               stockTotal={producto.stock_total}
               imagenUrl={producto.imagen_url}
               visible={producto.visible}
-              onEditar={tienePermiso('Modificar Producto') ? () => handleModificar(producto.producto_id) : null} // Usar el handler para modificar
+              producto_estado={producto.producto_estado}
+              onEditar={tienePermiso('Modificar Producto') ? () => handleModificar(producto.producto_id) : null}
               onEliminar={tienePermiso('Eliminar Producto') ? () => abrirModalEliminar(producto) : null}
+              onReactivar={() => handleReactivarProducto(producto.producto_id)} // Pasar la función reactivar
               onToggleVisible={tienePermiso('Modificar Producto') ? () => handleToggleVisible(producto.producto_id, producto.visible) : null}
               onVerStock={() => handleVerStock(producto.producto_id)}
             />
-            {/* Renderizar DetallesStock justo debajo del producto seleccionado */}
             {detallesStock?.producto?.producto_id === producto.producto_id && (
               <DetallesStock detallesStock={detallesStock} onClose={cerrarDetallesStock} />
             )}
@@ -196,7 +245,7 @@ const VerProductos = () => {
       />
       <ModalMensaje
         isOpen={modalMensajeOpen}
-        onClose={() => setModalMensajeOpen(false)}
+        onClose={() => cerrarModalMensaje()}
         tipo={tipoMensaje}
         mensaje={mensaje}
       />
