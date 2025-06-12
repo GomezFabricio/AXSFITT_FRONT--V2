@@ -9,6 +9,7 @@ import CrearProducto from './pages/product/productos/CrearProducto';
 import VerProductos from './pages/product/productos/VerProductos';
 import ModificarProducto from './pages/product/productos/ModificarProducto';
 import Stock from './pages/product/Stock'; 
+import Faltantes from './pages/product/Faltantes';
 import HomePage from './pages/HomePage';
 
 export const rutasProtegidas = [
@@ -69,7 +70,12 @@ export const rutasProtegidas = [
   },
   {
     path: '/productos/stock',
-    permiso: '',
+    permiso: 'Gestionar Stock',
     componente: <Stock />,
+  },
+  {
+    path: '/productos/faltantes',
+    permiso: 'Ver Lista de Faltantes',
+    componente: <Faltantes />,
   },
 ];
