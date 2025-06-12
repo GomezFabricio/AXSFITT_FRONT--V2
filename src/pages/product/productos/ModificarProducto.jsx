@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   obtenerProductoPorId,
@@ -47,6 +47,9 @@ const ModificarProducto = () => {
   const [cargando, setCargando] = useState(true);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false); // Estado para el modal
 
+  // useRef to store the previous formulariosVariantes
+  const previousFormulariosVariantes = useRef(null);
+
   useEffect(() => {
     const cargarProducto = async () => {
       try {
@@ -82,24 +85,24 @@ const ModificarProducto = () => {
 
         // Cargar variantes
         if (productoData.variantes && productoData.variantes.length > 0) {
-          setFormulariosVariantes(
-            productoData.variantes.map((variante) => ({
-              variante_id: variante.variante_id,
-              estado: variante.variante_estado || 'activo',
-              precioVenta: variante.variante_precio_venta || '',
-              precioCosto: variante.variante_precio_costo || '',
-              precioOferta: variante.variante_precio_oferta || '',
-              stock: variante.stock_total || '',
-              sku: variante.variante_sku || '',
-              imagen_url: variante.imagen_url || '',
-              ...Array.isArray(variante.atributos)
-                ? variante.atributos.reduce((acc, attr) => {
-                  acc[attr.atributo_nombre] = attr.valor_nombre;
-                  return acc;
-                }, {})
-                : {},
-            }))
-          );
+          const initialFormularios = productoData.variantes.map((variante) => ({
+            variante_id: variante.variante_id,
+            estado: variante.variante_estado || 'activo',
+            precioVenta: variante.variante_precio_venta || '',
+            precioCosto: variante.variante_precio_costo || '',
+            precioOferta: variante.variante_precio_oferta || '',
+            stock: variante.stock_total || '',
+            sku: variante.variante_sku || '',
+            imagen_url: variante.imagen_url || '',
+            ...Array.isArray(variante.atributos)
+              ? variante.atributos.reduce((acc, attr) => {
+                acc[attr.atributo_nombre] = attr.valor_nombre;
+                return acc;
+              }, {})
+              : {},
+          }));
+          setFormulariosVariantes(initialFormularios);
+          previousFormulariosVariantes.current = initialFormularios; // Store initial values
 
           setAtributosConfigurados({
             atributos: Array.isArray(productoData.variantes[0]?.atributos)
@@ -115,6 +118,7 @@ const ModificarProducto = () => {
         } else {
           // Si no hay variantes, inicializar los formulariosVariantes con un objeto vacío
           setFormulariosVariantes([]);
+          previousFormulariosVariantes.current = [];
           setAtributosConfigurados({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
         }
 
@@ -178,8 +182,25 @@ const ModificarProducto = () => {
   }, [imagenes, producto_id]);
 
   const handleAtributosSave = (data) => {
+    // Deep copy of formulariosVariantes
+    const formulariosVariantesCopy = JSON.parse(JSON.stringify(formulariosVariantes));
+
+    // Update atributosConfigurados
     setAtributosConfigurados(data);
-    setFormulariosVariantes([{}]); // Reiniciar las variantes al guardar nuevos atributos
+
+    // Merge data back into formulariosVariantes
+    if (formulariosVariantesCopy && formulariosVariantesCopy.length > 0) {
+      const mergedFormularios = formulariosVariantesCopy.map(variante => {
+        const newVariante = { ...variante };
+        data.atributos.forEach(attr => {
+          newVariante[attr.atributo_nombre] = variante[attr.atributo_nombre] || '';
+        });
+        return newVariante;
+      });
+      setFormulariosVariantes(mergedFormularios);
+    } else {
+      setFormulariosVariantes([{}]); // Reiniciar las variantes al guardar nuevos atributos
+    }
   };
 
   const handleFormularioChange = (index, field, value) => {
