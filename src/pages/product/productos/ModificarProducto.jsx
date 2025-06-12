@@ -330,6 +330,18 @@ const ModificarProducto = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validar que todas las variantes tengan una imagen seleccionada
+    if (usarAtributos) {
+      const algunaVarianteSinImagen = formulariosVariantes.some(
+        (variante) => !variante.imagen_url
+      );
+
+      if (algunaVarianteSinImagen) {
+        alert('Por favor, selecciona una imagen para cada variante.');
+        return;
+      }
+    }
+
     // Filtrar imágenes con URLs válidas
     const imagenesValidas = imagenes.filter((imagen) => imagen.url && imagen.url.trim() !== '');
 
@@ -349,6 +361,7 @@ const ModificarProducto = () => {
       })),
       variantes: usarAtributos
         ? formulariosVariantes.map((variante) => ({
+          variante_id: variante.variante_id,
           precio_venta: variante.precioVenta ? parseFloat(variante.precioVenta) : null,
           precio_costo: variante.precioCosto ? parseFloat(variante.precioCosto) : null,
           precio_oferta: variante.precioOferta ? parseFloat(variante.precioOferta) : null,

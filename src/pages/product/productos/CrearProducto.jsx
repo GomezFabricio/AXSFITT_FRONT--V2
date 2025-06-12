@@ -215,6 +215,17 @@ const CrearProducto = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (usarAtributos) {
+      const algunaVarianteSinImagen = formulariosVariantes.some(
+        (variante) => !variante.imagen_url
+      );
+
+      if (algunaVarianteSinImagen) {
+        alert('Por favor, selecciona una imagen para cada variante.');
+        return;
+      }
+    }
   
     const productoData = {
       usuario_id,
