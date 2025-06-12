@@ -36,7 +36,10 @@ const DetallesStock = ({ detallesStock, onClose, onToggleEstadoVariante, tienePe
                       )}
                     </p>
                     <p>Stock: {variante.stock_total}</p>
-                    <p>Atributos: {variante.atributos}</p>
+                    {/* Mostrar atributos */}
+                    {variante.atributos && (
+                      <p>Atributos: {variante.atributos}</p>
+                    )}
                     {/* Botón de alternar estado */}
                     {tienePermiso('Modificar Producto') && (
                       <button
