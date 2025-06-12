@@ -3,7 +3,7 @@ import config from '../config/config';
 
 export const actualizarStockMinimoMaximo = async (id, stockMinimo, stockMaximo, token) => {
   try {
-    const res = await axios.put(`${config.backendUrl}/api/productos/${id}/stock`, {
+    const res = await axios.put(`${config.backendUrl}/api/stock/${id}`, {
       stock_minimo: stockMinimo,
       stock_maximo: stockMaximo
     }, {
