@@ -14,12 +14,30 @@ const Stock = () => {
       try {
         const token = sessionStorage.getItem('token');
         const productosData = await obtenerProductos(token);
-        // Agregar la URL base a las imágenes
-        const productosConUrlCompleta = productosData.map(producto => ({
-          ...producto,
-          imagen_url: `${config.backendUrl}${producto.imagen_url}`
-        }));
-        setProductos(productosConUrlCompleta);
+
+        // Process products and variants to include full image URLs
+        const productosConStock = productosData.map(producto => {
+          const productoConUrlCompleta = {
+            ...producto,
+            imagen_url: `${config.backendUrl}${producto.imagen_url}`,
+            tipo: 'producto' // Add a type to differentiate products and variants
+          };
+
+          // Process variants if they exist
+          let variantesConUrlCompleta = [];
+          if (producto.variantes && producto.variantes.length > 0) {
+            variantesConUrlCompleta = producto.variantes.map(variante => ({
+              ...variante,
+              imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
+              producto_id: producto.producto_id, // Keep track of the parent product
+              tipo: 'variante' // Mark as variant
+            }));
+          }
+
+          return [productoConUrlCompleta, ...variantesConUrlCompleta]; // Flatten the array
+        }).flat(); // Flatten the array of arrays
+
+        setProductos(productosConStock);
         setLoading(false);
       } catch (error) {
         setError(error.message);
@@ -30,17 +48,19 @@ const Stock = () => {
     fetchProductos();
   }, []);
 
-  const handleActualizarStockMinimoMaximo = async (productoId, stockMinimo, stockMaximo) => {
+  const handleActualizarStockMinimoMaximo = async (id, stockMinimo, stockMaximo, isVariant = false) => {
     try {
       const token = sessionStorage.getItem('token');
-      await actualizarStockMinimoMaximo(productoId, stockMinimo, stockMaximo, token);
-      // Actualizar el estado local para reflejar los cambios
+      await actualizarStockMinimoMaximo(id, stockMinimo, stockMaximo, token);
+
+      // Update the state to reflect the changes
       setProductos(prevProductos =>
-        prevProductos.map(producto =>
-          producto.producto_id === productoId
-            ? { ...producto, stock_minimo: stockMinimo, stock_maximo: stockMaximo }
-            : producto
-        )
+        prevProductos.map(item => {
+          if (item.producto_id === id || item.variante_id === id) {
+            return { ...item, stock_minimo: stockMinimo, stock_maximo: stockMaximo };
+          }
+          return item;
+        })
       );
     } catch (error) {
       setError(error.message || 'Error al actualizar el stock.');
