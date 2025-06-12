@@ -1,8 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import tienePermiso from '../../utils/tienePermiso';
 
 const ListaStock = ({ productos, handleActualizarStockMinimoMaximo }) => {
   const [expandedProducts, setExpandedProducts] = useState({});
+  const [activeProducts, setActiveProducts] = useState([]);
+
+  useEffect(() => {
+    // Filter products and variants to only include those with an "activo" state
+    const filteredProducts = productos.filter(item => {
+      if (item.tipo === 'producto' && item.producto_estado === 'activo') {
+        return true;
+      }
+      if (item.tipo === 'variante' && item.variante_estado === 'activo') {
+        return true;
+      }
+      return false;
+    });
+
+    setActiveProducts(filteredProducts);
+  }, [productos]);
 
   const toggleProductVariants = (productoId) => {
     setExpandedProducts(prev => ({
@@ -31,8 +47,8 @@ const ListaStock = ({ productos, handleActualizarStockMinimoMaximo }) => {
           </tr>
         </thead>
         <tbody>
-          {productos
-            .filter(item => item.tipo === 'producto' && item.producto_estado === 'activo')
+          {activeProducts
+            .filter(item => item.tipo === 'producto')
             .map(producto => (
               <React.Fragment key={producto.producto_id}>
                 <tr
@@ -96,12 +112,10 @@ const ListaStock = ({ productos, handleActualizarStockMinimoMaximo }) => {
                 </tr>
                 {/* Variant Rows */}
                 {expandedProducts[producto.producto_id] &&
-                  productos
+                  activeProducts
                     .filter(
                       item =>
-                        item.tipo === 'variante' &&
-                        item.producto_id === producto.producto_id &&
-                        item.variante_estado === 'activo'
+                        item.tipo === 'variante' && item.producto_id === producto.producto_id
                     )
                     .map(variante => (
                       <tr key={variante.variante_id} className="bg-gray-50">

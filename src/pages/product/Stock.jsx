@@ -30,7 +30,8 @@ const Stock = () => {
               ...variante,
               imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
               producto_id: producto.producto_id, // Keep track of the parent product
-              tipo: 'variante' // Mark as variant
+              tipo: 'variante', // Mark as variant
+              variante_estado: variante.variante_estado // Keep track of the variant state
             }));
           }
 
