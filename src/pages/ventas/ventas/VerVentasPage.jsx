@@ -13,7 +13,7 @@ const VerVentasPage = () => {
   const [filtroEstadoEnvio, setFiltroEstadoEnvio] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
   const [ventasFiltradas, setVentasFiltradas] = useState([]);
-  
+
   // Estados para el modal de edición
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
   const [ventaEnEdicion, setVentaEnEdicion] = useState(null);
@@ -57,8 +57,8 @@ const VerVentasPage = () => {
     // Filtrar por búsqueda (cliente o ID)
     if (busqueda.trim() !== '') {
       const terminoBusqueda = busqueda.toLowerCase();
-      resultado = resultado.filter(venta => 
-        venta.cliente_nombre?.toLowerCase().includes(terminoBusqueda) || 
+      resultado = resultado.filter(venta =>
+        venta.cliente_nombre?.toLowerCase().includes(terminoBusqueda) ||
         venta.venta_id.toString().includes(terminoBusqueda)
       );
     }
@@ -75,12 +75,12 @@ const VerVentasPage = () => {
     try {
       const token = sessionStorage.getItem('token');
       await actualizarEstadoPago(ventaId, nuevoEstado, token);
-      
+
       // Actualizar estado local
-      setVentas(prevVentas => 
-        prevVentas.map(venta => 
-          venta.venta_id === ventaId 
-            ? { ...venta, venta_estado_pago: nuevoEstado } 
+      setVentas(prevVentas =>
+        prevVentas.map(venta =>
+          venta.venta_id === ventaId
+            ? { ...venta, venta_estado_pago: nuevoEstado }
             : venta
         )
       );
@@ -106,12 +106,12 @@ const VerVentasPage = () => {
     try {
       const token = sessionStorage.getItem('token');
       await actualizarEstadoEnvio(ventaId, nuevoEstado, token);
-      
+
       // Actualizar estado local
-      setVentas(prevVentas => 
-        prevVentas.map(venta => 
-          venta.venta_id === ventaId 
-            ? { ...venta, venta_estado_envio: nuevoEstado } 
+      setVentas(prevVentas =>
+        prevVentas.map(venta =>
+          venta.venta_id === ventaId
+            ? { ...venta, venta_estado_envio: nuevoEstado }
             : venta
         )
       );
@@ -136,25 +136,25 @@ const VerVentasPage = () => {
   // Nueva función para guardar cambios de edición
   const handleGuardarEdicion = async (datosActualizados) => {
     if (!ventaEnEdicion) return;
-    
+
     setGuardando(true);
     try {
       const token = sessionStorage.getItem('token');
       await actualizarDatosVenta(ventaEnEdicion.venta_id, datosActualizados, token);
-      
+
       // Actualizar estado local
-      setVentas(prevVentas => 
-        prevVentas.map(venta => 
-          venta.venta_id === ventaEnEdicion.venta_id 
-            ? { 
-                ...venta, 
-                venta_nota: datosActualizados.venta_nota,
-                venta_origen: datosActualizados.venta_origen
-              } 
+      setVentas(prevVentas =>
+        prevVentas.map(venta =>
+          venta.venta_id === ventaEnEdicion.venta_id
+            ? {
+              ...venta,
+              venta_nota: datosActualizados.venta_nota,
+              venta_origen: datosActualizados.venta_origen
+            }
             : venta
         )
       );
-      
+
       alert('Datos de la venta actualizados correctamente');
       setModalEdicionAbierto(false);
       setVentaEnEdicion(null);
@@ -190,7 +190,7 @@ const VerVentasPage = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-6">Gestión de Ventas</h1>
-      
+
       {/* Filtros y búsqueda */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -207,7 +207,7 @@ const VerVentasPage = () => {
               <option value="cancelado">Cancelado</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Estado de Envío</label>
             <select
@@ -222,7 +222,7 @@ const VerVentasPage = () => {
               <option value="cancelado">Cancelado</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
             <input
@@ -235,7 +235,7 @@ const VerVentasPage = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Tabla de ventas */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -309,12 +309,15 @@ const VerVentasPage = () => {
                           <FaEye className="text-lg" title="Ver detalle" />
                         </Link>
                         {puedeModificarVenta && (
-                          <button className="text-green-600 hover:text-green-900">
+                          <Link
+                            to={`/ventas/${venta.venta_id}/factura`}
+                            className="text-green-600 hover:text-green-900"
+                          >
                             <FaFileInvoice className="text-lg" title="Ver factura" />
-                          </button>
+                          </Link>
                         )}
                         {puedeModificarVenta && (
-                          <button 
+                          <button
                             className="text-amber-600 hover:text-amber-900"
                             onClick={() => handleEditarVenta(venta)}
                           >
@@ -336,7 +339,7 @@ const VerVentasPage = () => {
           </table>
         </div>
       </div>
-      
+
       {/* Modal de edición */}
       <ModalEditarVenta
         isOpen={modalEdicionAbierto}

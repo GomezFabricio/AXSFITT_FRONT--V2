@@ -16,6 +16,7 @@ import AgregarVentaPage from './pages/ventas/ventas/AgregarVentaPage';
 import VerVentasPage from './pages/ventas/ventas/VerVentasPage';
 import DetalleVentaPage from './pages/ventas/ventas/DetalleVentaPage';
 import HomePage from './pages/HomePage';
+import FacturaPage from './pages/ventas/ventas/FacturaPage';
 
 export const rutasProtegidas = [
   {
@@ -104,8 +105,13 @@ export const rutasProtegidas = [
     componente: <AgregarVentaPage />,
   },
   {
-    path: '/ventas/detalle/:id',
+    path: '/ventas/:id',
     permiso: 'Listado de Ventas',
     componente: <DetalleVentaPage />,
+  },
+  {
+    path: '/ventas/:id/factura',
+    permiso: 'Listado de Ventas',
+    componente: <FacturaPage />,
   }
 ];

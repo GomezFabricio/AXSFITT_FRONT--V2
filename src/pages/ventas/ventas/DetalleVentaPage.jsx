@@ -10,7 +10,7 @@ const DetalleVentaPage = () => {
   const navigate = useNavigate();
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Verificar permisos
   const puedeModificarVenta = tienePermiso('Modificar Venta');
 
@@ -47,7 +47,7 @@ Estado actual: ${venta.venta_estado_pago}`,
       try {
         const token = sessionStorage.getItem('token');
         await actualizarEstadoPago(id, nuevoEstado, token);
-        
+
         // Actualizar estado local
         setVenta({
           ...venta,
@@ -80,7 +80,7 @@ Estado actual: ${venta.venta_estado_envio}`,
       try {
         const token = sessionStorage.getItem('token');
         await actualizarEstadoEnvio(id, nuevoEstado, token);
-        
+
         // Actualizar estado local
         setVenta({
           ...venta,
@@ -163,20 +163,14 @@ Estado actual: ${venta.venta_estado_envio}`,
         </div>
         <div className="flex space-x-2">
           {puedeModificarVenta && (
-            <button 
+            <Link
+              to={`/ventas/${id}/factura`}
               className="flex items-center bg-green-50 text-green-700 px-3 py-2 rounded-md hover:bg-green-100"
               title="Ver factura"
             >
               <FaFileInvoice className="mr-2" /> Factura
-            </button>
+            </Link>
           )}
-          <button 
-            className="flex items-center bg-blue-50 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-100"
-            onClick={() => window.print()}
-            title="Imprimir detalles"
-          >
-            <FaPrint className="mr-2" /> Imprimir
-          </button>
         </div>
       </div>
 
@@ -192,20 +186,20 @@ Estado actual: ${venta.venta_estado_envio}`,
               <p><span className="font-medium">Nota:</span> {venta.venta_nota || 'Sin notas'}</p>
             </div>
           </div>
-          
+
           <div>
             <h2 className="text-lg font-semibold mb-3">Estado</h2>
             <div className="space-y-4">
               <div>
                 <p className="font-medium mb-1">Estado de pago:</p>
                 <div className="flex items-center">
-                  <span 
+                  <span
                     className={`px-3 py-1 inline-flex text-sm font-semibold rounded-md ${getEstadoClass(venta.venta_estado_pago, 'pago')}`}
                   >
                     {venta.venta_estado_pago.charAt(0).toUpperCase() + venta.venta_estado_pago.slice(1)}
                   </span>
                   {puedeModificarVenta && (
-                    <button 
+                    <button
                       onClick={handleCambiarEstadoPago}
                       className="ml-2 text-sm text-blue-600 hover:text-blue-800"
                     >
@@ -214,17 +208,17 @@ Estado actual: ${venta.venta_estado_envio}`,
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <p className="font-medium mb-1">Estado de envío:</p>
                 <div className="flex items-center">
-                  <span 
+                  <span
                     className={`px-3 py-1 inline-flex text-sm font-semibold rounded-md ${getEstadoClass(venta.venta_estado_envio, 'envio')}`}
                   >
                     {venta.venta_estado_envio.charAt(0).toUpperCase() + venta.venta_estado_envio.slice(1)}
                   </span>
                   {puedeModificarVenta && (
-                    <button 
+                    <button
                       onClick={handleCambiarEstadoEnvio}
                       className="ml-2 text-sm text-blue-600 hover:text-blue-800"
                     >
@@ -249,7 +243,7 @@ Estado actual: ${venta.venta_estado_envio}`,
               <p><span className="font-medium">Teléfono:</span> {venta.cliente.persona_telefono || venta.cliente.telefono || 'No disponible'}</p>
               {venta.cliente.persona_dni && <p><span className="font-medium">DNI:</span> {venta.cliente.persona_dni}</p>}
             </div>
-            
+
             {venta.envio && (
               <div>
                 <h3 className="font-medium mb-1">Dirección de envío:</h3>
@@ -286,9 +280,9 @@ Estado actual: ${venta.venta_estado_envio}`,
                     <div className="flex items-center">
                       {producto.imagen_url && (
                         <div className="flex-shrink-0 h-12 w-12 mr-3">
-                          <img 
-                            src={`${producto.imagen_url.startsWith('http') ? '' : config.backendUrl}${producto.imagen_url}`} 
-                            alt={producto.producto_nombre} 
+                          <img
+                            src={`${producto.imagen_url.startsWith('http') ? '' : config.backendUrl}${producto.imagen_url}`}
+                            alt={producto.producto_nombre}
                             className="h-12 w-12 object-cover rounded"
                           />
                         </div>
