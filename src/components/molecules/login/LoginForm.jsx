@@ -1,11 +1,11 @@
-// src/components/molecules/LoginForm.js
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../../../validations/login.schema'; // Importa el schema
+import { loginSchema } from '../../../validations/login.schema';
 import { useState } from 'react';
-import Input from '../../atoms/Input'; // Importa Input
-import Button from '../../atoms/Button'; // Importa Button
-import ErrorMessage from '../../atoms/ErrorMessage'; // Importa ErrorMessage
+import { Link } from 'react-router-dom';
+import Input from '../../atoms/Input';
+import Button from '../../atoms/Button';
+import ErrorMessage from '../../atoms/ErrorMessage';
 
 const LoginForm = ({ onLogin }) => {
   const [error, setError] = useState('');
@@ -15,12 +15,11 @@ const LoginForm = ({ onLogin }) => {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema), // Aplica el validador de Zod
+    resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data) => {
     try {
-      // Llama al handler que viene desde LoginPage
       await onLogin(data.email, data.password);
     } catch (err) {
       setError(err.message);
@@ -49,6 +48,16 @@ const LoginForm = ({ onLogin }) => {
             />
             <ErrorMessage message={error} />
             <Button type="submit">Ingresar</Button>
+            
+            {/* Botón de recuperación de contraseña */}
+            <div className="mt-4 text-center">
+              <Link 
+                to="/recuperar-password" 
+                className="text-sm text-violet-600 hover:text-violet-800 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </form>
         </div>
       </div>

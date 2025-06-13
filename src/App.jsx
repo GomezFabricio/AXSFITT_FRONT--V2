@@ -4,8 +4,10 @@ import { Routes, Route } from 'react-router-dom';
 // Layout general
 import Layout from './components/templates/Layout/Layout';
 
-// Página pública
+// Páginas públicas
 import LoginPage from './pages/auth/LoginPage';
+import RecuperarPasswordPage from './pages/auth/RecuperarPasswordPage';
+import RestablecerPasswordPage from './pages/auth/RestablecerPasswordPage';
 
 // Ruta protegida
 import ProtectedRoute from './pages/common/ProtectedRoute';
@@ -19,8 +21,12 @@ import NotFoundPage from './pages/common/NotFound';
 function App() {
   return (
     <Routes>
-      {/* Página pública */}
+      {/* Páginas públicas */}
       <Route path="/login" element={<LoginPage />} />
+      
+      {/* Rutas de recuperación de contraseña */}
+      <Route path="/recuperar-password" element={<RecuperarPasswordPage />} />
+      <Route path="/restablecer-password/:token" element={<RestablecerPasswordPage />} />
 
       {/* Rutas protegidas dinámicas */}
       {rutasProtegidas.map(({ path, permiso, componente }) => {
