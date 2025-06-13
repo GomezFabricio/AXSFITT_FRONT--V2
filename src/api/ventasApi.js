@@ -154,6 +154,18 @@ export const actualizarDatosVenta = async (ventaId, datos, token) => {
   }
 };
 
+export const obtenerMetricasVentas = async (token) => {
+  try {
+    const response = await axios.get(`${config.backendUrl}/api/ventas/metricas/dashboard`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al obtener métricas de ventas');
+  }
+};
 
 export const origenesVenta = [
   { value: 'Venta Manual', label: 'Venta Manual' },
