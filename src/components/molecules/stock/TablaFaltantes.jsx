@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { registrarFaltante } from '../../api/stockApi';
-import tienePermiso from '../../utils/tienePermiso';
+import { registrarFaltante } from '../../../api/stockApi';
+import tienePermiso from '../../../utils/tienePermiso';
 
 const TablaFaltantes = ({ faltantes, onRegistrarExitoso }) => {
   const [procesando, setProcesando] = useState(false);

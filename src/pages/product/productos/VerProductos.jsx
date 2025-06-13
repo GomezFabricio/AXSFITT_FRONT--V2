@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { obtenerProductos, eliminarProducto, cambiarVisibilidadProducto, obtenerDetallesStock, reactivarProducto, cambiarEstadoVariante } from '../../../api/productosApi';
 import config from '../../../config/config';
-import TarjetaProducto from '../../../components/molecules/TarjetaProducto';
+import TarjetaProducto from '../../../components/molecules/product/TarjetaProducto';
 import ModalEliminar from '../../../components/organisms/modals/ModalEliminar';
 import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
-import DetallesStock from '../../../components/molecules/DetallesStock';
+import DetallesStock from '../../../components/molecules/product/DetallesStock';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup } from '@headlessui/react'
 

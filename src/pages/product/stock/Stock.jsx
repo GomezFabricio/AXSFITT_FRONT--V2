@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerStock } from '../../api/stockApi';
-import config from '../../config/config';
-import ListaStock from '../../components/molecules/ListaStock';
+import { obtenerStock } from '../../../api/stockApi';
+import config from '../../../config/config';
+import ListaStock from '../../../components/molecules/stock/ListaStock';
 
 const Stock = () => {
   const [productos, setProductos] = useState([]);

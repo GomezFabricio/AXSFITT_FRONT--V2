@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { resolverFaltante } from '../../api/stockApi';
-import tienePermiso from '../../utils/tienePermiso';
+import { resolverFaltante } from '../../../api/stockApi';
+import tienePermiso from '../../../utils/tienePermiso';
 
 const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
   const [procesando, setProcesando] = useState(false);

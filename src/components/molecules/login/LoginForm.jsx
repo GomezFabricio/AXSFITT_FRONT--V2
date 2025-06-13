@@ -1,11 +1,11 @@
 // src/components/molecules/LoginForm.js
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../../validations/login.schema'; // Importa el schema
+import { loginSchema } from '../../../validations/login.schema'; // Importa el schema
 import { useState } from 'react';
-import Input from '../atoms/Input'; // Importa Input
-import Button from '../atoms/Button'; // Importa Button
-import ErrorMessage from '../atoms/ErrorMessage'; // Importa ErrorMessage
+import Input from '../../atoms/Input'; // Importa Input
+import Button from '../../atoms/Button'; // Importa Button
+import ErrorMessage from '../../atoms/ErrorMessage'; // Importa ErrorMessage
 
 const LoginForm = ({ onLogin }) => {
   const [error, setError] = useState('');

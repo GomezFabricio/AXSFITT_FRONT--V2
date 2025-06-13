@@ -5,11 +5,11 @@ import {
   crearCategoria as crearCategoriaApi,
   modificarCategoria as modificarCategoriaApi,
   eliminarCategoria as eliminarCategoriaApi,
-} from '../../api/categoriasApi';
+} from '../../../api/categoriasApi';
 import { FaPlus, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
-import ModalGestionCategoria from '../../components/organisms/Modals/ModalGestionCategoria';
-import ModalEliminar from '../../components/organisms/Modals/ModalEliminar';
-import tienePermiso from '../../utils/tienePermiso'; // Importa la función tienePermiso
+import ModalGestionCategoria from '../../../components/organisms/Modals/ModalGestionCategoria';
+import ModalEliminar from '../../../components/organisms/Modals/ModalEliminar';
+import tienePermiso from '../../../utils/tienePermiso'; // Importa la función tienePermiso
 
 // --- COMPONENTE PRINCIPAL ---
 const CategoriasPage = () => {

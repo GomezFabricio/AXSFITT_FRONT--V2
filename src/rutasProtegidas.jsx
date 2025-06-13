@@ -1,17 +1,20 @@
 import UsuariosPage from './pages/admin/usuarios/UsuariosPage';
 import CrearUsuarioPage from './pages/admin/usuarios/CrearUsuarioPage';
-import ModulosPage from './pages/admin/ModulosPage';
+import ModulosPage from './pages/admin/modulos/ModulosPage';
 import PerfilesPage from './pages/admin/perfiles/PerfilesPage';
 import CrearPerfilPage from './pages/admin/perfiles/CrearPerfilPage';
 import EditarPerfilPage from './pages/admin/perfiles/EditarPerfilPage';
-import CategoriasPage from './pages/product/CategoriasPage';
+import CategoriasPage from './pages/product/categorias/CategoriasPage';
 import CrearProducto from './pages/product/productos/CrearProducto';
 import VerProductos from './pages/product/productos/VerProductos';
 import ModificarProducto from './pages/product/productos/ModificarProducto';
-import Stock from './pages/product/Stock'; 
-import Faltantes from './pages/product/Faltantes';
+import Stock from './pages/product/stock/Stock'; 
+import Faltantes from './pages/product/stock/Faltantes';
 import CrearClientePage from './pages/ventas/clientes/CrearClientePage';
 import VerClientes from './pages/ventas/clientes/VerClientes';
+import AgregarVentaPage from './pages/ventas/ventas/AgregarVentaPage';
+import VerVentasPage from './pages/ventas/ventas/VerVentasPage';
+import DetalleVentaPage from './pages/ventas/ventas/DetalleVentaPage';
 import HomePage from './pages/HomePage';
 
 export const rutasProtegidas = [
@@ -90,4 +93,19 @@ export const rutasProtegidas = [
     permiso: 'Ver Clientes',
     componente: <VerClientes />,
   },
+  {
+    path: '/ventas',
+    permiso: 'Ver Ventas',
+    componente: <VerVentasPage />,
+  },
+  {
+    path: '/ventas/agregar',
+    permiso: 'Agregar Venta',
+    componente: <AgregarVentaPage />,
+  },
+  {
+    path: '/ventas/detalle/:id',
+    permiso: 'Ver Ventas',
+    componente: <DetalleVentaPage />,
+  }
 ];

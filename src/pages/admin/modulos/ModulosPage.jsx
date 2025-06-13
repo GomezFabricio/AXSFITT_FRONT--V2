@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import Table from '../../components/molecules/Table';
-import { getModulos, updateModulo } from '../../api/modulosApi';
-import ModalDetalleModulosYPermisos from '../../components/organisms/Modals/ModalDetalleModulosYPermisos';
-import ModalEditarModulo from '../../components/organisms/Modals/ModalEditarModulo';
-import tienePermiso from '../../utils/tienePermiso'; 
+import Table from '../../../components/molecules/Table';
+import { getModulos, updateModulo } from '../../../api/modulosApi';
+import ModalDetalleModulosYPermisos from '../../../components/organisms/Modals/ModalDetalleModulosYPermisos';
+import ModalEditarModulo from '../../../components/organisms/Modals/ModalEditarModulo';
+import tienePermiso from '../../../utils/tienePermiso'; 
 
 const ModulosPage = () => {
   const [modulos, setModulos] = useState([]);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from '../../components/molecules/LoginForm';
+import LoginForm from '../../components/molecules/login/LoginForm';
 import { login } from '../../api/loginApi';
 
 const LoginPage = () => {

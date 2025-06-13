@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { obtenerFaltantes } from '../../api/stockApi';
-import config from '../../config/config';
-import TablaFaltantes from '../../components/molecules/TablaFaltantes';
-import ListaFaltantesPendientes from '../../components/molecules/ListaFaltantesPendientes';
-import tienePermiso from '../../utils/tienePermiso';
+import { obtenerFaltantes } from '../../../api/stockApi';
+import config from '../../../config/config';
+import TablaFaltantes from '../../../components/molecules/stock/TablaFaltantes';
+import ListaFaltantesPendientes from '../../../components/molecules/stock/ListaFaltantesPendientes';
+import tienePermiso from '../../../utils/tienePermiso';
 
 const Faltantes = () => {
   const [faltantes, setFaltantes] = useState([]);

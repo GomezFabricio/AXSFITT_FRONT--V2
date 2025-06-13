@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import tienePermiso from '../../utils/tienePermiso';
-import { actualizarStockMinimoMaximo } from '../../api/stockApi';
+import tienePermiso from '../../../utils/tienePermiso';
+import { actualizarStockMinimoMaximo } from '../../../api/stockApi';
 
 const ListaStock = ({ productos }) => {
   // Estado para el modo de edición

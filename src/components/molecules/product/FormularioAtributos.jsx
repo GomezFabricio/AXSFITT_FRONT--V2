@@ -1,5 +1,5 @@
 import React from 'react';
-import config from '../../config/config'; // Importar la configuración para obtener la URL base del backend
+import config from '../../../config/config'; // Importar la configuración para obtener la URL base del backend
 
 const FormularioAtributos = ({
   atributosConfigurados,
