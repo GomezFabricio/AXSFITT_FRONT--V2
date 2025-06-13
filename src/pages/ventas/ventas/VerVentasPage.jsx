@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getVentas, actualizarEstadoPago, actualizarEstadoEnvio } from '../../../api/ventasApi';
+import { getVentas, actualizarEstadoPago, actualizarEstadoEnvio, actualizarDatosVenta } from '../../../api/ventasApi';
 import { FaEye, FaEdit, FaFileInvoice } from 'react-icons/fa';
 import tienePermiso from '../../../utils/tienePermiso';
 import EstadoSelector from '../../../components/molecules/ventas/EstadoSelector';
+import ModalEditarVenta from '../../../components/organisms/Modals/ventas/ModalEditarVenta';
 
 const VerVentasPage = () => {
   const [ventas, setVentas] = useState([]);
@@ -12,6 +13,11 @@ const VerVentasPage = () => {
   const [filtroEstadoEnvio, setFiltroEstadoEnvio] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
   const [ventasFiltradas, setVentasFiltradas] = useState([]);
+  
+  // Estados para el modal de edición
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
+  const [ventaEnEdicion, setVentaEnEdicion] = useState(null);
+  const [guardando, setGuardando] = useState(false);
 
   // Verificar permisos
   const puedeModificarVenta = tienePermiso('Modificar Venta');
@@ -82,7 +88,12 @@ const VerVentasPage = () => {
       alert(`El estado de pago se ha cambiado a ${nuevoEstado}`);
     } catch (error) {
       console.error('Error al actualizar estado de pago:', error);
-      alert('No se pudo actualizar el estado de pago');
+      // Mostrar mensaje específico del error si está disponible
+      if (error.message && error.message.includes('después de 3 días')) {
+        alert('No se puede cambiar el estado de una venta cancelada después de 3 días');
+      } else {
+        alert('No se pudo actualizar el estado de pago');
+      }
     }
   };
 
@@ -109,6 +120,49 @@ const VerVentasPage = () => {
     } catch (error) {
       console.error('Error al actualizar estado de envío:', error);
       alert('No se pudo actualizar el estado de envío');
+    }
+  };
+
+  // Nueva función para abrir el modal de edición
+  const handleEditarVenta = (venta) => {
+    if (!puedeModificarVenta) {
+      alert('No tienes permisos para modificar ventas');
+      return;
+    }
+    setVentaEnEdicion(venta);
+    setModalEdicionAbierto(true);
+  };
+
+  // Nueva función para guardar cambios de edición
+  const handleGuardarEdicion = async (datosActualizados) => {
+    if (!ventaEnEdicion) return;
+    
+    setGuardando(true);
+    try {
+      const token = sessionStorage.getItem('token');
+      await actualizarDatosVenta(ventaEnEdicion.venta_id, datosActualizados, token);
+      
+      // Actualizar estado local
+      setVentas(prevVentas => 
+        prevVentas.map(venta => 
+          venta.venta_id === ventaEnEdicion.venta_id 
+            ? { 
+                ...venta, 
+                venta_nota: datosActualizados.venta_nota,
+                venta_origen: datosActualizados.venta_origen
+              } 
+            : venta
+        )
+      );
+      
+      alert('Datos de la venta actualizados correctamente');
+      setModalEdicionAbierto(false);
+      setVentaEnEdicion(null);
+    } catch (error) {
+      console.error('Error al actualizar datos de venta:', error);
+      alert('No se pudieron actualizar los datos de la venta');
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -260,7 +314,10 @@ const VerVentasPage = () => {
                           </button>
                         )}
                         {puedeModificarVenta && (
-                          <button className="text-amber-600 hover:text-amber-900">
+                          <button 
+                            className="text-amber-600 hover:text-amber-900"
+                            onClick={() => handleEditarVenta(venta)}
+                          >
                             <FaEdit className="text-lg" title="Editar venta" />
                           </button>
                         )}
@@ -279,6 +336,18 @@ const VerVentasPage = () => {
           </table>
         </div>
       </div>
+      
+      {/* Modal de edición */}
+      <ModalEditarVenta
+        isOpen={modalEdicionAbierto}
+        onClose={() => {
+          setModalEdicionAbierto(false);
+          setVentaEnEdicion(null);
+        }}
+        venta={ventaEnEdicion}
+        onConfirm={handleGuardarEdicion}
+        loading={guardando}
+      />
     </div>
   );
 };

@@ -133,6 +133,28 @@ export const verificarStock = async (productos, token) => {
   }
 };
 
+// Actualizar datos de venta (notas y origen)
+export const actualizarDatosVenta = async (ventaId, datos, token) => {
+  try {
+    const response = await axios.put(
+      `${config.backendUrl}/api/ventas/${ventaId}/datos`,
+      {
+        venta_nota: datos.venta_nota,
+        venta_origen: datos.venta_origen
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al actualizar datos de venta');
+  }
+};
+
+
 export const origenesVenta = [
   { value: 'Venta Manual', label: 'Venta Manual' },
   { value: 'Redes Sociales', label: 'Redes Sociales' },
