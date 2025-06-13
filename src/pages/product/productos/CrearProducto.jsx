@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { crearProducto, obtenerImagenesTemporales, guardarImagenTemporal, moverImagenTemporal, eliminarImagenTemporal, cancelarProcesoAltaProducto } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
-import ModalConfigurarAtributos from '../../../components/organisms/Modals/ModalConfigurarAtributos';
-import GaleriaImagenesProducto from '../../../components/molecules/product/GaleriaImagenesProducto';
-import FormularioDatosProducto from '../../../components/molecules/product/FormularioDatosProducto';
-import FormularioAtributos from '../../../components/molecules/product/FormularioAtributos';
+import ModalConfigurarAtributos from '../../../components/organisms/Modals/product/ModalConfigurarAtributos';
+import GaleriaImagenesProducto from '../../../components/molecules/productos/GaleriaImagenesProducto';
+import FormularioDatosProducto from '../../../components/molecules/productos/FormularioDatosProducto';
+import FormularioAtributos from '../../../components/molecules/productos/FormularioAtributos';
 import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
 

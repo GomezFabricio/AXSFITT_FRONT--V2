@@ -7,7 +7,7 @@ import {
   eliminarCategoria as eliminarCategoriaApi,
 } from '../../../api/categoriasApi';
 import { FaPlus, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
-import ModalGestionCategoria from '../../../components/organisms/Modals/ModalGestionCategoria';
+import ModalGestionCategoria from '../../../components/organisms/Modals/categorias/ModalGestionCategoria';
 import ModalEliminar from '../../../components/organisms/Modals/ModalEliminar';
 import tienePermiso from '../../../utils/tienePermiso'; // Importa la función tienePermiso
 

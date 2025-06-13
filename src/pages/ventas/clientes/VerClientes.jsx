@@ -10,7 +10,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
 import ModalEliminar from '../../../components/organisms/Modals/ModalEliminar';
-import ModalModificarCliente from '../../../components/organisms/Modals/ModalModificarCliente';
+import ModalModificarCliente from '../../../components/organisms/Modals/clientes/ModalModificarCliente';
 import tienePermiso from '../../../utils/tienePermiso';
 
 const VerClientes = () => {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Table from '../../../components/molecules/Table';
 import { getUsuarios, updatePerfilesUsuario } from '../../../api/usuariosApi';
 import { getPerfiles } from '../../../api/perfilesApi';
-import ModalAsignarPerfiles from '../../../components/organisms/Modals/ModalAsignarPerfiles';
+import ModalAsignarPerfiles from '../../../components/organisms/Modals/usuarios/ModalAsignarPerfiles';
 import tienePermiso from '../../../utils/tienePermiso'; 
 
 const UsuariosPage = () => {

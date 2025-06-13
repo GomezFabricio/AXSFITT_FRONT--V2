@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Table from '../../../components/molecules/Table';
 import { getPerfiles, eliminarPerfil } from '../../../api/perfilesApi';
 import { useNavigate, useLocation } from 'react-router-dom';
-import ModalDetalleModulosYPermisos from '../../../components/organisms/Modals/ModalDetalleModulosYPermisos';
+import ModalDetalleModulosYPermisos from '../../../components/organisms/Modals/modulos/ModalDetalleModulosYPermisos';
 import ModalEliminar from '../../../components/organisms/Modals/ModalEliminar';
 import tienePermiso from '../../../utils/tienePermiso';
 

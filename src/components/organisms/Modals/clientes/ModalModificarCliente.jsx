@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { clienteSchema } from '../../../validations/clientes.schema';
+import { clienteSchema } from '../../../../validations/clientes.schema';
 
 const ModalModificarCliente = ({ isOpen, onClose, cliente, onSubmit, isSubmitting }) => {
   const [form, setForm] = useState({
