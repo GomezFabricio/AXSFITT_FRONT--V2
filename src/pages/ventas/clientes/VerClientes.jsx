@@ -38,7 +38,6 @@ const VerClientes = () => {
       
       // Cargar clientes eliminados
       const eliminados = await obtenerClientesEliminados(token);
-      console.log('Clientes eliminados:', eliminados); // Debug para ver la estructura
       setClientesEliminados(eliminados);
     } catch (error) {
       setMensajeModal({
@@ -61,7 +60,8 @@ const VerClientes = () => {
     { title: 'ID', data: 'cliente_id' },
     { title: 'Nombre', data: 'persona_nombre', render: (data, type, row) => `${row.persona_nombre} ${row.persona_apellido}` },
     { title: 'DNI', data: 'persona_dni' },
-    { title: 'Teléfono', data: 'persona_telefono', render: (data) => data || '-' },
+    { title: 'Email', data: 'cliente_email' },
+    { title: 'Teléfono', data: 'persona_telefono' },
     { title: 'Domicilio', data: 'persona_domicilio', render: (data) => data || '-' },
     { title: 'Fecha Alta', data: 'cliente_fecha_alta', render: (data) => {
       if (!data) return '-';
@@ -209,7 +209,7 @@ const VerClientes = () => {
     <div className="container-fluid px-4">
       <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
         <h2 className="pl-12 text-xl font-semibold">Listado de Clientes</h2>
-    
+        
       </div>
       
       {/* Pestañas para cambiar entre clientes activos y eliminados */}
@@ -240,45 +240,61 @@ const VerClientes = () => {
         <Table columns={columnsActivos} data={clientes} />
       ) : (
         <div className="py-6">
-          <div className="rounded-xl shadow-lg bg-white p-6 w-[95%] mx-auto border border-violet-200">
-            <table className="display datatable-react" style={{ width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>DNI</th>
-                  <th>Teléfono</th>
-                  <th>Domicilio</th>
-                  <th>Fecha Alta</th>
-                  <th>Fecha Baja</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clientesEliminados.map(cliente => (
-                  <tr key={cliente.cliente_id}>
-                    <td>{cliente.cliente_id}</td>
-                    <td>{`${cliente.persona_nombre} ${cliente.persona_apellido}`}</td>
-                    <td>{cliente.persona_dni}</td>
-                    <td>{cliente.persona_telefono || '-'}</td>
-                    <td>{cliente.persona_domicilio || '-'}</td>
-                    <td>{cliente.cliente_fecha_alta ? new Date(cliente.cliente_fecha_alta).toLocaleDateString('es-AR') : '-'}</td>
-                    <td>{cliente.cliente_fecha_baja ? new Date(cliente.cliente_fecha_baja).toLocaleDateString('es-AR') : '-'}</td>
-                    <td>
-                      {tienePermiso('Modificar Cliente') && (
-                        <button
-                          onClick={() => handleReactivarCliente(cliente)}
-                          className="bg-green-100 text-green-600 border-none px-3 py-1 rounded-md font-semibold"
-                          style={{background:"#dcfce7", color:"#16a34a", border:"none", padding:"6px 12px", borderRadius:"6px", cursor:"pointer", fontWeight:"600"}}
-                        >
-                          Reactivar
-                        </button>
-                      )}
-                    </td>
+          <div className="rounded-xl shadow-lg bg-white p-4 md:p-6 w-[95%] mx-auto border border-violet-200">
+            <div className="overflow-x-auto"> {/* Contenedor con scroll horizontal */}
+              <table className="w-full min-w-full table-auto">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNI</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domicilio</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Alta</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Baja</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {clientesEliminados.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="px-4 py-4 text-center text-sm text-gray-500">
+                        No hay clientes eliminados
+                      </td>
+                    </tr>
+                  ) : (
+                    clientesEliminados.map(cliente => (
+                      <tr key={cliente.cliente_id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{cliente.cliente_id}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{`${cliente.persona_nombre} ${cliente.persona_apellido}`}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{cliente.persona_dni}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{cliente.cliente_email || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{cliente.persona_telefono || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{cliente.persona_domicilio || '-'}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {cliente.cliente_fecha_alta ? new Date(cliente.cliente_fecha_alta).toLocaleDateString('es-AR') : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {cliente.cliente_fecha_baja ? new Date(cliente.cliente_fecha_baja).toLocaleDateString('es-AR') : '-'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                          {tienePermiso('Modificar Cliente') && (
+                            <button
+                              onClick={() => handleReactivarCliente(cliente)}
+                              className="bg-green-100 text-green-600 border-none px-3 py-1 rounded-md font-semibold"
+                              style={{background:"#dcfce7", color:"#16a34a", border:"none", padding:"6px 12px", borderRadius:"6px", cursor:"pointer", fontWeight:"600"}}
+                            >
+                              Reactivar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

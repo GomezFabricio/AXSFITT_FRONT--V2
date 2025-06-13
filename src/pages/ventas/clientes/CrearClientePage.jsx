@@ -11,7 +11,8 @@ const CrearClientePage = () => {
     persona_dni: '',
     persona_fecha_nac: '',
     persona_domicilio: '',
-    persona_telefono: ''
+    persona_telefono: '',
+    cliente_email: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -148,6 +149,35 @@ const CrearClientePage = () => {
             </div>
           </div>
           <div>
+            <label className="block mb-1 font-semibold text-gray-700">Email *</label>
+            <input
+              className="border border-violet-200 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              name="cliente_email"
+              type="email"
+              value={form.cliente_email}
+              onChange={handleChange}
+              required
+              placeholder="ejemplo@correo.com"
+            />
+            {errors.cliente_email && (
+              <p className="text-red-500 text-sm mt-1">{errors.cliente_email}</p>
+            )}
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700">Teléfono *</label>
+            <input
+              className="border border-violet-200 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              name="persona_telefono"
+              value={form.persona_telefono}
+              onChange={handleChange}
+              required
+              placeholder="Teléfono (10 dígitos)"
+            />
+            {errors.persona_telefono && (
+              <p className="text-red-500 text-sm mt-1">{errors.persona_telefono}</p>
+            )}
+          </div>
+          <div>
             <label className="block mb-1 font-semibold text-gray-700">Domicilio</label>
             <input
               className="border border-violet-200 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
@@ -158,19 +188,6 @@ const CrearClientePage = () => {
             />
             {errors.persona_domicilio && (
               <p className="text-red-500 text-sm mt-1">{errors.persona_domicilio}</p>
-            )}
-          </div>
-          <div>
-            <label className="block mb-1 font-semibold text-gray-700">Teléfono</label>
-            <input
-              className="border border-violet-200 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
-              name="persona_telefono"
-              value={form.persona_telefono}
-              onChange={handleChange}
-              placeholder="Teléfono (10 dígitos)"
-            />
-            {errors.persona_telefono && (
-              <p className="text-red-500 text-sm mt-1">{errors.persona_telefono}</p>
             )}
           </div>
           <div className="flex gap-2 justify-end mt-4">

@@ -37,7 +37,10 @@ export const clienteSchema = z.object({
   persona_telefono: z
     .string()
     .length(10, { message: 'El teléfono debe tener exactamente 10 caracteres' })
-    .regex(/^\d+$/, { message: 'El teléfono debe contener solo números' })
-    .nullable()
-    .optional(),
+    .regex(/^\d+$/, { message: 'El teléfono debe contener solo números' }),
+    
+  cliente_email: z
+    .string()
+    .email({ message: 'El email no es válido' })
+    .max(100, { message: 'El email no puede exceder los 100 caracteres' })
 });
