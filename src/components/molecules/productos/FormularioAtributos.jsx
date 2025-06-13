@@ -1,16 +1,20 @@
 import React from 'react';
-import config from '../../../config/config'; // Importar la configuración para obtener la URL base del backend
+import config from '../../../config/config';
+import PropTypes from 'prop-types';
 
 const FormularioAtributos = ({
   atributosConfigurados,
   formulariosVariantes,
-  setFormulariosVariantes,
   handleFormularioChange,
   handleAgregarFormulario,
   handleEliminarVariante,
   imagenes,
   errores,
+  tienePermiso,
 }) => {
+  // Verificar si el usuario tiene permiso para definir precios
+  const puedeDefinirPrecios = tienePermiso("Definir Precio Producto");
+
   return (
     <div>
       <h3 className="text-lg font-medium text-gray-900">Valores de Atributos:</h3>
@@ -33,7 +37,10 @@ const FormularioAtributos = ({
 
           {/* Campos adicionales */}
           <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-700">Precio Costo:</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Precio Costo:
+              {!puedeDefinirPrecios && <span className="text-xs text-red-500 ml-1">(Requiere permiso)</span>}
+            </label>
             <input
               type="number"
               value={formulario.precioCosto || ''}
@@ -41,6 +48,8 @@ const FormularioAtributos = ({
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
                 errores[`formulario_${index}_precioCosto`] ? 'border-red-500' : ''
               }`}
+              disabled={!puedeDefinirPrecios}
+              title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
             />
             {errores[`formulario_${index}_precioCosto`] && (
               <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_precioCosto`]}</p>
@@ -48,7 +57,10 @@ const FormularioAtributos = ({
           </div>
 
           <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-700">Precio Venta:</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Precio Venta:
+              {!puedeDefinirPrecios && <span className="text-xs text-red-500 ml-1">(Requiere permiso)</span>}
+            </label>
             <input
               type="number"
               value={formulario.precioVenta || ''}
@@ -56,6 +68,8 @@ const FormularioAtributos = ({
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
                 errores[`formulario_${index}_precioVenta`] ? 'border-red-500' : ''
               }`}
+              disabled={!puedeDefinirPrecios}
+              title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
             />
             {errores[`formulario_${index}_precioVenta`] && (
               <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_precioVenta`]}</p>
@@ -63,7 +77,10 @@ const FormularioAtributos = ({
           </div>
 
           <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-700">Precio Oferta:</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Precio Oferta:
+              {!puedeDefinirPrecios && <span className="text-xs text-red-500 ml-1">(Requiere permiso)</span>}
+            </label>
             <input
               type="number"
               value={formulario.precioOferta || ''}
@@ -71,6 +88,8 @@ const FormularioAtributos = ({
               className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
                 errores[`formulario_${index}_precioOferta`] ? 'border-red-500' : ''
               }`}
+              disabled={!puedeDefinirPrecios}
+              title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
             />
             {errores[`formulario_${index}_precioOferta`] && (
               <p className="text-sm text-red-500 mt-1">{errores[`formulario_${index}_precioOferta`]}</p>
@@ -113,7 +132,7 @@ const FormularioAtributos = ({
             <div className="grid grid-cols-3 gap-4 mt-2">
               {imagenes.map((imagen) => (
                 <div
-                  key={imagen.imagen_id}
+                  key={imagen.id}
                   className={`cursor-pointer border rounded-md p-1 ${
                     formulario.imagen_url === imagen.url ? 'border-blue-500' : 'border-gray-300'
                   }`}
@@ -121,8 +140,8 @@ const FormularioAtributos = ({
                   style={{ width: '100px', height: '100px' }}
                 >
                   <img
-                    src={`${config.backendUrl}${imagen.url}`} // Concatenar la URL base del backend
-                    alt={`Imagen ${imagen.imagen_id}`}
+                    src={`${imagen.url.startsWith('http') ? '' : config.backendUrl}${imagen.url}`}
+                    alt={`Imagen ${imagen.id}`}
                     className="w-full h-full object-cover rounded-md"
                   />
                 </div>
@@ -155,6 +174,17 @@ const FormularioAtributos = ({
       </button>
     </div>
   );
+};
+
+FormularioAtributos.propTypes = {
+  atributosConfigurados: PropTypes.object.isRequired,
+  formulariosVariantes: PropTypes.array.isRequired,
+  handleFormularioChange: PropTypes.func.isRequired,
+  handleAgregarFormulario: PropTypes.func.isRequired,
+  handleEliminarVariante: PropTypes.func.isRequired,
+  imagenes: PropTypes.array.isRequired,
+  errores: PropTypes.object,
+  tienePermiso: PropTypes.func.isRequired, // Agregar prop type para tienePermiso
 };
 
 export default FormularioAtributos;

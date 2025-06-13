@@ -7,7 +7,7 @@ import {
   eliminarImagenProducto,
   subirImagenProducto,
   cancelarImagenesNuevas,
-  verificarVentasVariante,
+  // Eliminada la importación de verificarVentasVariante
 } from '../../../api/productosApi';
 import { getCategorias } from '../../../api/categoriasApi';
 import ModalConfigurarAtributos from '../../../components/organisms/Modals/product/ModalConfigurarAtributos';
@@ -16,14 +16,7 @@ import FormularioDatosProducto from '../../../components/molecules/productos/For
 import FormularioAtributos from '../../../components/molecules/productos/FormularioAtributos';
 import { z } from 'zod';
 import { productoSchema } from '../../../validations/producto.schema';
-
-const tienePermiso = (permisoDescripcion) => {
-  const userData = JSON.parse(sessionStorage.getItem('userData'));
-  if (!userData || !userData.modulos) return false;
-  return userData.modulos.some(
-    (m) => m.permisos && m.permisos.some((p) => p.permiso_descripcion === permisoDescripcion)
-  );
-};
+import tienePermiso from '../../../utils/tienePermiso';
 
 const ModificarProducto = () => {
   const { producto_id } = useParams();
@@ -42,7 +35,7 @@ const ModificarProducto = () => {
   const [categorias, setCategorias] = useState([]);
   const [atributosConfigurados, setAtributosConfigurados] = useState({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
   const [formulariosVariantes, setFormulariosVariantes] = useState([]);
-  const [ventasPorVariante, setVentasPorVariante] = useState({});
+  // Eliminado el estado ventasPorVariante
   const [errores, setErrores] = useState({});
   const [cargando, setCargando] = useState(true);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false); // Estado para el modal
@@ -113,15 +106,13 @@ const ModificarProducto = () => {
               : [],
           });
 
-          // Llamar a verificarVentas después de cargar las variantes
-          verificarVentas(productoData.variantes);
+          // Eliminada la llamada a verificarVentas
         } else {
           // Si no hay variantes, inicializar los formulariosVariantes con un objeto vacío
           setFormulariosVariantes([]);
           previousFormulariosVariantes.current = [];
           setAtributosConfigurados({ atributos: [], precioBase: '', precioCostoBase: '', stockBase: '' });
         }
-
 
         setCargando(false);
       } catch (error) {
@@ -325,28 +316,7 @@ const ModificarProducto = () => {
     }
   };
 
-  const verificarVentas = async (variantes) => {
-    const token = sessionStorage.getItem('token');
-    const ventasInfo = {};
-
-    // Crear un array de promesas para verificar las ventas de cada variante
-    const ventasPromises = variantes.map(async (variante) => {
-      try {
-        const { tieneVentas } = await verificarVentasVariante(variante.variante_id, token);
-        ventasInfo[variante.variante_id] = tieneVentas;
-      } catch (error) {
-        console.error(`Error al verificar ventas para variante ${variante.variante_id}:`, error);
-        ventasInfo[variante.variante_id] = false;
-      }
-    });
-
-    // Esperar a que todas las promesas se resuelvan
-    await Promise.all(ventasPromises);
-
-    // Actualizar el estado con la información de ventas
-    setVentasPorVariante(ventasInfo);
-  };
-
+  // Eliminada la función verificarVentas
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -453,6 +423,7 @@ const ModificarProducto = () => {
           categorias={categorias} // Pasar las categorías cargadas
           errores={errores}
           usarAtributos={usarAtributos}
+          tienePermiso={tienePermiso}
         />
 
         <div>
@@ -500,7 +471,6 @@ const ModificarProducto = () => {
             imagenes={imagenes}
             errores={errores}
             tienePermiso={tienePermiso}
-            ventasPorVariante={ventasPorVariante}
           />
         )}
 

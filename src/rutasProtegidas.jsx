@@ -95,7 +95,7 @@ export const rutasProtegidas = [
   },
   {
     path: '/ventas',
-    permiso: 'Ver Ventas',
+    permiso: 'Listado de Ventas',
     componente: <VerVentasPage />,
   },
   {
@@ -105,7 +105,7 @@ export const rutasProtegidas = [
   },
   {
     path: '/ventas/detalle/:id',
-    permiso: 'Ver Ventas',
+    permiso: 'Listado de Ventas',
     componente: <DetalleVentaPage />,
   }
 ];
