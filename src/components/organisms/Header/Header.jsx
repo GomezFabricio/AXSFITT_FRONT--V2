@@ -17,7 +17,6 @@ const Header = () => {
 
         {/* Sección derecha */}
         <div className="flex items-center space-x-4">
-          <span className="hidden sm:block text-sm text-white">Bienvenido, Usuario</span>
           <button
             type="button"
             className="text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"

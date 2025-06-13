@@ -108,7 +108,7 @@ const MetricasDeVenta = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-6 flex items-center">
-        <FaChartLine className="mr-2" /> Dashboard de Ventas
+        <FaChartLine className="mr-2" /> Métrcias de Ventas
       </h1>
       
       {/* Tarjetas de resumen */}

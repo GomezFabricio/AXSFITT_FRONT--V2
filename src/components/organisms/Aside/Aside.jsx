@@ -178,7 +178,7 @@ const Aside = ({ isAsideOpen = true }) => {
       {/* Perfil de usuario */}
       {usuario && (
         <div className="flex flex-col gap-1 px-5 py-4 border-b border-gray-800 bg-transparent">
-          <Link to="/perfil" className="hover:underline font-semibold text-base text-white">
+          <Link to="#" className="hover:underline font-semibold text-base text-white">
             {usuario.nombre} {usuario.apellido}
           </Link>
           <div className="text-xs text-gray-400">{usuario.usuario_email}</div>
@@ -198,7 +198,7 @@ const Aside = ({ isAsideOpen = true }) => {
               `}
             >
               <FaThLarge />
-              Dashboard
+              Inicio
             </Link>
           </li>
           {modulos.length > 0 ? (
