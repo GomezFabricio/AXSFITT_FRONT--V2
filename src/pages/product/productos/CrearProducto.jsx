@@ -86,7 +86,7 @@ const CrearProducto = () => {
     cargarImagenesTemporales();
   }, [usuario_id]);
 
-  const handleMoverImagen = async (indexActual, indexNuevo) => {
+    const handleMoverImagen = async (indexActual, indexNuevo) => {
     const token = sessionStorage.getItem('token');
     const imagenActual = imagenes[indexActual];
   
@@ -96,8 +96,9 @@ const CrearProducto = () => {
       return;
     }
   
-    console.log('Datos enviados a la API moverImagenProducto:', {
-      producto_id,
+    // Eliminado la referencia incorrecta a producto_id que causaba el error
+    console.log('Datos enviados a la API moverImagenTemporal:', {
+      usuario_id,
       imagen_id: imagenActual.id,
       nuevo_orden: indexNuevo,
     });
@@ -117,7 +118,6 @@ const CrearProducto = () => {
       nuevasImagenes.splice(indexNuevo, 0, imagenActual);
       setImagenes(nuevasImagenes);
   
-      alert('Orden de la imagen actualizado correctamente.');
     } catch (error) {
       console.error('Error al mover la imagen:', error.response?.data || error);
       alert('Error al mover la imagen.');

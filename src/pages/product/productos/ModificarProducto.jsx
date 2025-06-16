@@ -230,7 +230,7 @@ const ModificarProducto = () => {
       await moverImagenProducto(
         {
           producto_id,
-          imagen_id: imagenActual.id, // Asegúrate de enviar el ID real de la imagen
+          imagen_id: imagenActual.id, 
           nuevo_orden: indexNuevo,
         },
         token
@@ -241,7 +241,6 @@ const ModificarProducto = () => {
       nuevasImagenes.splice(indexNuevo, 0, imagenActual);
       setImagenes(nuevasImagenes);
 
-      alert('Orden de la imagen actualizado correctamente.');
     } catch (error) {
       console.error('Error al mover la imagen:', error.response?.data || error);
       alert('Error al mover la imagen.');

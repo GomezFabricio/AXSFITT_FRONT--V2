@@ -27,144 +27,213 @@ const FormularioDatosProducto = ({
   const puedeDefinirPrecios = tienePermiso("Definir Precio Producto");
 
   return (
-    <div>
-      <div className="mb-4">
-        <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-          Nombre del Producto
-        </label>
-        <input
-          type="text"
-          id="nombre"
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-            errores?.producto_nombre ? 'border-red-500' : ''
-          }`}
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
-        {errores?.producto_nombre && (
-          <p className="mt-2 text-sm text-red-600">{errores.producto_nombre}</p>
+    <div className="bg-white rounded-lg shadow-sm p-6 transition-all duration-300">
+      <div className="space-y-6">
+        {/* Nombre del Producto */}
+        <div>
+          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre del Producto
+          </label>
+          <input
+            type="text"
+            id="nombre"
+            className={`w-full px-3 py-2 bg-gray-50 border rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors ${
+              errores?.producto_nombre ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'
+            }`}
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Ingrese el nombre del producto"
+          />
+          {errores?.producto_nombre && (
+            <p className="mt-1 text-sm text-red-500">{errores.producto_nombre}</p>
+          )}
+        </div>
+
+        {/* Categoría */}
+        <div>
+          <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
+            Categoría
+          </label>
+          <div className="relative">
+            <select
+              id="categoria"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors"
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
+            >
+              <option value="">Seleccione una categoría</option>
+              {categorias && categorias.map((categoria) => (
+                <option key={categoria.categoria_id} value={categoria.categoria_id}>
+                  {categoria.nombreJerarquico}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Descripción */}
+        <div>
+          <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
+            Descripción
+          </label>
+          <textarea
+            id="descripcion"
+            rows="3"
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder="Describa el producto"
+          ></textarea>
+        </div>
+
+        {!usarAtributos && (
+          <>
+            {/* Sección de Precios */}
+            <div className="border-t border-gray-100 pt-5">
+              <h3 className="text-sm font-medium text-gray-500 mb-4">Información de Precios</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Precio de Venta */}
+                <div>
+                  <label htmlFor="precioVenta" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    Precio de Venta
+                    {!puedeDefinirPrecios && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                        Sin permiso
+                      </span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="precioVenta"
+                      className={`w-full pl-7 pr-3 py-2 bg-gray-50 border rounded-md focus:outline-none focus:ring-2 ${
+                        !puedeDefinirPrecios ? 'bg-gray-100 text-gray-500' : ''
+                      } ${
+                        errores?.producto_precio_venta ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 focus:ring-violet-500'
+                      }`}
+                      value={precioVenta}
+                      onChange={(e) => setPrecioVenta(e.target.value)}
+                      disabled={!puedeDefinirPrecios}
+                      title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  {errores?.producto_precio_venta && (
+                    <p className="mt-1 text-sm text-red-500">{errores.producto_precio_venta}</p>
+                  )}
+                </div>
+
+                {/* Precio de Costo */}
+                <div>
+                  <label htmlFor="precioCosto" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    Precio de Costo
+                    {!puedeDefinirPrecios && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                        Sin permiso
+                      </span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="precioCosto"
+                      className={`w-full pl-7 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 ${
+                        !puedeDefinirPrecios ? 'bg-gray-100 text-gray-500' : ''
+                      }`}
+                      value={precioCosto}
+                      onChange={(e) => setPrecioCosto(e.target.value)}
+                      disabled={!puedeDefinirPrecios}
+                      title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Precio de Oferta */}
+                <div>
+                  <label htmlFor="precioOferta" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    Precio de Oferta
+                    {!puedeDefinirPrecios && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                        Sin permiso
+                      </span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="precioOferta"
+                      className={`w-full pl-7 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 ${
+                        !puedeDefinirPrecios ? 'bg-gray-100 text-gray-500' : ''
+                      }`}
+                      value={precioOferta}
+                      onChange={(e) => setPrecioOferta(e.target.value)}
+                      disabled={!puedeDefinirPrecios}
+                      title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sección de Inventario */}
+            <div className="border-t border-gray-100 pt-5">
+              <h3 className="text-sm font-medium text-gray-500 mb-4">Información de Inventario</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Stock General */}
+                <div>
+                  <label htmlFor="stockGeneral" className="block text-sm font-medium text-gray-700 mb-1">
+                    Stock General
+                  </label>
+                  <input
+                    type="number"
+                    id="stockGeneral"
+                    className={`w-full px-3 py-2 bg-gray-50 border rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors ${
+                      errores?.producto_stock ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'
+                    }`}
+                    value={stockGeneral}
+                    onChange={(e) => setStockGeneral(e.target.value)}
+                    placeholder="0"
+                  />
+                  {errores?.producto_stock && (
+                    <p className="mt-1 text-sm text-red-500">{errores.producto_stock}</p>
+                  )}
+                </div>
+
+                {/* SKU General */}
+                <div>
+                  <label htmlFor="skuGeneral" className="block text-sm font-medium text-gray-700 mb-1">
+                    SKU General
+                  </label>
+                  <input
+                    type="text"
+                    id="skuGeneral"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors"
+                    value={skuGeneral}
+                    onChange={(e) => setSkuGeneral(e.target.value)}
+                    placeholder="SKU-XXXXX"
+                  />
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
-
-      <div className="mb-4">
-        <label htmlFor="categoria" className="block text-sm font-medium text-gray-700">
-          Categoría
-        </label>
-        <select
-          id="categoria"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          value={categoriaId}
-          onChange={(e) => setCategoriaId(e.target.value)}
-        >
-          <option value="">Seleccione una categoría</option>
-          {categorias && categorias.map((categoria) => (
-            <option key={categoria.categoria_id} value={categoria.categoria_id}>
-              {categoria.nombreJerarquico}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700">
-          Descripción
-        </label>
-        <textarea
-          id="descripcion"
-          rows="3"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-        ></textarea>
-      </div>
-
-      {!usarAtributos && (
-        <>
-          <div className="mb-4">
-            <label htmlFor="precioVenta" className="block text-sm font-medium text-gray-700">
-              Precio de Venta
-              {!puedeDefinirPrecios && <span className="text-xs text-red-500 ml-1">(Requiere permiso)</span>}
-            </label>
-            <input
-              type="number"
-              id="precioVenta"
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores?.producto_precio_venta ? 'border-red-500' : ''
-              }`}
-              value={precioVenta}
-              onChange={(e) => setPrecioVenta(e.target.value)}
-              disabled={!puedeDefinirPrecios}
-              title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
-            />
-            {errores?.producto_precio_venta && (
-              <p className="mt-2 text-sm text-red-600">{errores.producto_precio_venta}</p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="precioCosto" className="block text-sm font-medium text-gray-700">
-              Precio de Costo
-              {!puedeDefinirPrecios && <span className="text-xs text-red-500 ml-1">(Requiere permiso)</span>}
-            </label>
-            <input
-              type="number"
-              id="precioCosto"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              value={precioCosto}
-              onChange={(e) => setPrecioCosto(e.target.value)}
-              disabled={!puedeDefinirPrecios}
-              title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="precioOferta" className="block text-sm font-medium text-gray-700">
-              Precio de Oferta
-              {!puedeDefinirPrecios && <span className="text-xs text-red-500 ml-1">(Requiere permiso)</span>}
-            </label>
-            <input
-              type="number"
-              id="precioOferta"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              value={precioOferta}
-              onChange={(e) => setPrecioOferta(e.target.value)}
-              disabled={!puedeDefinirPrecios}
-              title={!puedeDefinirPrecios ? "No tienes permiso para definir precios" : ""}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="stockGeneral" className="block text-sm font-medium text-gray-700">
-              Stock General
-            </label>
-            <input
-              type="number"
-              id="stockGeneral"
-              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
-                errores?.producto_stock ? 'border-red-500' : ''
-              }`}
-              value={stockGeneral}
-              onChange={(e) => setStockGeneral(e.target.value)}
-            />
-            {errores?.producto_stock && (
-              <p className="mt-2 text-sm text-red-600">{errores.producto_stock}</p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="skuGeneral" className="block text-sm font-medium text-gray-700">
-              SKU General
-            </label>
-            <input
-              type="text"
-              id="skuGeneral"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              value={skuGeneral}
-              onChange={(e) => setSkuGeneral(e.target.value)}
-            />
-          </div>
-        </>
-      )}
     </div>
   );
 };
@@ -194,7 +263,7 @@ FormularioDatosProducto.propTypes = {
   ).isRequired,
   errores: PropTypes.object,
   usarAtributos: PropTypes.bool.isRequired,
-  tienePermiso: PropTypes.func.isRequired, // Agregar prop type para tienePermiso
+  tienePermiso: PropTypes.func.isRequired,
 };
 
 export default FormularioDatosProducto;
