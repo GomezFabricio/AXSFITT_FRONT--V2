@@ -5,7 +5,7 @@ const ModalGestionCategoria = ({
   onClose,
   onSubmit,
   initialData = { categoria_nombre: '', categoria_descripcion: '' },
-  mode, // 'create_parent', 'create_sub', 'edit'
+  mode, 
   parentCategoriaNombre = null,
   loadingSubmit
 }) => {
@@ -13,7 +13,7 @@ const ModalGestionCategoria = ({
 
   useEffect(() => {
     setFormData(initialData);
-  }, [initialData, isOpen]); // Reset form when initialData or isOpen changes
+  }, [initialData, isOpen]); 
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,8 +36,15 @@ const ModalGestionCategoria = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
-      <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 ease-in-out scale-95 opacity-0 animate-modal-scale-fade-in">
+    <div 
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out"
+      style={{
+        background: 'linear-gradient(rgba(30, 27, 75, 0.15), rgba(30, 27, 75, 0.25))',
+        backdropFilter: 'blur(3px)',
+        WebkitBackdropFilter: 'blur(3px)'
+      }}
+    >
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-7 border border-violet-100 transform transition-all duration-300 ease-in-out scale-95 opacity-0 animate-modal-scale-fade-in">
         <h2 className="text-2xl font-bold mb-6 text-purple-700 text-center">
           {modalTitle}
         </h2>
@@ -103,7 +110,7 @@ const ModalGestionCategoria = ({
           </div>
         </form>
       </div>
-      {/* Animación para el modal (opcional, si no la tienes globalmente) */}
+      {/* Animación para el modal */}
       <style jsx global>{`
         @keyframes modal-scale-fade-in {
           0% {
