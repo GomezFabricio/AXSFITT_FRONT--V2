@@ -56,30 +56,31 @@ const AgregarVentaPage = () => {
     const nuevosProductos = [...productos];
 
     for (const prod of productosSeleccionados) {
-      if (!nuevosProductos.some(p => p.producto_id === prod.producto_id)) {
-        try {
-          const token = sessionStorage.getItem('token');
-          const variantes = await obtenerVariantesProducto(prod.producto_id, token);
+      try {
+        const token = sessionStorage.getItem('token');
+        const variantes = await obtenerVariantesProducto(prod.producto_id, token);
 
-          nuevosProductos.push({
-            uniqueId: uuidv4(),
-            producto_id: prod.producto_id,
-            nombre: prod.producto_nombre,
-            precio: prod.producto_precio_oferta || prod.producto_precio_venta,
-            cantidad: 1,
-            imagen_url: prod.imagen_url ? `${config.backendUrl}${prod.imagen_url}` : null,
-            stock: prod.stock,
-            variantes: variantes,
-            variante_id: null
-          });
-        } catch (error) {
-          console.error('Error al obtener variantes:', error);
-        }
+        // Permitir múltiples ingresos del mismo producto
+        nuevosProductos.push({
+          uniqueId: uuidv4(),
+          producto_id: prod.producto_id,
+          nombre: prod.producto_nombre,
+          precio: prod.producto_precio_oferta || prod.producto_precio_venta,
+          cantidad: 1,
+          imagen_url: prod.imagen_url ? `${config.backendUrl}${prod.imagen_url}` : null,
+          stock: prod.stock,
+          variantes: variantes,
+          variante_id: null // Se elegirá después
+        });
+
+      } catch (error) {
+        console.error('Error al obtener variantes:', error);
       }
     }
 
     setProductos(nuevosProductos);
   };
+
 
   const handleEliminarProducto = (uniqueId) => {
     setProductos(prev => prev.filter(p => p.uniqueId !== uniqueId));

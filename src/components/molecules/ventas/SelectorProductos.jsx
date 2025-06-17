@@ -42,12 +42,9 @@ const SelectorProductos = ({ onProductosSeleccionados }) => {
 
   // Seleccionar/deseleccionar un producto
   const toggleSeleccion = (producto) => {
-    if (seleccionados.find(p => p.producto_id === producto.producto_id)) {
-      setSeleccionados(prev => prev.filter(p => p.producto_id !== producto.producto_id));
-    } else {
-      setSeleccionados(prev => [...prev, producto]);
-    }
+    setSeleccionados(prev => [...prev, producto]); // permite agregar varias veces
   };
+
 
   // Confirmar selección y cerrar modal
   const confirmarSeleccion = () => {

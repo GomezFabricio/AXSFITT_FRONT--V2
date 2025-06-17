@@ -98,13 +98,18 @@ const VerProductos = () => {
     try {
       const token = sessionStorage.getItem('token');
       await cambiarVisibilidadProducto(productoId, !visible, token);
+      
+      // Actualizar el estado local con el nuevo valor de visibilidad
       setProductos((prevProductos) =>
         prevProductos.map((producto) =>
-          producto.producto_id === productoId ? { ...producto, visible: !visible } : producto
+          producto.producto_id === productoId 
+            ? { ...producto, visible: !visible } 
+            : producto
         )
       );
+      
       setTipoMensaje('exito');
-      setMensaje('Visibilidad del producto actualizada.');
+      setMensaje(`Producto ${!visible ? 'visible' : 'oculto'} exitosamente.`);
       setModalMensajeOpen(true);
     } catch (error) {
       console.error('Error al cambiar visibilidad del producto:', error);
@@ -253,7 +258,7 @@ const VerProductos = () => {
               marca={producto.marca || null}
               stockTotal={producto.stock_total}
               imagenUrl={producto.imagen_url}
-              visible={producto.visible}
+              visible={Boolean(producto.visible)} 
               producto_estado={producto.producto_estado}
               onEditar={tienePermiso('Modificar Producto') ? () => handleModificar(producto.producto_id) : null}
               onEliminar={tienePermiso('Eliminar Producto') ? () => abrirModalEliminar(producto) : null}
