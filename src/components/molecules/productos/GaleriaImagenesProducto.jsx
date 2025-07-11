@@ -16,7 +16,6 @@ const GaleriaImagenesProducto = ({ imagenes, onMoverImagen, onEliminarImagen, on
             src={`${config.backendUrl}${imagen.url}`}
             alt={`Imagen ${index + 1}`}
             className="w-full h-full object-cover"
-            onLoad={() => console.log('✅ Imagen cargada:', `${config.backendUrl}${imagen.url}`)}
             onError={() => console.error('❌ Error al cargar imagen:', `${config.backendUrl}${imagen.url}`)}
           />
           

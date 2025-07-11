@@ -77,8 +77,6 @@ const CrearProducto = () => {
         const token = sessionStorage.getItem('token');
         const response = await obtenerImagenesTemporales(usuario_id, token);
         
-        console.log('🔄 Respuesta de obtenerImagenesTemporales:', response);
-        
         // Extraer las imágenes del objeto response
         const imagenesTemporales = response.data || response;
 
@@ -87,7 +85,6 @@ const CrearProducto = () => {
           url: img.imagen_url,
         }));
 
-        console.log('🔄 Imágenes procesadas:', imagenesProcesadas);
         setImagenes(imagenesProcesadas);
       } catch (error) {
         console.error('Error al cargar imágenes temporales:', error);
@@ -107,13 +104,6 @@ const CrearProducto = () => {
       alert('Error al mover la imagen. La imagen no tiene un ID válido.');
       return;
     }
-  
-    // Eliminado la referencia incorrecta a producto_id que causaba el error
-    console.log('Datos enviados a la API moverImagenTemporal:', {
-      usuario_id,
-      imagen_id: imagenActual.id,
-      nuevo_orden: indexNuevo,
-    });
   
     try {
       await moverImagenTemporal(
@@ -180,14 +170,12 @@ const CrearProducto = () => {
   
       try {
         const response = await guardarImagenTemporal(formData, token);
-        console.log('🔄 Respuesta del servidor al guardar imagen:', response);
         
         if (response && response.data) {
           const nuevaImagen = { 
             id: response.data.imagen_id, 
             url: response.data.imagen_url 
           };
-          console.log('🔄 Nueva imagen procesada:', nuevaImagen);
           newImages.push(nuevaImagen);
         } else {
           console.error('❌ Respuesta inesperada del servidor:', response);
@@ -309,18 +297,11 @@ const CrearProducto = () => {
         : [],
     };
   
-    console.log('Datos del producto a enviar:', productoData);
-  
     try {
       productoSchema.parse(productoData);
   
       const token = sessionStorage.getItem('token');
-      console.log('Token a enviar:', token);
-  
-      console.log('Llamando a la API crearProducto con:', productoData, token);
       const response = await crearProducto(productoData, token);
-  
-      console.log('Respuesta de la API crearProducto:', response);
   
       if (response && response.data && response.data.producto_id) {
         alert('Producto creado exitosamente.');

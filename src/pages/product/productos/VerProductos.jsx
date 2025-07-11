@@ -145,8 +145,6 @@ const VerProductos = () => {
       const token = sessionStorage.getItem('token');
       const detalles = await obtenerDetallesStock(productoId, token);
 
-      console.log('Detalles recibidos del backend:', detalles);
-
       // Verificar que los detalles tengan la estructura esperada
       if (!detalles || !detalles.producto) {
         throw new Error('Estructura de datos inválida recibida del servidor');

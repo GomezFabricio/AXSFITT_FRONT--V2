@@ -185,14 +185,12 @@ export const actualizarProducto = async (producto_id, productoData, token) => {
 };
 
 export const moverImagenProducto = async (data, token) => {
-  console.log('🔄 API: Moviendo imagen con datos:', data);
   try {
     const response = await axios.put(`${API_BASE_URL}/imagenes/mover`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log('✅ API: Imagen movida exitosamente:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ API: Error al mover imagen:', error);
@@ -217,7 +215,6 @@ export const eliminarImagenProducto = async ({ producto_id, imagen_id }, token) 
 
 // Subir una nueva imagen al producto
 export const subirImagenProducto = async (producto_id, formData, token) => {
-  console.log('🔄 API: Subiendo imagen al producto:', producto_id, formData);
   try {
     const response = await axios.post(`${API_BASE_URL}/${producto_id}/imagenes`, formData, {
       headers: {
@@ -225,7 +222,6 @@ export const subirImagenProducto = async (producto_id, formData, token) => {
         'Content-Type': 'multipart/form-data',
       },
     });
-    console.log('✅ API: Respuesta exitosa:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ API: Error al subir imagen:', error);
@@ -257,7 +253,6 @@ export const cambiarEstadoVariante = async (variante_id, estado, token) => {
 };
 
 export const verificarVentasVariante = async (variante_id, token) => {
-  console.log('Verificando ventas para variante:', variante_id);
   if (!variante_id) {
     throw new Error('El ID de la variante es requerido para verificar ventas');
   }

@@ -86,7 +86,6 @@ const ModificarProducto = () => {
           id: imagen.imagen_id, // Usar el ID real de la base de datos
           url: imagen.imagen_url, // La URL ya viene procesada desde el backend
         }));
-        console.log('Imágenes procesadas:', imagenesProcesadas);
         setImagenes(imagenesProcesadas);
 
         // Cargar variantes
@@ -175,7 +174,6 @@ const ModificarProducto = () => {
           const token = sessionStorage.getItem('token');
           const imagenIds = nuevas.map((img) => img.id).filter(Boolean);
           await cancelarImagenesNuevas(producto_id, imagenIds, token);
-          console.log('Imágenes nuevas eliminadas automáticamente al salir');
         } catch (error) {
           console.error('Error al cancelar imágenes nuevas automáticamente:', error);
         }
@@ -227,13 +225,6 @@ const ModificarProducto = () => {
     const token = sessionStorage.getItem('token');
     const imagenActual = imagenes[indexActual];
 
-    console.log('🔄 Iniciando movimiento de imagen:', {
-      indexActual,
-      indexNuevo,
-      imagenActual,
-      totalImagenes: imagenes.length
-    });
-
     if (!imagenActual || imagenActual.id === undefined) {
       console.error('❌ La imagen actual no tiene un ID válido:', imagenActual);
       alert('Error al mover la imagen. La imagen no tiene un ID válido.');
@@ -246,19 +237,14 @@ const ModificarProducto = () => {
       nuevo_orden: indexNuevo,
     };
 
-    console.log('📤 Datos enviados a la API moverImagenProducto:', datosAEnviar);
-
     try {
       const respuesta = await moverImagenProducto(datosAEnviar, token);
-      console.log('✅ Respuesta del servidor:', respuesta);
 
       // Actualizar el estado local solo si el servidor confirma el éxito
       const nuevasImagenes = [...imagenes];
       nuevasImagenes.splice(indexActual, 1);
       nuevasImagenes.splice(indexNuevo, 0, imagenActual);
       setImagenes(nuevasImagenes);
-      
-      console.log('✅ Estado local actualizado');
 
     } catch (error) {
       console.error('❌ Error al mover la imagen:', error.response?.data || error);
@@ -275,11 +261,6 @@ const ModificarProducto = () => {
       alert('Error al eliminar la imagen. La imagen no tiene un ID válido.');
       return;
     }
-
-    console.log('Datos enviados a la API eliminarImagenProducto:', {
-      producto_id,
-      imagen_id: imagen.id,
-    });
 
     try {
       // Llamar a la API para eliminar la imagen
@@ -306,17 +287,11 @@ const ModificarProducto = () => {
   const handleSubirImagen = async (file) => {
     const token = sessionStorage.getItem('token');
     const formData = new FormData();
-    formData.append('file', file);
-
-    console.log('Subiendo imagen:', file);
-
-    try {
+    formData.append('file', file);    try {
       const response = await subirImagenProducto(producto_id, formData, token);
-      console.log('Respuesta completa del servidor:', response);
       
       // Extraer los datos correctamente de la respuesta
       const nuevaImagen = response.data || response;
-      console.log('Datos de la nueva imagen:', nuevaImagen);
       
       setImagenes((prev) => [
         ...prev,
@@ -406,8 +381,6 @@ const ModificarProducto = () => {
         }))
         : [],
     };
-
-    console.log('Datos enviados a la API de modificar producto:', productoData);
 
     try {
       // Validación con Zod
