@@ -17,7 +17,13 @@ const TarjetaProducto = ({
   onReactivar, // Nueva prop para la función reactivar
 }) => {
   return (
-    <div className="flex items-center p-4 bg-white shadow-md rounded-md border border-gray-200 hover:shadow-lg transition-shadow">
+    <div className={`flex items-center p-4 shadow-md rounded-md border transition-shadow ${
+      producto_estado === 'inactivo' 
+        ? 'bg-red-50 border-red-200 opacity-70' 
+        : producto_estado === 'pendiente'
+        ? 'bg-yellow-50 border-yellow-200'
+        : 'bg-white border-gray-200 hover:shadow-lg'
+    }`}>
       {/* Imagen del producto */}
       <div className="flex-shrink-0">
         <img
@@ -44,9 +50,10 @@ const TarjetaProducto = ({
 
       {/* Acciones */}
       <div className="flex items-center space-x-2 ml-4">
-        {/* Si el producto está inactivo, mostrar solo el botón para reactivar */}
+        {/* Si el producto está inactivo (eliminado), mostrar solo el botón para reactivar */}
         {producto_estado === 'inactivo' ? (
           <>
+            <span className="text-red-500 font-medium text-sm">INACTIVO</span>
             {onReactivar && (
               <button
                 onClick={onReactivar}

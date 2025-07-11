@@ -9,7 +9,8 @@ import {
 import { FaPlus, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
 import ModalGestionCategoria from '../../../components/organisms/Modals/categorias/ModalGestionCategoria';
 import ModalEliminar from '../../../components/organisms/Modals/ModalEliminar';
-import tienePermiso from '../../../utils/tienePermiso'; // Importa la función tienePermiso
+import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
+import tienePermiso from '../../../utils/tienePermiso';
 
 // --- COMPONENTE PRINCIPAL ---
 const CategoriasPage = () => {
@@ -23,6 +24,10 @@ const CategoriasPage = () => {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [showEliminarModal, setShowEliminarModal] = useState(false);
   const [categoriaAEliminar, setCategoriaAEliminar] = useState(null);
+  
+  // Estados para el modal de mensaje
+  const [modalMensajeOpen, setModalMensajeOpen] = useState(false);
+  const [mensajeModal, setMensajeModal] = useState({ tipo: '', mensaje: '' });
 
   // --- CARGAR CATEGORÍAS ---
   const buildTree = (flatList) => {
@@ -85,7 +90,11 @@ const CategoriasPage = () => {
     setLoadingSubmit(true);
     const token = sessionStorage.getItem('token');
     if (!token) {
-      setError("Token no encontrado. Por favor, inicia sesión.");
+      setMensajeModal({
+        tipo: 'error',
+        mensaje: 'Token no encontrado. Por favor, inicia sesión.'
+      });
+      setModalMensajeOpen(true);
       setLoadingSubmit(false);
       return;
     }
@@ -96,17 +105,30 @@ const CategoriasPage = () => {
           categoria_padre_id: currentCategoria.categoria_padre_id || null, // Mantener el padre actual si existe
         };
         await modificarCategoriaApi(currentCategoria.categoria_id, payload, token);
+        setMensajeModal({
+          tipo: 'exito',
+          mensaje: 'Categoría modificada exitosamente.'
+        });
       } else {
         const payload = {
           ...formData,
           categoria_padre_id: modalMode === 'create_sub' && currentCategoria ? currentCategoria.categoria_id : null,
         };
         await crearCategoriaApi(payload, token);
+        setMensajeModal({
+          tipo: 'exito',
+          mensaje: modalMode === 'create_sub' ? 'Subcategoría creada exitosamente.' : 'Categoría creada exitosamente.'
+        });
       }
       handleCloseGestionModal();
       loadCategorias();
+      setModalMensajeOpen(true);
     } catch (err) {
-      setError(err.message || 'Ocurrió un error al guardar la categoría.');
+      setMensajeModal({
+        tipo: 'error',
+        mensaje: err.message || 'Ocurrió un error al guardar la categoría.'
+      });
+      setModalMensajeOpen(true);
     } finally {
       setLoadingSubmit(false);
     }
@@ -202,6 +224,14 @@ const CategoriasPage = () => {
         onConfirm={handleConfirmEliminarCategoria}
         nombreEntidad={categoriaAEliminar ? `la categoría "${categoriaAEliminar.categoria_nombre}"` : 'el elemento'}
       />
+      {modalMensajeOpen && (
+        <ModalMensaje
+          isOpen={modalMensajeOpen}
+          onClose={() => setModalMensajeOpen(false)}
+          mensaje={mensajeModal.mensaje}
+          tipo={mensajeModal.tipo}
+        />
+      )}
     </div>
   );
 };

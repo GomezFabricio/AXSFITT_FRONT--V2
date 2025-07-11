@@ -78,9 +78,16 @@ const VerProductos = () => {
     try {
       const token = sessionStorage.getItem('token');
       await eliminarProducto(productoAEliminar.producto_id, token);
+      
+      // Actualizar el estado del producto a "inactivo" en lugar de eliminarlo de la lista
       setProductos((prevProductos) =>
-        prevProductos.filter((producto) => producto.producto_id !== productoAEliminar.producto_id)
+        prevProductos.map((producto) =>
+          producto.producto_id === productoAEliminar.producto_id
+            ? { ...producto, producto_estado: 'inactivo' }
+            : producto
+        )
       );
+      
       setModalOpen(false);
       setProductoAEliminar(null);
       setTipoMensaje('exito');
@@ -138,16 +145,23 @@ const VerProductos = () => {
       const token = sessionStorage.getItem('token');
       const detalles = await obtenerDetallesStock(productoId, token);
 
+      console.log('Detalles recibidos del backend:', detalles);
+
+      // Verificar que los detalles tengan la estructura esperada
+      if (!detalles || !detalles.producto) {
+        throw new Error('Estructura de datos inválida recibida del servidor');
+      }
+
       const productoConUrlCompleta = {
         ...detalles.producto,
-        imagen_url: `${config.backendUrl}${detalles.producto.imagen_url}`,
-        stock_total: Number(detalles.producto.stock_total),
+        imagen_url: detalles.producto.imagen_url ? `${config.backendUrl}${detalles.producto.imagen_url}` : null,
+        stock_total: Number(detalles.producto.stock_total || 0),
       };
 
-      const variantesConUrlCompleta = detalles.variantes.map((variante) => ({
+      const variantesConUrlCompleta = (detalles.variantes || []).map((variante) => ({
         ...variante,
         imagen_url: variante.imagen_url ? `${config.backendUrl}${variante.imagen_url}` : null,
-        stock_total: Number(variante.stock_total),
+        stock_total: Number(variante.stock_total || 0),
       }));
 
       setDetallesStock({

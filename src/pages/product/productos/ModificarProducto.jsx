@@ -40,6 +40,14 @@ const ModificarProducto = () => {
   const [cargando, setCargando] = useState(true);
   const [modalAtributosOpen, setModalAtributosOpen] = useState(false); // Estado para el modal
 
+  // Estados para validación
+  const [productoDuplicado, setProductoDuplicado] = useState(false);
+  const [skuValido, setSkuValido] = useState(true);
+  const [puedeModificar, setPuedeModificar] = useState(true);
+  const [nombreOriginal, setNombreOriginal] = useState('');
+  const [categoriaOriginal, setCategoriaOriginal] = useState('');
+  const [skuOriginal, setSkuOriginal] = useState('');
+
   // useRef to store the previous formulariosVariantes
   const previousFormulariosVariantes = useRef(null);
 
@@ -67,6 +75,11 @@ const ModificarProducto = () => {
         setStockGeneral(producto.stock_total || '');
         setSkuGeneral(producto.producto_sku || '');
         setUsarAtributos(productoData.variantes && productoData.variantes.length > 0);
+
+        // Guardar valores originales para validación
+        setNombreOriginal(producto.nombre);
+        setCategoriaOriginal(producto.categoria_id);
+        setSkuOriginal(producto.producto_sku || '');
 
         // Cargar imágenes
         const imagenesProcesadas = producto.imagenes.map((imagen) => ({
@@ -214,36 +227,42 @@ const ModificarProducto = () => {
     const token = sessionStorage.getItem('token');
     const imagenActual = imagenes[indexActual];
 
+    console.log('🔄 Iniciando movimiento de imagen:', {
+      indexActual,
+      indexNuevo,
+      imagenActual,
+      totalImagenes: imagenes.length
+    });
+
     if (!imagenActual || imagenActual.id === undefined) {
-      console.error('La imagen actual no tiene un ID válido:', imagenActual);
+      console.error('❌ La imagen actual no tiene un ID válido:', imagenActual);
       alert('Error al mover la imagen. La imagen no tiene un ID válido.');
       return;
     }
 
-    console.log('Datos enviados a la API moverImagenProducto:', {
+    const datosAEnviar = {
       producto_id,
       imagen_id: imagenActual.id,
       nuevo_orden: indexNuevo,
-    });
+    };
+
+    console.log('📤 Datos enviados a la API moverImagenProducto:', datosAEnviar);
 
     try {
-      await moverImagenProducto(
-        {
-          producto_id,
-          imagen_id: imagenActual.id, 
-          nuevo_orden: indexNuevo,
-        },
-        token
-      );
+      const respuesta = await moverImagenProducto(datosAEnviar, token);
+      console.log('✅ Respuesta del servidor:', respuesta);
 
+      // Actualizar el estado local solo si el servidor confirma el éxito
       const nuevasImagenes = [...imagenes];
       nuevasImagenes.splice(indexActual, 1);
       nuevasImagenes.splice(indexNuevo, 0, imagenActual);
       setImagenes(nuevasImagenes);
+      
+      console.log('✅ Estado local actualizado');
 
     } catch (error) {
-      console.error('Error al mover la imagen:', error.response?.data || error);
-      alert('Error al mover la imagen.');
+      console.error('❌ Error al mover la imagen:', error.response?.data || error);
+      alert('Error al mover la imagen: ' + (error.message || 'Error desconocido'));
     }
   };
 
@@ -292,10 +311,20 @@ const ModificarProducto = () => {
     console.log('Subiendo imagen:', file);
 
     try {
-      const nuevaImagen = await subirImagenProducto(producto_id, formData, token);
+      const response = await subirImagenProducto(producto_id, formData, token);
+      console.log('Respuesta completa del servidor:', response);
+      
+      // Extraer los datos correctamente de la respuesta
+      const nuevaImagen = response.data || response;
+      console.log('Datos de la nueva imagen:', nuevaImagen);
+      
       setImagenes((prev) => [
         ...prev,
-        { id: nuevaImagen.imagen_id, url: nuevaImagen.imagen_url, nueva: true },
+        { 
+          id: nuevaImagen.imagen_id, 
+          url: nuevaImagen.imagen_url, 
+          nueva: true 
+        },
       ]);
     } catch (error) {
       console.error('Error al subir imagen (completo):', error);
@@ -319,6 +348,18 @@ const ModificarProducto = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Verificar validaciones antes de proceder
+    if (!puedeModificar) {
+      if (productoDuplicado) {
+        alert('No se puede modificar el producto: Ya existe un producto con ese nombre en la categoría seleccionada.');
+        return;
+      }
+      if (!skuValido) {
+        alert('No se puede modificar el producto: El SKU ya está en uso.');
+        return;
+      }
+    }
 
     // Validar que todas las variantes tengan una imagen seleccionada
     if (usarAtributos) {
@@ -394,6 +435,35 @@ const ModificarProducto = () => {
     }
   };
 
+  // Callbacks para validaciones
+  const handleDuplicateFound = (isDuplicate) => {
+    // Solo es duplicado si cambió el nombre o categoría y es diferente al original
+    const nombreCambio = nombre !== nombreOriginal;
+    const categoriaCambio = categoriaId !== categoriaOriginal;
+    
+    if (nombreCambio || categoriaCambio) {
+      setProductoDuplicado(isDuplicate);
+    } else {
+      setProductoDuplicado(false);
+    }
+  };
+
+  const handleSkuValidated = (isValid) => {
+    // Solo es inválido si cambió el SKU y es diferente al original
+    const skuCambio = skuGeneral !== skuOriginal;
+    
+    if (skuCambio) {
+      setSkuValido(isValid);
+    } else {
+      setSkuValido(true);
+    }
+  };
+
+  // Actualizar si puede modificar basado en las validaciones
+  React.useEffect(() => {
+    setPuedeModificar(!productoDuplicado && skuValido);
+  }, [productoDuplicado, skuValido]);
+
   if (cargando) {
     return <p>Cargando datos del producto...</p>;
   }
@@ -423,6 +493,8 @@ const ModificarProducto = () => {
           errores={errores}
           usarAtributos={usarAtributos}
           tienePermiso={tienePermiso}
+          onDuplicateFound={handleDuplicateFound}
+          onSkuValidated={handleSkuValidated}
         />
 
         <div>
@@ -476,7 +548,10 @@ const ModificarProducto = () => {
         <div className="flex space-x-4">
           <button
             type="submit"
-            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`px-4 py-2 border border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              !puedeModificar ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={!puedeModificar}
           >
             Guardar Cambios
           </button>

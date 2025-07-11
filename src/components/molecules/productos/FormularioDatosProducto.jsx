@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import AutocompleteProducto from './AutocompleteProducto';
+import InputSku from './InputSku';
 
 const FormularioDatosProducto = ({
   nombre,
@@ -22,31 +24,47 @@ const FormularioDatosProducto = ({
   errores,
   usarAtributos,
   tienePermiso,
+  onDuplicateFound = null, // Callback para manejar duplicados
+  onSkuValidated = null, // Callback para validar SKU
 }) => {
+  const [productoDuplicado, setProductoDuplicado] = useState(null);
+  const [skuEstado, setSkuEstado] = useState({ valid: true, duplicate: false });
+  
   // Verificar si el usuario tiene permiso para definir precios
   const puedeDefinirPrecios = tienePermiso("Definir Precio Producto");
+
+  // Manejar cuando se encuentra un duplicado
+  const handleDuplicateFound = (duplicado) => {
+    setProductoDuplicado(duplicado);
+    if (onDuplicateFound) {
+      onDuplicateFound(duplicado);
+    }
+  };
+
+  // Manejar validación de SKU
+  const handleSkuValidated = (estado) => {
+    setSkuEstado(estado);
+    if (onSkuValidated) {
+      onSkuValidated(estado);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 transition-all duration-300">
       <div className="space-y-6">
-        {/* Nombre del Producto */}
+        {/* Nombre del Producto con Autocomplete */}
         <div>
           <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
             Nombre del Producto
           </label>
-          <input
-            type="text"
-            id="nombre"
-            className={`w-full px-3 py-2 bg-gray-50 border rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors ${
-              errores?.producto_nombre ? 'border-red-400 focus:ring-red-400' : 'border-gray-200'
-            }`}
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+          <AutocompleteProducto
+            valor={nombre}
+            onChange={setNombre}
+            categoriaId={categoriaId}
             placeholder="Ingrese el nombre del producto"
+            error={errores?.producto_nombre}
+            onDuplicateFound={handleDuplicateFound}
           />
-          {errores?.producto_nombre && (
-            <p className="mt-1 text-sm text-red-500">{errores.producto_nombre}</p>
-          )}
         </div>
 
         {/* Categoría */}
@@ -220,13 +238,12 @@ const FormularioDatosProducto = ({
                   <label htmlFor="skuGeneral" className="block text-sm font-medium text-gray-700 mb-1">
                     SKU General
                   </label>
-                  <input
-                    type="text"
-                    id="skuGeneral"
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors"
-                    value={skuGeneral}
-                    onChange={(e) => setSkuGeneral(e.target.value)}
-                    placeholder="SKU-XXXXX"
+                  <InputSku
+                    valor={skuGeneral}
+                    onChange={setSkuGeneral}
+                    placeholder="SKU-XXXXX (opcional)"
+                    error={errores?.producto_sku}
+                    onSkuValidated={handleSkuValidated}
                   />
                 </div>
               </div>
@@ -239,9 +256,9 @@ const FormularioDatosProducto = ({
 };
 
 FormularioDatosProducto.propTypes = {
-  nombre: PropTypes.string.isRequired,
+  nombre: PropTypes.string,
   setNombre: PropTypes.func.isRequired,
-  categoriaId: PropTypes.string.isRequired,
+  categoriaId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   setCategoriaId: PropTypes.func.isRequired,
   descripcion: PropTypes.string,
   setDescripcion: PropTypes.func.isRequired,
@@ -264,6 +281,8 @@ FormularioDatosProducto.propTypes = {
   errores: PropTypes.object,
   usarAtributos: PropTypes.bool.isRequired,
   tienePermiso: PropTypes.func.isRequired,
+  onDuplicateFound: PropTypes.func,
+  onSkuValidated: PropTypes.func,
 };
 
 export default FormularioDatosProducto;

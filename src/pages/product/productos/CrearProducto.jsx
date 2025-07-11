@@ -35,6 +35,12 @@ const CrearProducto = () => {
   const [mostrarFormularioAtributos, setMostrarFormularioAtributos] = useState(false);
   const [formulariosVariantes, setFormulariosVariantes] = useState([{}]);
   const [errores, setErrores] = useState({});
+  
+  // Estados para validaciones
+  const [productoDuplicado, setProductoDuplicado] = useState(null);
+  const [skuValido, setSkuValido] = useState(true);
+  const [puedeCrear, setPuedeCrear] = useState(true);
+  
   const navigate = useNavigate();
 
   const userData = JSON.parse(sessionStorage.getItem('userData'));
@@ -69,13 +75,19 @@ const CrearProducto = () => {
     const cargarImagenesTemporales = async () => {
       try {
         const token = sessionStorage.getItem('token');
-        const imagenesTemporales = await obtenerImagenesTemporales(usuario_id, token);
+        const response = await obtenerImagenesTemporales(usuario_id, token);
+        
+        console.log('🔄 Respuesta de obtenerImagenesTemporales:', response);
+        
+        // Extraer las imágenes del objeto response
+        const imagenesTemporales = response.data || response;
 
         const imagenesProcesadas = imagenesTemporales.map((img) => ({
           id: img.imagen_id,
           url: img.imagen_url,
         }));
 
+        console.log('🔄 Imágenes procesadas:', imagenesProcesadas);
         setImagenes(imagenesProcesadas);
       } catch (error) {
         console.error('Error al cargar imágenes temporales:', error);
@@ -168,7 +180,18 @@ const CrearProducto = () => {
   
       try {
         const response = await guardarImagenTemporal(formData, token);
-        newImages.push({ id: response.imagen_id, url: response.imagen_url });
+        console.log('🔄 Respuesta del servidor al guardar imagen:', response);
+        
+        if (response && response.data) {
+          const nuevaImagen = { 
+            id: response.data.imagen_id, 
+            url: response.data.imagen_url 
+          };
+          console.log('🔄 Nueva imagen procesada:', nuevaImagen);
+          newImages.push(nuevaImagen);
+        } else {
+          console.error('❌ Respuesta inesperada del servidor:', response);
+        }
       } catch (error) {
         console.error('Error al guardar imagen temporal:', error);
         alert('Error al subir la imagen.');
@@ -197,6 +220,28 @@ const CrearProducto = () => {
     setFormulariosVariantes([{}]); // Reiniciamos los formularios al guardar nuevos atributos
   };
 
+  // Manejar duplicados de productos
+  const handleDuplicateFound = (duplicado) => {
+    setProductoDuplicado(duplicado);
+    setPuedeCrear(!duplicado);
+  };
+
+  // Manejar validación de SKU
+  const handleSkuValidated = (estado) => {
+    setSkuValido(estado.valid);
+    // Solo bloquear si hay un duplicado de SKU, no si está vacío
+    if (estado.sku && estado.sku.trim() !== '') {
+      setPuedeCrear(estado.valid && !productoDuplicado);
+    } else {
+      setPuedeCrear(!productoDuplicado);
+    }
+  };
+
+  // Actualizar puedeCrear cuando cambia productoDuplicado
+  React.useEffect(() => {
+    setPuedeCrear(!productoDuplicado && skuValido);
+  }, [productoDuplicado, skuValido]);
+
   const handleFormularioChange = (index, field, value) => {
     const newFormularios = [...formulariosVariantes];
     newFormularios[index][field] = value;
@@ -215,6 +260,18 @@ const CrearProducto = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Verificar validaciones antes de proceder
+    if (!puedeCrear) {
+      if (productoDuplicado) {
+        alert('No se puede crear el producto: Ya existe un producto con ese nombre en la categoría seleccionada.');
+        return;
+      }
+      if (!skuValido) {
+        alert('No se puede crear el producto: El SKU ya está en uso.');
+        return;
+      }
+    }
 
     if (usarAtributos) {
       const algunaVarianteSinImagen = formulariosVariantes.some(
@@ -265,10 +322,11 @@ const CrearProducto = () => {
   
       console.log('Respuesta de la API crearProducto:', response);
   
-      if (response && response.producto_id) {
+      if (response && response.data && response.data.producto_id) {
         alert('Producto creado exitosamente.');
         navigate('/productos');
       } else {
+        console.error('Respuesta inesperada del servidor:', response);
         alert('Error al crear producto: No se recibió el ID del producto.');
       }
   
@@ -375,7 +433,10 @@ const CrearProducto = () => {
         <div className="flex space-x-4">
           <button
             type="submit"
-            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`px-4 py-2 border border-blue-600 text-blue-600 rounded-md text-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              !puedeCrear ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={!puedeCrear}
           >
             Agregar Producto
           </button>

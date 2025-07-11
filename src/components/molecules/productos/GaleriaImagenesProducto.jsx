@@ -7,7 +7,7 @@ const GaleriaImagenesProducto = ({ imagenes, onMoverImagen, onEliminarImagen, on
       {/* Mostrar las imágenes actuales */}
       {imagenes.map((imagen, index) => (
         <div 
-          key={imagen.id} 
+          key={imagen.id || `imagen-${index}`} 
           className="relative aspect-square border border-gray-200 rounded-lg overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md group"
         >
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>
@@ -16,6 +16,8 @@ const GaleriaImagenesProducto = ({ imagenes, onMoverImagen, onEliminarImagen, on
             src={`${config.backendUrl}${imagen.url}`}
             alt={`Imagen ${index + 1}`}
             className="w-full h-full object-cover"
+            onLoad={() => console.log('✅ Imagen cargada:', `${config.backendUrl}${imagen.url}`)}
+            onError={() => console.error('❌ Error al cargar imagen:', `${config.backendUrl}${imagen.url}`)}
           />
           
           {/* Distintivo de imagen principal */}

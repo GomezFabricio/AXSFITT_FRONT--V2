@@ -6,6 +6,13 @@ const DetallesStock = ({ detallesStock, onClose, onToggleEstadoVariante, tienePe
 
   const { producto, variantes } = detallesStock;
 
+  // Función para formatear precios
+  const formatearPrecio = (precio) => {
+    if (precio === null || precio === undefined || precio === '') return '0.00';
+    const numeroLimpio = typeof precio === 'number' ? precio : parseFloat(precio);
+    return isNaN(numeroLimpio) ? '0.00' : numeroLimpio.toFixed(2);
+  };
+
   return (
     <div className="mt-8 bg-gray-100 p-4 rounded-md shadow-md">
       <h3 className="text-xl font-semibold mb-4">Detalles de Stock</h3>
@@ -28,11 +35,11 @@ const DetallesStock = ({ detallesStock, onClose, onToggleEstadoVariante, tienePe
                       Precio:{' '}
                       {variante.variante_precio_oferta ? (
                         <>
-                          <span className="line-through text-red-500">{variante.variante_precio_venta}</span>{' '}
-                          {variante.variante_precio_oferta}
+                          <span className="line-through text-red-500">${formatearPrecio(variante.variante_precio_venta)}</span>{' '}
+                          ${formatearPrecio(variante.variante_precio_oferta)}
                         </>
                       ) : (
-                        variante.variante_precio_venta
+                        `$${formatearPrecio(variante.variante_precio_venta)}`
                       )}
                     </p>
                     <p>Stock: {variante.stock_total}</p>
@@ -73,11 +80,11 @@ const DetallesStock = ({ detallesStock, onClose, onToggleEstadoVariante, tienePe
                 Precio:{' '}
                 {producto.producto_precio_oferta ? (
                   <>
-                    <span className="line-through text-red-500">{producto.producto_precio_venta}</span>{' '}
-                    {producto.producto_precio_oferta}
+                    <span className="line-through text-red-500">${formatearPrecio(producto.producto_precio_venta)}</span>{' '}
+                    ${formatearPrecio(producto.producto_precio_oferta)}
                   </>
                 ) : (
-                  producto.producto_precio_venta
+                  `$${formatearPrecio(producto.producto_precio_venta)}`
                 )}
               </p>
               <p>Stock Total: {producto.stock_total}</p>
@@ -101,8 +108,8 @@ DetallesStock.propTypes = {
       imagen_url: PropTypes.string.isRequired,
       nombre: PropTypes.string.isRequired,
       producto_sku: PropTypes.string,
-      producto_precio_venta: PropTypes.number,
-      producto_precio_oferta: PropTypes.number,
+      producto_precio_venta: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      producto_precio_oferta: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       stock_total: PropTypes.number.isRequired,
     }).isRequired,
     variantes: PropTypes.arrayOf(
@@ -110,8 +117,8 @@ DetallesStock.propTypes = {
         variante_id: PropTypes.number.isRequired,
         imagen_url: PropTypes.string,
         variante_sku: PropTypes.string, // Cambiar de `isRequired` a opcional
-        variante_precio_venta: PropTypes.number,
-        variante_precio_oferta: PropTypes.number,
+        variante_precio_venta: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        variante_precio_oferta: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
         stock_total: PropTypes.number.isRequired,
         atributos: PropTypes.string,
         variante_estado: PropTypes.oneOf(['activo', 'inactivo']).isRequired, // Agregar validación para el estado
