@@ -337,7 +337,7 @@ const ModificarProducto = () => {
 
     const productoData = {
       producto_nombre: nombre,
-      categoria_id: categoriaId,
+      categoria_id: parseInt(categoriaId, 10), // Convertir a número entero
       producto_descripcion: descripcion || null,
       producto_precio_venta: precioVenta ? parseFloat(precioVenta) : null,
       producto_precio_costo: precioCosto ? parseFloat(precioCosto) : null,
