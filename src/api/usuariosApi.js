@@ -3,7 +3,7 @@ import config from '../config/config';
 
 export const getUsuarios = async (token) => {
   try {
-    const response = await axios.get(`${config.backendUrl}/api/usuarios`, {
+    const response = await axios.get(`${config.backendUrl}/api/usuarios-v2`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -18,7 +18,7 @@ export const getUsuarios = async (token) => {
 export const agregarUsuario = async (usuario, token) => {
   try {
     const response = await axios.post(
-      `${config.backendUrl}/api/usuarios`,
+      `${config.backendUrl}/api/usuarios-v2`,
       usuario,
       {
         headers: {
@@ -35,7 +35,7 @@ export const agregarUsuario = async (usuario, token) => {
 export const updatePerfilesUsuario = async (usuario_id, perfiles, token) => {
   try {
     const response = await axios.put(
-      `${config.backendUrl}/api/usuarios/${usuario_id}/perfiles`,
+      `${config.backendUrl}/api/usuarios-v2/${usuario_id}/perfiles`,
       { perfiles },
       {
         headers: {

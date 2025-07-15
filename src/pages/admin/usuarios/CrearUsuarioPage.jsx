@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { agregarUsuario } from '../../../api/usuariosApi';
 import { useNavigate } from 'react-router-dom';
 import { usuarioSchema } from '../../../validations/usuario.schema';
+import ModalMensaje from '../../../components/organisms/Modals/ModalMensaje';
 
 const CrearUsuarioPage = () => {
   const [form, setForm] = useState({
@@ -16,6 +17,8 @@ const CrearUsuarioPage = () => {
     usuario_pass: ''
   });
   const [loading, setLoading] = useState(false);
+  const [modalMensajeOpen, setModalMensajeOpen] = useState(false);
+  const [mensajeModal, setMensajeModal] = useState({ tipo: 'error', mensaje: '' });
   const navigate = useNavigate();
 
   const handleChange = e => {
@@ -29,14 +32,30 @@ const CrearUsuarioPage = () => {
       setLoading(true);
       const token = sessionStorage.getItem('token');
       await agregarUsuario(form, token);
-      alert('Usuario creado correctamente');
-      navigate('/admin/usuarios');
+      
+      setMensajeModal({
+        tipo: 'exito',
+        mensaje: 'Usuario creado correctamente'
+      });
+      setModalMensajeOpen(true);
+      
+      // Navegar después de mostrar el mensaje
+      setTimeout(() => {
+        navigate('/admin/usuarios');
+      }, 2000);
     } catch (error) {
       if (error.errors) {
-        alert(error.errors[0].message); // Muestra el primer error de validación
+        setMensajeModal({
+          tipo: 'error',
+          mensaje: error.errors[0].message
+        });
       } else {
-        alert(error?.message || 'Error al crear usuario');
+        setMensajeModal({
+          tipo: 'error',
+          mensaje: error?.message || 'Error al crear usuario'
+        });
       }
+      setModalMensajeOpen(true);
     }
     setLoading(false);
   };
@@ -168,6 +187,13 @@ const CrearUsuarioPage = () => {
           </div>
         </form>
       </div>
+      
+      <ModalMensaje
+        isOpen={modalMensajeOpen}
+        onClose={() => setModalMensajeOpen(false)}
+        tipo={mensajeModal.tipo}
+        mensaje={mensajeModal.mensaje}
+      />
     </div>
   );
 };
