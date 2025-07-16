@@ -227,7 +227,9 @@ const FacturaPage = () => {
                         <tbody>
                             {venta.productos && venta.productos.map((producto) => (
                                 <tr key={producto.vd_id} className="border-b border-gray-200">
-                                    <td className="py-2">{producto.variante_sku || `PROD-${producto.producto_id}`}</td>
+                                    <td className="py-2">
+                                        {producto.variante_sku || producto.producto_sku || 'N/A'}
+                                    </td>
                                     <td className="py-2">
                                         {producto.producto_nombre}
                                         {producto.variante_descripcion && (
