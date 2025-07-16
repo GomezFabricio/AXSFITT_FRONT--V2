@@ -5,6 +5,8 @@ import { FaEye, FaEdit, FaFileInvoice } from 'react-icons/fa';
 import tienePermiso from '../../../utils/tienePermiso';
 import EstadoSelector from '../../../components/molecules/ventas/EstadoSelector';
 import ModalEditarVenta from '../../../components/organisms/Modals/ventas/ModalEditarVenta';
+import useNotification from '../../../hooks/useNotification';
+import NotificationContainer from '../../../components/atoms/NotificationContainer';
 
 const VerVentasPage = () => {
   const [ventas, setVentas] = useState([]);
@@ -19,6 +21,9 @@ const VerVentasPage = () => {
   const [ventaEnEdicion, setVentaEnEdicion] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
+  // Hook para notificaciones
+  const { notifications, removeNotification, success, error, warning, info } = useNotification();
+
   // Verificar permisos
   const puedeModificarVenta = tienePermiso('Modificar Venta');
 
@@ -32,13 +37,13 @@ const VerVentasPage = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar ventas:', error);
-        alert('No se pudieron cargar las ventas');
+        error('No se pudieron cargar las ventas');
         setLoading(false);
       }
     };
 
     cargarVentas();
-  }, []);
+  }, [error]);
 
   useEffect(() => {
     // Aplicar filtros
@@ -68,7 +73,7 @@ const VerVentasPage = () => {
 
   const handleCambiarEstadoPago = async (ventaId, nuevoEstado) => {
     if (!puedeModificarVenta) {
-      alert('No tienes permisos para modificar el estado de pago');
+      warning('No tienes permisos para modificar el estado de pago');
       return;
     }
 
@@ -76,30 +81,41 @@ const VerVentasPage = () => {
       const token = sessionStorage.getItem('token');
       await actualizarEstadoPago(ventaId, nuevoEstado, token);
 
-      // Actualizar estado local
-      setVentas(prevVentas =>
-        prevVentas.map(venta =>
-          venta.venta_id === ventaId
-            ? { ...venta, venta_estado_pago: nuevoEstado }
-            : venta
-        )
-      );
+      // Recargar ventas para obtener los estados sincronizados
+      const ventasActualizadas = await getVentas(token);
+      setVentas(ventasActualizadas);
 
-      alert(`El estado de pago se ha cambiado a ${nuevoEstado}`);
+      // Buscar la venta actualizada para mostrar mensaje apropiado
+      const ventaActualizada = ventasActualizadas.find(v => v.venta_id === ventaId);
+      
+      if (nuevoEstado === 'cancelado' && ventaActualizada) {
+        success(`El estado de pago se ha cambiado a ${nuevoEstado}. El estado de envío también se cambió automáticamente a cancelado.`);
+      } else {
+        success(`El estado de pago se ha cambiado a ${nuevoEstado}`);
+      }
     } catch (error) {
       console.error('Error al actualizar estado de pago:', error);
-      // Mostrar mensaje específico del error si está disponible
-      if (error.message && error.message.includes('después de 3 días')) {
-        alert('No se puede cambiar el estado de una venta cancelada después de 3 días');
+      
+      // Manejar errores específicos
+      if (error.response && error.response.data && error.response.data.message) {
+        const mensaje = error.response.data.message;
+        
+        if (mensaje.includes('después de 24 horas')) {
+          error('No se puede cancelar el estado de pago después de 24 horas desde la venta');
+        } else if (mensaje.includes('No se puede cambiar el estado desde "cancelado"')) {
+          error('No se puede cambiar el estado desde "cancelado" a otro estado');
+        } else {
+          error(mensaje);
+        }
       } else {
-        alert('No se pudo actualizar el estado de pago');
+        error('No se pudo actualizar el estado de pago');
       }
     }
   };
 
   const handleCambiarEstadoEnvio = async (ventaId, nuevoEstado) => {
     if (!puedeModificarVenta) {
-      alert('No tienes permisos para modificar el estado de envío');
+      warning('No tienes permisos para modificar el estado de envío');
       return;
     }
 
@@ -107,19 +123,33 @@ const VerVentasPage = () => {
       const token = sessionStorage.getItem('token');
       await actualizarEstadoEnvio(ventaId, nuevoEstado, token);
 
-      // Actualizar estado local
-      setVentas(prevVentas =>
-        prevVentas.map(venta =>
-          venta.venta_id === ventaId
-            ? { ...venta, venta_estado_envio: nuevoEstado }
-            : venta
-        )
-      );
+      // Recargar ventas para obtener los estados sincronizados
+      const ventasActualizadas = await getVentas(token);
+      setVentas(ventasActualizadas);
 
-      alert(`El estado de envío se ha cambiado a ${nuevoEstado}`);
+      // Buscar la venta actualizada para mostrar mensaje apropiado
+      const ventaActualizada = ventasActualizadas.find(v => v.venta_id === ventaId);
+      
+      if (nuevoEstado === 'cancelado' && ventaActualizada) {
+        success(`El estado de envío se ha cambiado a ${nuevoEstado}. El estado de pago también se cambió automáticamente a cancelado.`);
+      } else {
+        success(`El estado de envío se ha cambiado a ${nuevoEstado}`);
+      }
     } catch (error) {
       console.error('Error al actualizar estado de envío:', error);
-      alert('No se pudo actualizar el estado de envío');
+      
+      // Manejar errores específicos
+      if (error.response && error.response.data && error.response.data.message) {
+        const mensaje = error.response.data.message;
+        
+        if (mensaje.includes('No se puede cambiar el estado desde "cancelado"')) {
+          error('No se puede cambiar el estado desde "cancelado" a otro estado');
+        } else {
+          error(mensaje);
+        }
+      } else {
+        error('No se pudo actualizar el estado de envío');
+      }
     }
   };
 
@@ -293,6 +323,7 @@ const VerVentasPage = () => {
                         estadoActual={venta.venta_estado_pago}
                         onEstadoChange={(nuevoEstado) => handleCambiarEstadoPago(venta.venta_id, nuevoEstado)}
                         disabled={!puedeModificarVenta}
+                        fechaVenta={venta.venta_fecha}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -301,6 +332,7 @@ const VerVentasPage = () => {
                         estadoActual={venta.venta_estado_envio}
                         onEstadoChange={(nuevoEstado) => handleCambiarEstadoEnvio(venta.venta_id, nuevoEstado)}
                         disabled={!puedeModificarVenta}
+                        fechaVenta={venta.venta_fecha}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -350,6 +382,12 @@ const VerVentasPage = () => {
         venta={ventaEnEdicion}
         onConfirm={handleGuardarEdicion}
         loading={guardando}
+      />
+
+      {/* Notificaciones */}
+      <NotificationContainer 
+        notifications={notifications} 
+        removeNotification={removeNotification} 
       />
     </div>
   );

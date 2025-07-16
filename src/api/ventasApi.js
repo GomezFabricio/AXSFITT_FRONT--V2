@@ -4,7 +4,7 @@ import config from '../config/config';
 // Obtener todas las ventas
 export const getVentas = async (token) => {
   try {
-    const response = await axios.get(`${config.backendUrl}/api/ventas`, {
+    const response = await axios.get(`${config.backendUrl}/api/ventas-v2`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -18,7 +18,7 @@ export const getVentas = async (token) => {
 // Obtener una venta específica por ID
 export const getVentaPorId = async (ventaId, token) => {
   try {
-    const response = await axios.get(`${config.backendUrl}/api/ventas/${ventaId}`, {
+    const response = await axios.get(`${config.backendUrl}/api/ventas-v2/${ventaId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -33,7 +33,7 @@ export const getVentaPorId = async (ventaId, token) => {
 export const crearVenta = async (datosVenta, token) => {
   try {
     const response = await axios.post(
-      `${config.backendUrl}/api/ventas`,
+      `${config.backendUrl}/api/ventas-v2`,
       datosVenta,
       {
         headers: {
@@ -50,8 +50,8 @@ export const crearVenta = async (datosVenta, token) => {
 // Actualizar estado de pago de una venta
 export const actualizarEstadoPago = async (ventaId, estadoPago, token) => {
   try {
-    const response = await axios.patch(
-      `${config.backendUrl}/api/ventas/${ventaId}/estado-pago`,
+    const response = await axios.put(
+      `${config.backendUrl}/api/ventas-v2/${ventaId}/estado-pago`,
       { estado_pago: estadoPago },
       {
         headers: {
@@ -68,8 +68,8 @@ export const actualizarEstadoPago = async (ventaId, estadoPago, token) => {
 // Actualizar estado de envío de una venta
 export const actualizarEstadoEnvio = async (ventaId, estadoEnvio, token) => {
   try {
-    const response = await axios.patch(
-      `${config.backendUrl}/api/ventas/${ventaId}/estado-envio`,
+    const response = await axios.put(
+      `${config.backendUrl}/api/ventas-v2/${ventaId}/estado-envio`,
       { estado_envio: estadoEnvio },
       {
         headers: {
@@ -86,8 +86,14 @@ export const actualizarEstadoEnvio = async (ventaId, estadoEnvio, token) => {
 // Buscar productos para agregar a una venta
 export const buscarProductosParaVenta = async (termino = '', token) => {
   try {
-    const response = await axios.get(`${config.backendUrl}/api/ventas/productos/buscar`, {
-      params: { termino },
+    // Configurar parámetros, solo incluir término si no está vacío
+    const params = {};
+    if (termino && termino.trim()) {
+      params.termino = termino.trim();
+    }
+    
+    const response = await axios.get(`${config.backendUrl}/api/ventas-v2/productos/buscar`, {
+      params,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -102,7 +108,7 @@ export const buscarProductosParaVenta = async (termino = '', token) => {
 export const obtenerVariantesProducto = async (productoId, token) => {
   try {
     const response = await axios.get(
-      `${config.backendUrl}/api/ventas/productos/${productoId}/variantes`,
+      `${config.backendUrl}/api/ventas-v2/productos/${productoId}/variantes`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -119,7 +125,7 @@ export const obtenerVariantesProducto = async (productoId, token) => {
 export const verificarStock = async (productos, token) => {
   try {
     const response = await axios.post(
-      `${config.backendUrl}/api/ventas/verificar-stock`,
+      `${config.backendUrl}/api/ventas-v2/verificar-stock`,
       { productos },
       {
         headers: {
@@ -137,7 +143,7 @@ export const verificarStock = async (productos, token) => {
 export const actualizarDatosVenta = async (ventaId, datos, token) => {
   try {
     const response = await axios.put(
-      `${config.backendUrl}/api/ventas/${ventaId}/datos`,
+      `${config.backendUrl}/api/ventas-v2/${ventaId}/datos`,
       {
         venta_nota: datos.venta_nota,
         venta_origen: datos.venta_origen
@@ -156,7 +162,7 @@ export const actualizarDatosVenta = async (ventaId, datos, token) => {
 
 export const obtenerMetricasVentas = async (token) => {
   try {
-    const response = await axios.get(`${config.backendUrl}/api/ventas/metricas/dashboard`, {
+    const response = await axios.get(`${config.backendUrl}/api/ventas-v2/metricas/dashboard`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

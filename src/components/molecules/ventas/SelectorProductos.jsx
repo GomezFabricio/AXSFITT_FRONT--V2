@@ -8,10 +8,17 @@ const SelectorProductos = ({ onProductosSeleccionados }) => {
   const [seleccionados, setSeleccionados] = useState([]);
   const [termino, setTermino] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Cargar productos iniciales cuando se abre el modal
   useEffect(() => {
     if (showModal) {
+      // Limpiar estado anterior
+      setProductos([]);
+      setSeleccionados([]);
+      setTermino('');
+      setError('');
+      // Cargar productos destacados
       cargarProductos();
     }
   }, [showModal]);
@@ -20,11 +27,14 @@ const SelectorProductos = ({ onProductosSeleccionados }) => {
   const cargarProductos = async () => {
     try {
       setLoading(true);
+      setError('');
       const token = sessionStorage.getItem('token');
       const productosData = await buscarProductosParaVenta(termino, token);
       setProductos(productosData);
     } catch (error) {
       console.error('Error al cargar productos:', error);
+      setError('Error al cargar productos. Intente nuevamente.');
+      setProductos([]);
     } finally {
       setLoading(false);
     }
@@ -92,7 +102,14 @@ const SelectorProductos = ({ onProductosSeleccionados }) => {
             {/* Lista de productos */}
             <div className="mb-4 space-y-2">
               {loading ? (
-                <p className="text-center">Cargando productos...</p>
+                <div className="text-center py-4">
+                  <p>Cargando productos...</p>
+                  <div className="mt-2">
+                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  </div>
+                </div>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
               ) : productos.length > 0 ? (
                 productos.map(producto => (
                   <div 
@@ -133,7 +150,12 @@ const SelectorProductos = ({ onProductosSeleccionados }) => {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500">No se encontraron productos.</p>
+                <p className="text-center text-gray-500">
+                  {termino 
+                    ? `No se encontraron productos para "${termino}".`
+                    : 'No hay productos disponibles en este momento.'
+                  }
+                </p>
               )}
             </div>
             

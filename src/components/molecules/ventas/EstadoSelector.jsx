@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const EstadoSelector = ({ tipo, estadoActual, onEstadoChange, disabled }) => {
+const EstadoSelector = ({ tipo, estadoActual, onEstadoChange, disabled, fechaVenta }) => {
   const [menuAbierto, setMenuAbierto] = useState(false);
   const menuRef = useRef(null);
   
@@ -17,6 +17,27 @@ const EstadoSelector = ({ tipo, estadoActual, onEstadoChange, disabled }) => {
         { valor: 'entregado', etiqueta: 'Entregado', clase: 'bg-green-100 text-green-800 hover:bg-green-200' },
         { valor: 'cancelado', etiqueta: 'Cancelado', clase: 'bg-red-100 text-red-800 hover:bg-red-200' },
       ];
+
+  // Función para verificar si una opción está deshabilitada
+  const isOpcionDeshabilitada = (opcion) => {
+    // Si el estado actual es cancelado, no se puede cambiar a otros estados
+    if (estadoActual === 'cancelado' && opcion.valor !== 'cancelado') {
+      return true;
+    }
+    
+    // Si es tipo pago y se intenta cancelar, verificar restricción de 24 horas
+    if (tipo === 'pago' && opcion.valor === 'cancelado' && fechaVenta) {
+      const ahora = new Date();
+      const fechaVentaDate = new Date(fechaVenta);
+      const diferenciaHoras = (ahora - fechaVentaDate) / (1000 * 60 * 60);
+      
+      if (diferenciaHoras > 24) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
   
   // Cerrar el menú cuando se hace clic fuera de él
   useEffect(() => {
@@ -67,16 +88,28 @@ const EstadoSelector = ({ tipo, estadoActual, onEstadoChange, disabled }) => {
           }}
         >
           <div className="py-1" role="menu" aria-orientation="vertical">
-            {opciones.map((opcion) => (
-              <button
-                key={opcion.valor}
-                onClick={() => handleSeleccionarEstado(opcion.valor)}
-                className={`block w-full text-left px-4 py-2 text-sm ${opcion.clase} ${opcion.valor === estadoActual ? 'font-bold' : ''}`}
-                role="menuitem"
-              >
-                {opcion.etiqueta}
-              </button>
-            ))}
+            {opciones.map((opcion) => {
+              const deshabilitada = isOpcionDeshabilitada(opcion);
+              return (
+                <button
+                  key={opcion.valor}
+                  onClick={() => !deshabilitada && handleSeleccionarEstado(opcion.valor)}
+                  className={`block w-full text-left px-4 py-2 text-sm ${opcion.clase} ${opcion.valor === estadoActual ? 'font-bold' : ''} ${deshabilitada ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  role="menuitem"
+                  disabled={deshabilitada}
+                  title={deshabilitada ? 
+                    (estadoActual === 'cancelado' && opcion.valor !== 'cancelado' ? 
+                      'No se puede cambiar desde cancelado a otro estado' : 
+                      'No se puede cancelar después de 24 horas') : 
+                    ''}
+                >
+                  {opcion.etiqueta}
+                  {deshabilitada && (
+                    <span className="ml-1 text-gray-400">🚫</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -88,11 +121,13 @@ EstadoSelector.propTypes = {
   tipo: PropTypes.oneOf(['pago', 'envio']).isRequired,
   estadoActual: PropTypes.string.isRequired,
   onEstadoChange: PropTypes.func.isRequired,
-  disabled: PropTypes.bool
+  disabled: PropTypes.bool,
+  fechaVenta: PropTypes.string
 };
 
 EstadoSelector.defaultProps = {
-  disabled: false
+  disabled: false,
+  fechaVenta: null
 };
 
 export default EstadoSelector;

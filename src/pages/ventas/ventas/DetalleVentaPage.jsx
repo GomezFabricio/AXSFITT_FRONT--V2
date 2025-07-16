@@ -192,40 +192,20 @@ Estado actual: ${venta.venta_estado_envio}`,
             <div className="space-y-4">
               <div>
                 <p className="font-medium mb-1">Estado de pago:</p>
-                <div className="flex items-center">
-                  <span
-                    className={`px-3 py-1 inline-flex text-sm font-semibold rounded-md ${getEstadoClass(venta.venta_estado_pago, 'pago')}`}
-                  >
-                    {venta.venta_estado_pago.charAt(0).toUpperCase() + venta.venta_estado_pago.slice(1)}
-                  </span>
-                  {puedeModificarVenta && (
-                    <button
-                      onClick={handleCambiarEstadoPago}
-                      className="ml-2 text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      Cambiar
-                    </button>
-                  )}
-                </div>
+                <span
+                  className={`px-3 py-1 inline-flex text-sm font-semibold rounded-md ${getEstadoClass(venta.venta_estado_pago, 'pago')}`}
+                >
+                  {venta.venta_estado_pago.charAt(0).toUpperCase() + venta.venta_estado_pago.slice(1)}
+                </span>
               </div>
 
               <div>
                 <p className="font-medium mb-1">Estado de envío:</p>
-                <div className="flex items-center">
-                  <span
-                    className={`px-3 py-1 inline-flex text-sm font-semibold rounded-md ${getEstadoClass(venta.venta_estado_envio, 'envio')}`}
-                  >
-                    {venta.venta_estado_envio.charAt(0).toUpperCase() + venta.venta_estado_envio.slice(1)}
-                  </span>
-                  {puedeModificarVenta && (
-                    <button
-                      onClick={handleCambiarEstadoEnvio}
-                      className="ml-2 text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      Cambiar
-                    </button>
-                  )}
-                </div>
+                <span
+                  className={`px-3 py-1 inline-flex text-sm font-semibold rounded-md ${getEstadoClass(venta.venta_estado_envio, 'envio')}`}
+                >
+                  {venta.venta_estado_envio.charAt(0).toUpperCase() + venta.venta_estado_envio.slice(1)}
+                </span>
               </div>
             </div>
           </div>
