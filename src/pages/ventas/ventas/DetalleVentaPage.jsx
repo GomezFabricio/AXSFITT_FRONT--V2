@@ -4,12 +4,17 @@ import { getVentaPorId, actualizarEstadoPago, actualizarEstadoEnvio } from '../.
 import tienePermiso from '../../../utils/tienePermiso';
 import config from '../../../config/config';
 import { FaArrowLeft, FaFileInvoice, FaPrint } from 'react-icons/fa';
+import useNotification from '../../../hooks/useNotification';
+import NotificationContainer from '../../../components/atoms/NotificationContainer';
 
 const DetalleVentaPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Hook para notificaciones
+  const { notifications, removeNotification, success, error, warning, info } = useNotification();
 
   // Verificar permisos
   const puedeModificarVenta = tienePermiso('Modificar Venta');
@@ -23,17 +28,17 @@ const DetalleVentaPage = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar detalle de venta:', error);
-        alert('No se pudo cargar el detalle de la venta');
+        error('No se pudo cargar el detalle de la venta');
         navigate('/ventas');
       }
     };
 
     cargarVenta();
-  }, [id, navigate]);
+  }, [id, navigate, error]);
 
   const handleCambiarEstadoPago = async () => {
     if (!puedeModificarVenta) {
-      alert('No tienes permisos para modificar el estado de pago');
+      warning('No tienes permisos para modificar el estado de pago');
       return;
     }
 
@@ -54,19 +59,33 @@ Estado actual: ${venta.venta_estado_pago}`,
           venta_estado_pago: nuevoEstado
         });
 
-        alert(`El estado de pago se ha cambiado a ${nuevoEstado}`);
+        success(`El estado de pago se ha cambiado a ${nuevoEstado}`);
       } catch (error) {
         console.error('Error al actualizar estado de pago:', error);
-        alert('No se pudo actualizar el estado de pago');
+        
+        // Manejar errores específicos
+        if (error.response && error.response.data && error.response.data.message) {
+          const mensaje = error.response.data.message;
+          
+          if (mensaje.includes('después de 24 horas')) {
+            error('No se puede cancelar el estado de pago después de 24 horas desde la venta');
+          } else if (mensaje.includes('No se puede cambiar el estado desde "cancelado"')) {
+            error('No se puede cambiar el estado desde "cancelado" a otro estado');
+          } else {
+            error(mensaje);
+          }
+        } else {
+          error('No se pudo actualizar el estado de pago');
+        }
       }
     } else if (nuevoEstado && !['pendiente', 'abonado', 'cancelado'].includes(nuevoEstado)) {
-      alert('Estado de pago no válido. Opciones: pendiente, abonado, cancelado');
+      warning('Estado de pago no válido. Opciones: pendiente, abonado, cancelado');
     }
   };
 
   const handleCambiarEstadoEnvio = async () => {
     if (!puedeModificarVenta) {
-      alert('No tienes permisos para modificar el estado de envío');
+      warning('No tienes permisos para modificar el estado de envío');
       return;
     }
 
@@ -87,13 +106,25 @@ Estado actual: ${venta.venta_estado_envio}`,
           venta_estado_envio: nuevoEstado
         });
 
-        alert(`El estado de envío se ha cambiado a ${nuevoEstado}`);
+        success(`El estado de envío se ha cambiado a ${nuevoEstado}`);
       } catch (error) {
         console.error('Error al actualizar estado de envío:', error);
-        alert('No se pudo actualizar el estado de envío');
+        
+        // Manejar errores específicos
+        if (error.response && error.response.data && error.response.data.message) {
+          const mensaje = error.response.data.message;
+          
+          if (mensaje.includes('No se puede cambiar el estado desde "cancelado"')) {
+            error('No se puede cambiar el estado desde "cancelado" a otro estado');
+          } else {
+            error(mensaje);
+          }
+        } else {
+          error('No se pudo actualizar el estado de envío');
+        }
       }
     } else if (nuevoEstado && !['pendiente', 'enviado', 'entregado', 'cancelado'].includes(nuevoEstado)) {
-      alert('Estado de envío no válido. Opciones: pendiente, enviado, entregado, cancelado');
+      warning('Estado de envío no válido. Opciones: pendiente, enviado, entregado, cancelado');
     }
   };
 
@@ -329,6 +360,12 @@ Estado actual: ${venta.venta_estado_envio}`,
           )}
         </div>
       )}
+
+      {/* Notificaciones */}
+      <NotificationContainer 
+        notifications={notifications} 
+        removeNotification={removeNotification} 
+      />
     </div>
   );
 };

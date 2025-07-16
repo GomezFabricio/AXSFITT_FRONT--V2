@@ -156,14 +156,14 @@ const VerVentasPage = () => {
   // Nueva función para abrir el modal de edición
   const handleEditarVenta = (venta) => {
     if (!puedeModificarVenta) {
-      alert('No tienes permisos para modificar ventas');
+      warning('No tienes permisos para modificar ventas');
       return;
     }
     setVentaEnEdicion(venta);
     setModalEdicionAbierto(true);
   };
 
-  // Nueva función para guardar cambios de edición
+      // Nueva función para guardar cambios de edición
   const handleGuardarEdicion = async (datosActualizados) => {
     if (!ventaEnEdicion) return;
 
@@ -185,12 +185,12 @@ const VerVentasPage = () => {
         )
       );
 
-      alert('Datos de la venta actualizados correctamente');
+      success('Datos de la venta actualizados correctamente');
       setModalEdicionAbierto(false);
       setVentaEnEdicion(null);
     } catch (error) {
       console.error('Error al actualizar datos de venta:', error);
-      alert('No se pudieron actualizar los datos de la venta');
+      error('No se pudieron actualizar los datos de la venta');
     } finally {
       setGuardando(false);
     }

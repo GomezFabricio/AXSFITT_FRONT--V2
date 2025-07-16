@@ -4,6 +4,8 @@ import { getVentaPorId } from '../../../api/ventasApi';
 import { FaArrowLeft, FaPrint } from 'react-icons/fa';
 import config from '../../../config/config';
 import { useReactToPrint } from 'react-to-print';
+import useNotification from '../../../hooks/useNotification';
+import NotificationContainer from '../../../components/atoms/NotificationContainer';
 
 // Estilos de impresión mejorados
 const printStyles = `
@@ -47,6 +49,9 @@ const FacturaPage = () => {
     const [loading, setLoading] = useState(true);
     const facturaRef = useRef(null);
 
+    // Hook para notificaciones
+    const { notifications, removeNotification, success, error, warning, info } = useNotification();
+
     // Método mejorado para imprimir solo la factura
     const handlePrintBetter = () => {
       // Usar setTimeout para asegurarse que los estilos se apliquen
@@ -79,13 +84,13 @@ const FacturaPage = () => {
                 setLoading(false);
             } catch (error) {
                 console.error('Error al cargar datos de venta:', error);
-                alert('No se pudo cargar la información de la venta');
+                error('No se pudo cargar la información de la venta');
                 navigate('/ventas');
             }
         };
 
         cargarVenta();
-    }, [id, navigate]);
+    }, [id, navigate, error]);
 
     // Resto del código sin cambios...
     const formatDate = (dateString) => {
@@ -301,6 +306,12 @@ const FacturaPage = () => {
                     <p>Documento generado por sistema - {venta.venta_estado_pago === 'abonado' ? 'ORIGINAL' : 'NO VÁLIDO COMO FACTURA'}</p>
                 </div>
             </div>
+
+            {/* Notificaciones */}
+            <NotificationContainer 
+                notifications={notifications} 
+                removeNotification={removeNotification} 
+            />
         </div>
     );
 };
