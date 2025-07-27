@@ -10,6 +10,7 @@ import VerProductos from './pages/product/productos/VerProductos';
 import ModificarProducto from './pages/product/productos/ModificarProducto';
 import Stock from './pages/product/stock/Stock'; 
 import Faltantes from './pages/product/stock/Faltantes';
+import Proveedores from './pages/product/stock/Proveedores';
 import CrearClientePage from './pages/ventas/clientes/CrearClientePage';
 import VerClientes from './pages/ventas/clientes/VerClientes';
 import AgregarVentaPage from './pages/ventas/ventas/AgregarVentaPage';
@@ -84,6 +85,11 @@ export const rutasProtegidas = [
     path: '/productos/faltantes',
     permiso: 'Ver Lista de Faltantes',
     componente: <Faltantes />,
+  },
+  {
+    path: '/productos/proveedores',
+    permiso: 'Gestionar Proveedores',
+    componente: <Proveedores />,
   },
   {
     path: '/ventas/clientes/agregar',
