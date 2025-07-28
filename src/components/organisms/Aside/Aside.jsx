@@ -6,7 +6,9 @@ import {
   FaIdBadge, FaUserShield, FaBoxOpen, FaTags, FaPlusSquare, FaBoxes, FaSlidersH,
   FaArrowUp, FaDollarSign, FaBell, FaShoppingCart, FaListAlt, FaCartPlus,
   FaAddressBook, FaChartLine, FaCreditCard, FaTruck, FaPercent, FaTicketAlt,
-  FaUserPlus, FaUsersCog, FaThLarge, FaClipboardList, FaUserTag, FaGift, FaBoxes as FaBoxesSolid, FaWarehouse, FaClipboardCheck, FaLayerGroup, FaExclamationTriangle, FaList, FaSyncAlt, FaHandshake
+  FaUserPlus, FaUsersCog, FaThLarge, FaClipboardList, FaUserTag, FaGift,
+  FaBoxes as FaBoxesSolid, FaWarehouse, FaClipboardCheck, FaLayerGroup,
+  FaExclamationTriangle, FaList, FaSyncAlt, FaHandshake, FaChartBar
 } from 'react-icons/fa';
 
 const Aside = ({ isAsideOpen = true }) => {
@@ -90,6 +92,10 @@ const Aside = ({ isAsideOpen = true }) => {
     if (nombre === 'ver stock') return <FaLayerGroup />;
     if (nombre === 'ver lista de faltantes' || nombre === 'ver faltantes') return <FaExclamationTriangle />;
     if (nombre === 'gestionar proveedores' || nombre === 'proveedores') return <FaHandshake />;
+    if (nombre === 'gestionar pedidos') return <FaClipboardList />;
+    if (nombre === 'reportes de stock') return <FaChartBar />;
+    if (nombre === 'ver clientes') return <FaAddressBook />;
+    if (nombre === 'agregar cliente') return <FaUserPlus />;
     return <FaFolder />;
   };
 

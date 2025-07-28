@@ -65,3 +65,7 @@ export const actualizarProveedor = async (id, proveedorData) => {
 export const eliminarProveedor = async (id) => {
   return await proveedoresApi.delete(`/${id}`);
 };
+
+export const reactivarProveedor = async (id) => {
+  return await proveedoresApi.put(`/${id}/reactivar`);
+};

@@ -13,6 +13,7 @@ const Proveedores = () => {
         handleCrearProveedor,
         handleActualizarProveedor,
         handleEliminarProveedor,
+        handleReactivarProveedor,
         puedeAgregar,
         puedeModificar,
         puedeEliminar,
@@ -41,6 +42,10 @@ const Proveedores = () => {
             if (e.target.closest('.btn-eliminar-proveedor')) {
                 const id = e.target.closest('.btn-eliminar-proveedor').getAttribute('data-id');
                 handleDelete(parseInt(id));
+            }
+            if (e.target.closest('.btn-reactivar-proveedor')) {
+                const id = e.target.closest('.btn-reactivar-proveedor').getAttribute('data-id');
+                handleReactivarProveedor(parseInt(id));
             }
         };
         table.addEventListener('click', handler);
@@ -85,7 +90,18 @@ const Proveedores = () => {
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Proveedores</h1>
             {puedeAgregar && (
-                <button className="btn btn-primary mb-4" onClick={handleAdd}>Agregar Proveedor</button>
+                <button
+                    onClick={handleAdd}
+                    className="
+    inline-flex items-center justify-center 
+    bg-indigo-600 hover:bg-indigo-700 
+    text-white font-semibold 
+    px-4 py-2 rounded-md 
+    shadow-sm transition-colors duration-200
+  "
+                >
+                    Agregar Proveedor
+                </button>
             )}
             {error && <div className="alert alert-error mb-2">{error}</div>}
             <Table
@@ -111,6 +127,15 @@ const Proveedores = () => {
               Modificar
             </button>`
                                 );
+                                if (row.proveedor_estado === 'inactivo') {
+                                    botones.push(
+                                        `<button class="btn-reactivar-proveedor" data-id="${row.proveedor_id}" title="Reactivar"
+                  style="background:#d1fae5;color:#059669;border:none;padding:6px 12px;
+                  border-radius:6px;cursor:pointer;font-weight:600;display:inline-block;">
+                  Reactivar
+                </button>`
+                                    );
+                                }
                             }
                             if (puedeEliminar) {
                                 botones.push(

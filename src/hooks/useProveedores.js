@@ -1,16 +1,15 @@
 import { useState, useCallback } from 'react';
 import {
   obtenerProveedores,
-  obtenerProveedorPorId,
   crearProveedor,
   actualizarProveedor,
-  eliminarProveedor
+  eliminarProveedor,
+  reactivarProveedor
 } from '../api/proveedoresApi';
 import tienePermiso from '../utils/tienePermiso';
 
 /**
  * Hook personalizado para la gestión de proveedores
- * Cumple los lineamientos: simplicidad, validación de permisos, sin lógica innecesaria
  */
 const useProveedores = () => {
   const [proveedores, setProveedores] = useState([]);
@@ -76,6 +75,21 @@ const useProveedores = () => {
     }
   }, [cargarProveedores]);
 
+  // Reactivar proveedor
+  const handleReactivarProveedor = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await reactivarProveedor(id);
+      await cargarProveedores();
+    } catch (err) {
+      setError(err.message || 'Error al reactivar proveedor');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [cargarProveedores]);
+
   // Validación de permisos
   const puedeGestionar = tienePermiso('Gestionar Proveedores');
   const puedeAgregar = tienePermiso('Agregar Proveedor');
@@ -90,6 +104,7 @@ const useProveedores = () => {
     handleCrearProveedor,
     handleActualizarProveedor,
     handleEliminarProveedor,
+    handleReactivarProveedor,
     puedeGestionar,
     puedeAgregar,
     puedeModificar,
