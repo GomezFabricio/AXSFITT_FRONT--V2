@@ -19,6 +19,7 @@ import DetalleVentaPage from './pages/ventas/ventas/DetalleVentaPage';
 import HomePage from './pages/HomePage';
 import FacturaPage from './pages/ventas/ventas/FacturaPage';
 import MetricasDeVenta from './pages/ventas/metricas/MetricasDeVenta';
+import Pedidos from './pages/product/stock/Pedidos';
 
 export const rutasProtegidas = [
   {
@@ -125,6 +126,11 @@ export const rutasProtegidas = [
     path: '/ventas/metricas',
     permiso: 'Listado de Ventas',
     componente: <MetricasDeVenta />,
+  },
+  {
+    path: '/productos/pedidos',
+    permiso: 'Gestionar Pedidos',
+    componente: <Pedidos />,
   },
 
 ];

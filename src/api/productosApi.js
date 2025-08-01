@@ -277,3 +277,18 @@ export const buscarProductosPorNombre = async (nombre, categoria_id, token) => {
     throw error.response?.data || new Error('Error al buscar productos');
   }
 };
+
+// Buscar productos por nombre sin filtrar por estado
+export const buscarProductosPorNombreSinEstado = async (nombre, categoria_id, token) => {
+  try {
+    const params = { nombre };
+    if (categoria_id) params.categoria_id = categoria_id;
+    const response = await axios.get(`${API_BASE_URL}/buscar-sin-estado`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error('Error al buscar productos (sin estado)');
+  }
+};
