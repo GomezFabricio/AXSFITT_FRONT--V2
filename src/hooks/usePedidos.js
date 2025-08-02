@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getPedidoPorId } from '../api/pedidosApi';
 import * as pedidosApi from '../api/pedidosApi';
 import tienePermiso from '../utils/tienePermiso';
 
@@ -110,6 +111,23 @@ const usePedidos = () => {
     }
   }, []);
 
+  // Handler para ver detalle de pedido
+  const [detallePedido, setDetallePedido] = useState(null);
+  const [modalDetalleOpen, setModalDetalleOpen] = useState(false);
+  const handleDetallePedido = useCallback(async (pedido_id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const detalle = await getPedidoPorId(pedido_id);
+      setDetallePedido(detalle);
+      setModalDetalleOpen(true);
+    } catch (err) {
+      setError(err.message || 'Error al obtener detalle del pedido');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     pedidos,
     pedidoSeleccionado,
@@ -128,6 +146,11 @@ const usePedidos = () => {
     puedeModificar,
     puedeCancelar,
     puedeRecepcionar,
+    // Detalle
+    detallePedido,
+    modalDetalleOpen,
+    setModalDetalleOpen,
+    handleDetallePedido,
   };
 };
 

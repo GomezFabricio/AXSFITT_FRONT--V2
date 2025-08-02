@@ -128,21 +128,22 @@ export default function useCrearPedido(pedido, cargarProveedores) {
       return;
     }
     setError(null);
+    const productosAEnviar = productos.map((p) => {
+      const det = productoDetalles[p.uniqueId] || {};
+      return {
+        producto_id: p.producto_id,
+        variante_id: det.varianteId || null,
+        cantidad: det.cantidad || 1,
+        precio_costo: det.precio_costo || undefined
+      };
+    });
     onSubmit({
       proveedor_id: proveedorId,
       descuento: descuentoPorcentaje,
       descuento_monto: descuentoMonto,
       costo_envio: Number(costoEnvio) || 0,
       fecha_esperada_entrega: fechaEsperada || undefined,
-      productos: productos.map((p) => {
-        const det = productoDetalles[p.uniqueId] || {};
-        return {
-          producto_id: p.producto_id,
-          variante_id: det.varianteId || null,
-          cantidad: det.cantidad || 1,
-          precio_costo: det.precio_costo || undefined
-        };
-      }),
+      productos: productosAEnviar,
       productosSinRegistrar
     });
   };

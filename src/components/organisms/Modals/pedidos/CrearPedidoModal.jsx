@@ -238,14 +238,16 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                           <select
                             className="ml-2 select select-bordered select-xs"
                             value={varianteId}
+                            required
                             onChange={e => setProductoDetalles(prev => ({
                               ...prev,
                               [p.uniqueId]: {
                                 ...prev[p.uniqueId],
-                                varianteId: e.target.value
+                                varianteId: e.target.value ? Number(e.target.value) : null
                               }
                             }))}
                           >
+                            <option value="" disabled>Seleccione una variante</option>
                             {detallesStock.variantes.map(v => (
                               <option key={v.variante_id} value={v.variante_id}>
                                 {v.atributos || 'Variante'}
@@ -303,8 +305,36 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
               <ul className="space-y-2">
                 {productosSinRegistrar.map((p, idx) => (
                   <li key={idx} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
-                    <span>{p.nombre} (x{p.cantidad})</span>
-                    <button type="button" className="btn btn-xs btn-error" onClick={() => quitarProductoSinRegistrar(idx)}>Quitar</button>
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        type="text"
+                        className="input input-bordered input-xs w-40"
+                        value={p.nombre}
+                        onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, nombre: e.target.value } : item))}
+                        placeholder="Nombre del producto"
+                        required
+                      />
+                      <label className="ml-2 text-xs text-gray-600">Cantidad:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className="input input-bordered input-xs w-16 ml-1"
+                        value={p.cantidad || ''}
+                        onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, cantidad: Number(e.target.value) } : item))}
+                        required
+                      />
+                      <label className="ml-2 text-xs text-gray-600">Precio:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="input input-bordered input-xs w-20 ml-1"
+                        value={p.precio_costo || ''}
+                        onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, precio_costo: Number(e.target.value) } : item))}
+                        required
+                      />
+                    </div>
+                    <button type="button" className="btn btn-xs btn-error ml-2" onClick={() => quitarProductoSinRegistrar(idx)}>Quitar</button>
                   </li>
                 ))}
               </ul>
@@ -333,7 +363,13 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
             </div>
           )}
 
-          <button type="button" className="btn btn-link" onClick={onPrecargarProducto}>Agregar producto sin registrar</button>
+          <button
+            type="button"
+            className="btn btn-link"
+            onClick={() => setProductosSinRegistrar(prev => ([...prev, { nombre: '', cantidad: 1, precio_costo: 0 }]))}
+          >
+            Agregar producto sin registrar
+          </button>
 
           {error && <p className="text-error text-sm">{error}</p>}
 

@@ -6,6 +6,7 @@ import CrearPedidoModal from '../../../components/organisms/modals/pedidos/Crear
 import { crearPedido, modificarPedido } from '../../../api/pedidosApi';
 import PrecargarProductoModal from '../../../components/organisms/modals/pedidos/PrecargarProductoModal';
 import HistorialModificacionesModal from '../../../components/organisms/modals/pedidos/HistorialModificacionesModal';
+import DetallePedidoModal from '../../../components/organisms/Modals/pedidos/DetallePedidoModal';
 
 const Pedidos = () => {
   const {
@@ -17,7 +18,11 @@ const Pedidos = () => {
     puedeRecepcionar,
     puedeCancelar,
     cargarPedidos,
-    recepcionarPedido
+    recepcionarPedido,
+    detallePedido,
+    modalDetalleOpen,
+    setModalDetalleOpen,
+    handleDetallePedido
   } = usePedidos();
 
   // Cargar pedidos al montar
@@ -54,12 +59,37 @@ const Pedidos = () => {
         if (puedeModificar && row.pedido_estado === 'pendiente') {
           botones.push(`<button class="btn-editar-pedido" data-id="${row.pedido_id}" style="background:#e0e7ff;color:#2563eb;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px;display:inline-block;">Editar</button>`);
         }
-        // Botón de ver detalle (antes era historial)
-        botones.push(`<button class="btn-historial-pedido" data-id="${row.pedido_id}" style="background:#bae6fd;color:#0369a1;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-block;">Detalle</button>`);
+        // Botón de ver detalle
+        botones.push(`<button class="btn-detalle-pedido" data-id="${row.pedido_id}" style="background:#bae6fd;color:#0369a1;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-block;">Detalle</button>`);
         return `<div style="display:flex;gap:8px;justify-content:center;align-items:center;">${botones.join('')}</div>`;
       }
     }
   ];
+
+  // Delegación de eventos para botones de acción de DataTables
+  React.useEffect(() => {
+    const handler = (e) => {
+      const detalleBtn = e.target.closest('.btn-detalle-pedido');
+      if (detalleBtn) {
+        const rowId = detalleBtn.getAttribute('data-id');
+        const row = pedidos.find(r => String(r.pedido_id) === String(rowId));
+        if (row) handleDetallePedido(row.pedido_id);
+        return;
+      }
+      const editarBtn = e.target.closest('.btn-editar-pedido');
+      if (editarBtn) {
+        const rowId = editarBtn.getAttribute('data-id');
+        const row = pedidos.find(r => String(r.pedido_id) === String(rowId));
+        if (row) {
+          setPedidoSeleccionado(row);
+          setModalCrear(true);
+        }
+        return;
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [pedidos, handleDetallePedido]);
 
   return (
     <div className="px-2 sm:px-4 md:px-6 py-4 md:py-8">
@@ -110,6 +140,13 @@ const Pedidos = () => {
           loading={loading}
           error={error}
           onRowClick={row => setPedidoSeleccionado(row)}
+          onActionClick={(action, row) => {
+            if (action === 'detalle') handleDetallePedido(row.pedido_id);
+            if (action === 'editar') {
+              setPedidoSeleccionado(row);
+              setModalCrear(true);
+            }
+          }}
         />
       )}
 
@@ -176,6 +213,12 @@ const Pedidos = () => {
           pedido={pedidoSeleccionado}
         />
       )}
+      {/* Modal Detalle Pedido */}
+      <DetallePedidoModal
+        open={modalDetalleOpen}
+        onClose={() => setModalDetalleOpen(false)}
+        pedido={detallePedido}
+      />
     </div>
   );
 };
