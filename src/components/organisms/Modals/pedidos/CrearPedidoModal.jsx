@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ModalConfigurarAtributos from '../../../../components/organisms/Modals/product/ModalConfigurarAtributos';
+import AgregarVariante from './AgregarVariante';
 import useProveedores from '../../../../hooks/useProveedores';
 import useCrearPedido from '../../../../hooks/useCrearPedido';
 import config from '../../../../config/config';
@@ -228,6 +229,146 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                     }
                   }
                   nombre = `${p.nombre}${atributosStr ? ' (' + atributosStr + ')' : ''}`;
+
+                  // --- NUEVO: Si el producto NO tiene variantes en el sistema, permitir configurar atributos y variantes ---
+                  const tieneVariantesSistema = detallesStock?.variantes && detallesStock.variantes.length > 0;
+                  // Estado local para atributos y variantes de productos registrados sin variantes
+                  if (!tieneVariantesSistema) {
+                    // Usar campos en productoDetalles para atributos y variantes
+                    const atributosConfigurados = det.atributosConfigurados || { atributos: [] };
+                    const variantes = det.variantes || [];
+                    return (
+                      <li key={p.uniqueId || idx} className="flex flex-col gap-1 bg-gray-50 px-3 py-2 rounded-md">
+                        <div className="flex items-center gap-2 w-full">
+                          {imagen ? (
+                            <img
+                              src={`${imagen.startsWith('http') ? '' : config.backendUrl}${imagen}`}
+                              alt="prod"
+                              className="w-8 h-8 border rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 border rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">Sin</div>
+                          )}
+                          <span>{nombre}</span>
+                          <button type="button" className="btn btn-xs btn-error ml-2" onClick={() => quitarProducto(idx)}>Quitar</button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <button type="button" className="btn btn-xs btn-outline" onClick={() => {
+                            // Abrir modal de atributos para este producto registrado
+                            setProductoDetalles(prev => ({
+                              ...prev,
+                              [p.uniqueId]: {
+                                ...prev[p.uniqueId],
+                                showAtributosModal: true
+                              }
+                            }));
+                          }}>
+                            {atributosConfigurados.atributos.length > 0 ? 'Editar atributos' : 'Configurar atributos'}
+                          </button>
+                        {atributosConfigurados.atributos.length > 0 && (
+                            <button type="button" className="btn btn-xs btn-outline" onClick={() => {
+                              // Inicializar draft de variante al abrir el modal (inputs vacíos)
+                              const atributos = atributosConfigurados.atributos || [];
+                              const initial = {};
+                              atributos.forEach(a => { initial[a.atributo_nombre] = ''; });
+                              initial.cantidad = '';
+                              initial.precio_costo = '';
+                              setProductoDetalles(prev => ({
+                                ...prev,
+                                [p.uniqueId]: {
+                                  ...prev[p.uniqueId],
+                                  varianteDraft: initial,
+                                  showVarianteModal: true
+                                }
+                              }));
+                            }}>Gestionar variantes</button>
+                          )}
+                          {atributosConfigurados.atributos.length > 0 && <span className="text-xs text-gray-500">{variantes.length} variante(s)</span>}
+                        </div>
+                        {/* Listado de variantes */}
+                        {atributosConfigurados.atributos.length > 0 && variantes.length > 0 && (
+                          <ul className="ml-4 mt-1 space-y-1">
+                            {variantes.map((v, vIdx) => (
+                              <li key={vIdx} className="flex items-center gap-2">
+                                <span className="text-xs">{atributosConfigurados.atributos.map(a => `${a.atributo_nombre}: ${v[a.atributo_nombre] || ''}`).join(', ')} | Cant: {v.cantidad} | $ {v.precio_costo}</span>
+                                <button type="button" className="btn btn-xs btn-error" onClick={() => {
+                                  setProductoDetalles(prev => ({
+                                    ...prev,
+                                    [p.uniqueId]: {
+                                      ...prev[p.uniqueId],
+                                      variantes: prev[p.uniqueId].variantes.filter((_, j) => j !== vIdx)
+                                    }
+                                  }));
+                                }}>Quitar</button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {/* Modal para configurar atributos */}
+                        {det.showAtributosModal && (
+                          <ModalConfigurarAtributos
+                            isOpen={true}
+                            onClose={() => setProductoDetalles(prev => ({
+                              ...prev,
+                              [p.uniqueId]: {
+                                ...prev[p.uniqueId],
+                                showAtributosModal: false
+                              }
+                            }))}
+                            initialAtributos={atributosConfigurados.atributos || []}
+                            onSave={data => {
+                              setProductoDetalles(prev => ({
+                                ...prev,
+                                [p.uniqueId]: {
+                                  ...prev[p.uniqueId],
+                                  atributosConfigurados: data,
+                                  showAtributosModal: false,
+                                  variantes: [] // reset variantes si cambian atributos
+                                }
+                              }));
+                            }}
+                          />
+                        )}
+                        {/* Modal para gestionar variantes */}
+                        {det.showVarianteModal && (
+                          <AgregarVariante
+                            isOpen={true}
+                            atributos={atributosConfigurados.atributos || []}
+                            varianteDraft={det.varianteDraft || {}}
+                            setVarianteDraft={fn => setProductoDetalles(prev => ({
+                              ...prev,
+                              [p.uniqueId]: {
+                                ...prev[p.uniqueId],
+                                varianteDraft: typeof fn === 'function' ? fn(prev[p.uniqueId].varianteDraft || {}) : fn
+                              }
+                            }))}
+                            onAgregar={() => {
+                              setProductoDetalles(prev => ({
+                                ...prev,
+                                [p.uniqueId]: {
+                                  ...prev[p.uniqueId],
+                                  variantes: [...(prev[p.uniqueId].variantes || []), det.varianteDraft],
+                                  varianteDraft: {},
+                                  showVarianteModal: false
+                                }
+                              }));
+                            }}
+                            onClose={() => setProductoDetalles(prev => ({
+                              ...prev,
+                              [p.uniqueId]: {
+                                ...prev[p.uniqueId],
+                                varianteDraft: {},
+                                showVarianteModal: false
+                              }
+                            }))}
+                          />
+                        )}
+                      </li>
+                    );
+                  }
+                  // --- FIN NUEVO ---
+
+                  // Caso original: producto registrado con variantes
                   return (
                     <li key={p.uniqueId || idx} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
                       <div className="flex items-center gap-2">
@@ -332,8 +473,8 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                             type="number"
                             min="1"
                             className="input input-bordered input-xs w-16 ml-1"
-                            value={p.cantidad || ''}
-                            onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, cantidad: Number(e.target.value) } : item))}
+                            value={p.cantidad === undefined ? '' : p.cantidad}
+                            onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, cantidad: e.target.value === '' ? '' : Number(e.target.value) } : item))}
                             required
                           />
                           <label className="ml-2 text-xs text-gray-600">Precio:</label>
@@ -342,8 +483,8 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                             min="0"
                             step="0.01"
                             className="input input-bordered input-xs w-20 ml-1"
-                            value={p.precio_costo || ''}
-                            onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, precio_costo: Number(e.target.value) } : item))}
+                            value={p.precio_costo === undefined ? '' : p.precio_costo}
+                            onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, precio_costo: e.target.value === '' ? '' : Number(e.target.value) } : item))}
                             required
                           />
                         </>}
@@ -355,12 +496,12 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                           {tieneAtributos ? 'Editar atributos' : 'Configurar atributos'}
                         </button>
                         {tieneAtributos && <button type="button" className="btn btn-xs btn-outline" onClick={() => {
-                          // Inicializar draft de variante al abrir el modal
+                          // Inicializar draft de variante al abrir el modal (inputs vacíos)
                           const atributos = p.atributosConfigurados?.atributos || [];
                           const initial = {};
                           atributos.forEach(a => { initial[a.atributo_nombre] = ''; });
-                          initial.cantidad = 1;
-                          initial.precio_costo = 0;
+                          initial.cantidad = '';
+                          initial.precio_costo = '';
                           setVarianteDraft(initial);
                           setShowVarianteModalIdx(idx);
                         }}>Gestionar variantes</button>}
@@ -399,111 +540,26 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                 />
               )}
               {/* Modal para gestionar variantes */}
-              {showVarianteModalIdx !== null && (() => {
-                const p = productosSinRegistrar[showVarianteModalIdx];
-                const atributos = p.atributosConfigurados?.atributos || [];
-                // Handler para agregar variante
-                function handleAgregarVariante() {
-                  setFormulariosVariantes(prev => ({
-                    ...prev,
-                    [showVarianteModalIdx]: [...(prev[showVarianteModalIdx] || []), varianteDraft]
-                  }));
-                  setVarianteDraft({});
-                  setShowVarianteModalIdx(null);
-                }
-                // Para inputs: avanzar con Enter, agregar variante en el último
-                const inputOrder = [
-                  ...atributos.map(a => a.atributo_nombre),
-                  'cantidad',
-                  'precio_costo'
-                ];
-                return (
-                  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-4 w-full max-w-xs flex flex-col gap-2">
-                      <h4 className="font-semibold mb-2">Agregar variante</h4>
-                      {atributos.map((attr, i) => (
-                        <div key={attr.atributo_nombre} className="flex flex-col mb-1">
-                          <label className="text-xs text-gray-600 mb-0.5">{attr.atributo_nombre}</label>
-                          <input
-                            type="text"
-                            className="input input-bordered input-xs"
-                            placeholder={attr.atributo_nombre}
-                            value={varianteDraft[attr.atributo_nombre] || ''}
-                            onChange={e => setVarianteDraft(v => ({ ...v, [attr.atributo_nombre]: e.target.value }))}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const idx = inputOrder.indexOf(attr.atributo_nombre);
-                                const next = inputOrder[idx + 1];
-                                if (next) {
-                                  const form = e.target.form;
-                                  const nextInput = form.elements.namedItem(next);
-                                  if (nextInput) nextInput.focus();
-                                } else {
-                                  handleAgregarVariante();
-                                }
-                              }
-                            }}
-                            name={attr.atributo_nombre}
-                          />
-                        </div>
-                      ))}
-                      <div className="flex flex-col mb-1">
-                        <label className="text-xs text-gray-600 mb-0.5">Cantidad</label>
-                        <input
-                          type="number"
-                          min="1"
-                          className="input input-bordered input-xs"
-                          placeholder="Cantidad"
-                          value={varianteDraft.cantidad ?? ''}
-                          onChange={e => setVarianteDraft(v => ({ ...v, cantidad: e.target.value === '' ? '' : Number(e.target.value) }))}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const idx = inputOrder.indexOf('cantidad');
-                              const next = inputOrder[idx + 1];
-                              if (next) {
-                                const form = e.target.form;
-                                const nextInput = form.elements.namedItem(next);
-                                if (nextInput) nextInput.focus();
-                              } else {
-                                handleAgregarVariante();
-                              }
-                            }
-                          }}
-                          name="cantidad"
-                        />
-                      </div>
-                      <div className="flex flex-col mb-1">
-                        <label className="text-xs text-gray-600 mb-0.5">Precio costo</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          className="input input-bordered input-xs"
-                          placeholder="Precio costo"
-                          value={varianteDraft.precio_costo ?? ''}
-                          onChange={e => setVarianteDraft(v => ({ ...v, precio_costo: e.target.value === '' ? '' : Number(e.target.value) }))}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAgregarVariante();
-                            }
-                          }}
-                          name="precio_costo"
-                        />
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <button type="button" className="btn btn-xs btn-primary flex-1" onClick={handleAgregarVariante}>Agregar</button>
-                        <button type="button" className="btn btn-xs btn-outline flex-1" onClick={() => {
-                          setVarianteDraft({});
-                          setShowVarianteModalIdx(null);
-                        }}>Cerrar</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
+              {showVarianteModalIdx !== null && (
+                <AgregarVariante
+                  isOpen={true}
+                  atributos={productosSinRegistrar[showVarianteModalIdx]?.atributosConfigurados?.atributos || []}
+                  varianteDraft={varianteDraft}
+                  setVarianteDraft={setVarianteDraft}
+                  onAgregar={() => {
+                    setFormulariosVariantes(prev => ({
+                      ...prev,
+                      [showVarianteModalIdx]: [...(prev[showVarianteModalIdx] || []), varianteDraft]
+                    }));
+                    setVarianteDraft({});
+                    setShowVarianteModalIdx(null);
+                  }}
+                  onClose={() => {
+                    setVarianteDraft({});
+                    setShowVarianteModalIdx(null);
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -532,7 +588,7 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
           <button
             type="button"
             className="btn btn-link"
-            onClick={() => setProductosSinRegistrar(prev => ([...prev, { nombre: '', cantidad: 1, precio_costo: 0 }]))}
+            onClick={() => setProductosSinRegistrar(prev => ([...prev, { nombre: '', cantidad: '', precio_costo: '' }]))}
           >
             Agregar producto sin registrar
           </button>
