@@ -17,6 +17,25 @@ export default function useCrearPedido(pedido, cargarProveedores) {
   const [seleccionados, setSeleccionados] = useState([]);
   const [productoDetalles, setProductoDetalles] = useState({});
 
+  // Estado para variantes y productos en borrador
+  const [variantesBorrador, setVariantesBorrador] = useState([]);
+  const [productosBorrador, setProductosBorrador] = useState([]);
+
+  // Handler para agregar variante en borrador
+  const agregarVarianteBorrador = (vb) => {
+    setVariantesBorrador(prev => [...prev, vb]);
+  };
+  const quitarVarianteBorrador = (idx) => {
+    setVariantesBorrador(prev => prev.filter((_, i) => i !== idx));
+  };
+  // Handler para agregar producto en borrador
+  const agregarProductoBorrador = (pb) => {
+    setProductosBorrador(prev => [...prev, pb]);
+  };
+  const quitarProductoBorrador = (idx) => {
+    setProductosBorrador(prev => prev.filter((_, i) => i !== idx));
+  };
+
   // Calcular totales por línea (precio * cantidad por línea)
   const calcularSubtotal = () => {
     let subtotal = 0;
@@ -123,8 +142,8 @@ export default function useCrearPedido(pedido, cargarProveedores) {
       setError('Error interno: onSubmit no es una función');
       return;
     }
-    if (!proveedorId || (productos.length === 0 && productosSinRegistrar.length === 0)) {
-      setError('Debe seleccionar un proveedor y al menos un producto.');
+    if (!proveedorId || (productos.length === 0 && productosSinRegistrar.length === 0 && variantesBorrador.length === 0 && productosBorrador.length === 0)) {
+      setError('Debe seleccionar un proveedor y al menos un producto o variante.');
       return;
     }
     setError(null);
@@ -144,7 +163,9 @@ export default function useCrearPedido(pedido, cargarProveedores) {
       costo_envio: Number(costoEnvio) || 0,
       fecha_esperada_entrega: fechaEsperada || undefined,
       productos: productosAEnviar,
-      productosSinRegistrar
+      productosSinRegistrar,
+      variantesBorrador,
+      productosBorrador
     });
   };
 
@@ -163,6 +184,8 @@ export default function useCrearPedido(pedido, cargarProveedores) {
     seleccionados, setSeleccionados,
     productoDetalles, setProductoDetalles,
     subtotal, descuentoPorcentaje, descuentoMonto, total,
-    confirmarSeleccion, quitarProducto, quitarProductoSinRegistrar, handleSubmit
+    confirmarSeleccion, quitarProducto, quitarProductoSinRegistrar, handleSubmit,
+    variantesBorrador, setVariantesBorrador, agregarVarianteBorrador, quitarVarianteBorrador,
+    productosBorrador, setProductosBorrador, agregarProductoBorrador, quitarProductoBorrador
   };
 }

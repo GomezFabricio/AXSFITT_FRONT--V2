@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ModalConfigurarAtributos from '../../../../components/organisms/Modals/product/ModalConfigurarAtributos';
 import useProveedores from '../../../../hooks/useProveedores';
 import useCrearPedido from '../../../../hooks/useCrearPedido';
 import config from '../../../../config/config';
@@ -23,6 +24,13 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
     subtotal, descuentoPorcentaje, descuentoMonto, total,
     confirmarSeleccion, quitarProducto, quitarProductoSinRegistrar, handleSubmit
   } = useCrearPedido(pedido, cargarProveedores);
+
+  // Estado para variantes y atributos de productos sin registrar
+  const [showVarianteModalIdx, setShowVarianteModalIdx] = useState(null); // idx del producto sin registrar
+  const [showAtributosModalIdx, setShowAtributosModalIdx] = useState(null); // idx del producto sin registrar para atributos
+  const [formulariosVariantes, setFormulariosVariantes] = useState({}); // { idx: [ { ...variante } ] }
+  // Estado para la variante draft (solo uno global)
+  const [varianteDraft, setVarianteDraft] = useState({});
 
   if (!open) return null;
 
@@ -303,41 +311,199 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
             <div>
               <h3 className="font-semibold mb-2">Productos sin Registrar</h3>
               <ul className="space-y-2">
-                {productosSinRegistrar.map((p, idx) => (
-                  <li key={idx} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
-                    <div className="flex items-center gap-2 w-full">
-                      <input
-                        type="text"
-                        className="input input-bordered input-xs w-40"
-                        value={p.nombre}
-                        onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, nombre: e.target.value } : item))}
-                        placeholder="Nombre del producto"
-                        required
-                      />
-                      <label className="ml-2 text-xs text-gray-600">Cantidad:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        className="input input-bordered input-xs w-16 ml-1"
-                        value={p.cantidad || ''}
-                        onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, cantidad: Number(e.target.value) } : item))}
-                        required
-                      />
-                      <label className="ml-2 text-xs text-gray-600">Precio:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="input input-bordered input-xs w-20 ml-1"
-                        value={p.precio_costo || ''}
-                        onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, precio_costo: Number(e.target.value) } : item))}
-                        required
-                      />
-                    </div>
-                    <button type="button" className="btn btn-xs btn-error ml-2" onClick={() => quitarProductoSinRegistrar(idx)}>Quitar</button>
-                  </li>
-                ))}
+                {productosSinRegistrar.map((p, idx) => {
+                  const tieneAtributos = !!p.atributosConfigurados && p.atributosConfigurados.atributos && p.atributosConfigurados.atributos.length > 0;
+                  const variantes = formulariosVariantes[idx] || [];
+                  return (
+                    <li key={idx} className="flex flex-col gap-1 bg-gray-50 px-3 py-2 rounded-md">
+                      <div className="flex items-center gap-2 w-full">
+                        <input
+                          type="text"
+                          className="input input-bordered input-xs w-40"
+                          value={p.nombre}
+                          onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, nombre: e.target.value } : item))}
+                          placeholder="Nombre del producto"
+                          required
+                        />
+                        {/* Si no tiene atributos, modo simple */}
+                        {!tieneAtributos && <>
+                          <label className="ml-2 text-xs text-gray-600">Cantidad:</label>
+                          <input
+                            type="number"
+                            min="1"
+                            className="input input-bordered input-xs w-16 ml-1"
+                            value={p.cantidad || ''}
+                            onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, cantidad: Number(e.target.value) } : item))}
+                            required
+                          />
+                          <label className="ml-2 text-xs text-gray-600">Precio:</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="input input-bordered input-xs w-20 ml-1"
+                            value={p.precio_costo || ''}
+                            onChange={e => setProductosSinRegistrar(prev => prev.map((item, i) => i === idx ? { ...item, precio_costo: Number(e.target.value) } : item))}
+                            required
+                          />
+                        </>}
+                        <button type="button" className="btn btn-xs btn-error ml-2" onClick={() => quitarProductoSinRegistrar(idx)}>Quitar</button>
+                      </div>
+                      {/* Configurar atributos */}
+                      <div className="flex items-center gap-2 mt-1">
+                        <button type="button" className="btn btn-xs btn-outline" onClick={() => setShowAtributosModalIdx(idx)}>
+                          {tieneAtributos ? 'Editar atributos' : 'Configurar atributos'}
+                        </button>
+                        {tieneAtributos && <button type="button" className="btn btn-xs btn-outline" onClick={() => {
+                          // Inicializar draft de variante al abrir el modal
+                          const atributos = p.atributosConfigurados?.atributos || [];
+                          const initial = {};
+                          atributos.forEach(a => { initial[a.atributo_nombre] = ''; });
+                          initial.cantidad = 1;
+                          initial.precio_costo = 0;
+                          setVarianteDraft(initial);
+                          setShowVarianteModalIdx(idx);
+                        }}>Gestionar variantes</button>}
+                        {tieneAtributos && <span className="text-xs text-gray-500">{variantes.length} variante(s)</span>}
+                      </div>
+                      {/* Listado de variantes */}
+                      {tieneAtributos && variantes.length > 0 && (
+                        <ul className="ml-4 mt-1 space-y-1">
+                          {variantes.map((v, vIdx) => (
+                            <li key={vIdx} className="flex items-center gap-2">
+                              <span className="text-xs">{p.atributosConfigurados.atributos.map(a => `${a.atributo_nombre}: ${v[a.atributo_nombre] || ''}`).join(', ')} | Cant: {v.cantidad} | $ {v.precio_costo}</span>
+                              <button type="button" className="btn btn-xs btn-error" onClick={() => {
+                                setFormulariosVariantes(prev => ({
+                                  ...prev,
+                                  [idx]: prev[idx].filter((_, j) => j !== vIdx)
+                                }));
+                              }}>Quitar</button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
+              {/* Modal para configurar atributos */}
+              {showAtributosModalIdx !== null && (
+                <ModalConfigurarAtributos
+                  isOpen={true}
+                  onClose={() => setShowAtributosModalIdx(null)}
+                  initialAtributos={productosSinRegistrar[showAtributosModalIdx]?.atributosConfigurados?.atributos || []}
+                  onSave={data => {
+                    setProductosSinRegistrar(prev => prev.map((item, i) => i === showAtributosModalIdx ? { ...item, atributosConfigurados: data } : item));
+                    setShowAtributosModalIdx(null);
+                  }}
+                />
+              )}
+              {/* Modal para gestionar variantes */}
+              {showVarianteModalIdx !== null && (() => {
+                const p = productosSinRegistrar[showVarianteModalIdx];
+                const atributos = p.atributosConfigurados?.atributos || [];
+                // Handler para agregar variante
+                function handleAgregarVariante() {
+                  setFormulariosVariantes(prev => ({
+                    ...prev,
+                    [showVarianteModalIdx]: [...(prev[showVarianteModalIdx] || []), varianteDraft]
+                  }));
+                  setVarianteDraft({});
+                  setShowVarianteModalIdx(null);
+                }
+                // Para inputs: avanzar con Enter, agregar variante en el último
+                const inputOrder = [
+                  ...atributos.map(a => a.atributo_nombre),
+                  'cantidad',
+                  'precio_costo'
+                ];
+                return (
+                  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-4 w-full max-w-xs flex flex-col gap-2">
+                      <h4 className="font-semibold mb-2">Agregar variante</h4>
+                      {atributos.map((attr, i) => (
+                        <div key={attr.atributo_nombre} className="flex flex-col mb-1">
+                          <label className="text-xs text-gray-600 mb-0.5">{attr.atributo_nombre}</label>
+                          <input
+                            type="text"
+                            className="input input-bordered input-xs"
+                            placeholder={attr.atributo_nombre}
+                            value={varianteDraft[attr.atributo_nombre] || ''}
+                            onChange={e => setVarianteDraft(v => ({ ...v, [attr.atributo_nombre]: e.target.value }))}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const idx = inputOrder.indexOf(attr.atributo_nombre);
+                                const next = inputOrder[idx + 1];
+                                if (next) {
+                                  const form = e.target.form;
+                                  const nextInput = form.elements.namedItem(next);
+                                  if (nextInput) nextInput.focus();
+                                } else {
+                                  handleAgregarVariante();
+                                }
+                              }
+                            }}
+                            name={attr.atributo_nombre}
+                          />
+                        </div>
+                      ))}
+                      <div className="flex flex-col mb-1">
+                        <label className="text-xs text-gray-600 mb-0.5">Cantidad</label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="input input-bordered input-xs"
+                          placeholder="Cantidad"
+                          value={varianteDraft.cantidad ?? ''}
+                          onChange={e => setVarianteDraft(v => ({ ...v, cantidad: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const idx = inputOrder.indexOf('cantidad');
+                              const next = inputOrder[idx + 1];
+                              if (next) {
+                                const form = e.target.form;
+                                const nextInput = form.elements.namedItem(next);
+                                if (nextInput) nextInput.focus();
+                              } else {
+                                handleAgregarVariante();
+                              }
+                            }
+                          }}
+                          name="cantidad"
+                        />
+                      </div>
+                      <div className="flex flex-col mb-1">
+                        <label className="text-xs text-gray-600 mb-0.5">Precio costo</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="input input-bordered input-xs"
+                          placeholder="Precio costo"
+                          value={varianteDraft.precio_costo ?? ''}
+                          onChange={e => setVarianteDraft(v => ({ ...v, precio_costo: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAgregarVariante();
+                            }
+                          }}
+                          name="precio_costo"
+                        />
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <button type="button" className="btn btn-xs btn-primary flex-1" onClick={handleAgregarVariante}>Agregar</button>
+                        <button type="button" className="btn btn-xs btn-outline flex-1" onClick={() => {
+                          setVarianteDraft({});
+                          setShowVarianteModalIdx(null);
+                        }}>Cerrar</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
