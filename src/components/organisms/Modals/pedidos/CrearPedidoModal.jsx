@@ -237,6 +237,7 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                     // Usar campos en productoDetalles para atributos y variantes
                     const atributosConfigurados = det.atributosConfigurados || { atributos: [] };
                     const variantes = det.variantes || [];
+                    const mostrarInputsSimples = atributosConfigurados.atributos.length === 0;
                     return (
                       <li key={p.uniqueId || idx} className="flex flex-col gap-1 bg-gray-50 px-3 py-2 rounded-md">
                         <div className="flex items-center gap-2 w-full">
@@ -252,6 +253,42 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                           <span>{nombre}</span>
                           <button type="button" className="btn btn-xs btn-error ml-2" onClick={() => quitarProducto(idx)}>Quitar</button>
                         </div>
+                        {/* Inputs simples de cantidad y precio_costo si no hay atributos configurados */}
+                        {mostrarInputsSimples && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <label className="ml-2 text-xs text-gray-600">Cantidad:</label>
+                            <input
+                              type="number"
+                              min="1"
+                              className="input input-bordered input-xs w-16 ml-1"
+                              value={det.cantidad === undefined ? '' : det.cantidad}
+                              onChange={e => setProductoDetalles(prev => ({
+                                ...prev,
+                                [p.uniqueId]: {
+                                  ...prev[p.uniqueId],
+                                  cantidad: e.target.value === '' ? '' : Number(e.target.value)
+                                }
+                              }))}
+                              required
+                            />
+                            <label className="ml-2 text-xs text-gray-600">Precio:</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              className="input input-bordered input-xs w-20 ml-1"
+                              value={det.precio_costo === undefined ? '' : det.precio_costo}
+                              onChange={e => setProductoDetalles(prev => ({
+                                ...prev,
+                                [p.uniqueId]: {
+                                  ...prev[p.uniqueId],
+                                  precio_costo: e.target.value === '' ? '' : Number(e.target.value)
+                                }
+                              }))}
+                              required
+                            />
+                          </div>
+                        )}
                         <div className="flex items-center gap-2 mt-1">
                           <button type="button" className="btn btn-xs btn-outline" onClick={() => {
                             // Abrir modal de atributos para este producto registrado
@@ -265,7 +302,7 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                           }}>
                             {atributosConfigurados.atributos.length > 0 ? 'Editar atributos' : 'Configurar atributos'}
                           </button>
-                        {atributosConfigurados.atributos.length > 0 && (
+                          {atributosConfigurados.atributos.length > 0 && (
                             <button type="button" className="btn btn-xs btn-outline" onClick={() => {
                               // Inicializar draft de variante al abrir el modal (inputs vacíos)
                               const atributos = atributosConfigurados.atributos || [];
@@ -369,9 +406,67 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                   // --- FIN NUEVO ---
 
                   // Caso original: producto registrado con variantes
+                  // Mostrar todas las variantes existentes para este producto, con inputs de cantidad y precio_costo
+                  // y permitir agregar nuevas variantes
+                  // 1. Parsear atributos únicos para el modal de agregar variante
+                  let atributosSistema = [];
+                  if (detallesStock?.variantes?.length > 0) {
+                    const atributosSet = new Set();
+                    detallesStock.variantes.forEach(v => {
+                      let attrs = v.atributos;
+                      if (typeof attrs === 'string') {
+                        attrs = attrs.split(',').map(s => {
+                          const [nombre, valor] = s.split(':').map(x => x && x.trim());
+                          return nombre ? { atributo_nombre: nombre, valor_nombre: valor || '' } : null;
+                        }).filter(Boolean);
+                      }
+                      if (Array.isArray(attrs)) {
+                        attrs.forEach(a => {
+                          if (a && a.atributo_nombre && !atributosSet.has(a.atributo_nombre)) {
+                            atributosSet.add(a.atributo_nombre);
+                            atributosSistema.push({ atributo_nombre: a.atributo_nombre });
+                          }
+                        });
+                      }
+                    });
+                  }
+
+                  // 2. Estado local para cantidades y precios de variantes seleccionadas
+                  // Guardar en productoDetalles[p.uniqueId].variantesPedido: [{variante_id, cantidad, precio_costo}]
+                  const variantesPedido = det.variantesPedido || [];
+                  // 3. Mapear variantes existentes
+                  // Unir variantes existentes del sistema y las nuevas agregadas en este pedido
+                  const variantesNuevas = det.variantes || [];
+                  // Las variantes nuevas no tienen variante_id, así que les asignamos un id temporal negativo
+                  const variantesExistentes = [
+                    ...(detallesStock?.variantes || []).map(v => {
+                      let attrs = v.atributos;
+                      if (typeof attrs === 'string') {
+                        attrs = attrs.split(',').map(s => {
+                          const [nombre, valor] = s.split(':').map(x => x && x.trim());
+                          return nombre ? { atributo_nombre: nombre, valor_nombre: valor || '' } : null;
+                        }).filter(Boolean);
+                      }
+                      return {
+                        ...v,
+                        atributos: attrs,
+                        _esNueva: false
+                      };
+                    }),
+                    ...variantesNuevas.map((v, i) => ({
+                      ...v,
+                      variante_id: v.variante_id || `nueva_${i}`,
+                      atributos: atributosSistema.map(a => ({
+                        atributo_nombre: a.atributo_nombre,
+                        valor_nombre: v[a.atributo_nombre] || ''
+                      })),
+                      _esNueva: true
+                    }))
+                  ];
+
                   return (
-                    <li key={p.uniqueId || idx} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
-                      <div className="flex items-center gap-2">
+                    <li key={p.uniqueId || idx} className="flex flex-col gap-1 bg-gray-50 px-3 py-2 rounded-md">
+                      <div className="flex items-center gap-2 w-full">
                         {imagen ? (
                           <img
                             src={`${imagen.startsWith('http') ? '' : config.backendUrl}${imagen}`}
@@ -382,64 +477,190 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                           <div className="w-8 h-8 border rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">Sin</div>
                         )}
                         <span>{nombre}</span>
-                        {/* Selector de variante si hay */}
-                        {detallesStock?.variantes?.length > 0 && (
-                          <select
-                            className="ml-2 select select-bordered select-xs"
-                            value={varianteId}
-                            required
-                            onChange={e => setProductoDetalles(prev => ({
-                              ...prev,
-                              [p.uniqueId]: {
-                                ...prev[p.uniqueId],
-                                varianteId: e.target.value ? Number(e.target.value) : null
-                              }
-                            }))}
-                          >
-                            <option value="" disabled>Seleccione una variante</option>
-                            {detallesStock.variantes.map(v => (
-                              <option key={v.variante_id} value={v.variante_id}>
-                                {v.atributos || 'Variante'}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                        {/* Input para precio de costo y cantidad a pedir */}
-                        <label className="ml-2 text-xs text-gray-600">Precio costo:</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          className="input input-bordered input-xs w-20 ml-1"
-                          value={det.precio_costo ?? ''}
-                          onChange={e => setProductoDetalles(prev => ({
+                        <button type="button" className="btn btn-xs btn-error ml-2" onClick={() => quitarProducto(idx)}>Quitar</button>
+                      </div>
+                      {/* Tabla de variantes existentes */}
+                      {variantesExistentes.length > 0 && (
+                        <div className="mt-2">
+                          <div className="overflow-x-auto">
+                            <table className="table table-xs w-full">
+                              <thead>
+                                <tr>
+                                  <th>Variante</th>
+                                  <th>Cantidad</th>
+                                  <th>Precio costo</th>
+                                  <th>Incluir</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {variantesExistentes.map((v, vIdx) => {
+                                  // Buscar si ya está en variantesPedido
+                                  const pedido = variantesPedido.find(x => x.variante_id === v.variante_id) || { cantidad: '', precio_costo: '' };
+                                  return (
+                                    <tr key={v.variante_id}>
+                                      <td className="text-xs">
+                                        {Array.isArray(v.atributos)
+                                          ? v.atributos.map(a => `${a.atributo_nombre}: ${a.valor_nombre}`).join(', ')
+                                          : v.atributos || 'Variante'}
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          className="input input-bordered input-xs w-16"
+                                          value={pedido.cantidad}
+                                          onChange={e => {
+                                            const val = e.target.value === '' ? '' : Number(e.target.value);
+                                            setProductoDetalles(prev => {
+                                              const prevPedido = prev[p.uniqueId]?.variantesPedido || [];
+                                              const idxPedido = prevPedido.findIndex(x => x.variante_id === v.variante_id);
+                                              let newPedido;
+                                              if (idxPedido >= 0) {
+                                                newPedido = [...prevPedido];
+                                                newPedido[idxPedido] = { ...newPedido[idxPedido], cantidad: val };
+                                              } else {
+                                                newPedido = [...prevPedido, { variante_id: v.variante_id, cantidad: val, precio_costo: pedido.precio_costo }];
+                                              }
+                                              return {
+                                                ...prev,
+                                                [p.uniqueId]: {
+                                                  ...prev[p.uniqueId],
+                                                  variantesPedido: newPedido
+                                                }
+                                              };
+                                            });
+                                          }}
+                                        />
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          className="input input-bordered input-xs w-20"
+                                          value={pedido.precio_costo}
+                                          onChange={e => {
+                                            const val = e.target.value === '' ? '' : Number(e.target.value);
+                                            setProductoDetalles(prev => {
+                                              const prevPedido = prev[p.uniqueId]?.variantesPedido || [];
+                                              const idxPedido = prevPedido.findIndex(x => x.variante_id === v.variante_id);
+                                              let newPedido;
+                                              if (idxPedido >= 0) {
+                                                newPedido = [...prevPedido];
+                                                newPedido[idxPedido] = { ...newPedido[idxPedido], precio_costo: val };
+                                              } else {
+                                                newPedido = [...prevPedido, { variante_id: v.variante_id, cantidad: pedido.cantidad, precio_costo: val }];
+                                              }
+                                              return {
+                                                ...prev,
+                                                [p.uniqueId]: {
+                                                  ...prev[p.uniqueId],
+                                                  variantesPedido: newPedido
+                                                }
+                                              };
+                                            });
+                                          }}
+                                        />
+                                      </td>
+                                      <td>
+                                        <input
+                                          type="checkbox"
+                                          checked={pedido.cantidad > 0}
+                                          onChange={e => {
+                                            // Si se desmarca, poner cantidad en ''
+                                            setProductoDetalles(prev => {
+                                              const prevPedido = prev[p.uniqueId]?.variantesPedido || [];
+                                              const idxPedido = prevPedido.findIndex(x => x.variante_id === v.variante_id);
+                                              let newPedido;
+                                              if (idxPedido >= 0) {
+                                                newPedido = [...prevPedido];
+                                                newPedido[idxPedido] = { ...newPedido[idxPedido], cantidad: e.target.checked ? (pedido.cantidad || 1) : '' };
+                                              } else {
+                                                newPedido = [...prevPedido, { variante_id: v.variante_id, cantidad: 1, precio_costo: pedido.precio_costo }];
+                                              }
+                                              return {
+                                                ...prev,
+                                                [p.uniqueId]: {
+                                                  ...prev[p.uniqueId],
+                                                  variantesPedido: newPedido
+                                                }
+                                              };
+                                            });
+                                          }}
+                                        />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                      {/* Botón para agregar nueva variante */}
+                      <div className="mt-2">
+                        <button type="button" className="btn btn-xs btn-outline" onClick={() => {
+                          const initial = {};
+                          atributosSistema.forEach(a => { initial[a.atributo_nombre] = ''; });
+                          initial.cantidad = '';
+                          initial.precio_costo = '';
+                          setProductoDetalles(prev => ({
                             ...prev,
                             [p.uniqueId]: {
                               ...prev[p.uniqueId],
-                              precio_costo: e.target.value
+                              varianteDraft: initial,
+                              showVarianteModal: true
                             }
-                          }))}
-                        />
-                        <label className="ml-2 text-xs text-gray-600">Cantidad a pedir:</label>
-                        <input
-                          type="number"
-                          min="1"
-                          required
-                          className="input input-bordered input-xs w-16 ml-1"
-                          value={cantidad === undefined ? '' : cantidad}
-                          onChange={e => setProductoDetalles(prev => ({
+                          }));
+                        }}>Agregar variante nueva</button>
+                      </div>
+                      {/* Modal para agregar variante nueva */}
+                      {det.showVarianteModal && (
+                        <AgregarVariante
+                          isOpen={true}
+                          atributos={atributosSistema}
+                          varianteDraft={det.varianteDraft || {}}
+                          setVarianteDraft={fn => setProductoDetalles(prev => ({
                             ...prev,
                             [p.uniqueId]: {
                               ...prev[p.uniqueId],
-                              cantidad: e.target.value === '' ? undefined : Number(e.target.value)
+                              varianteDraft: typeof fn === 'function' ? fn(prev[p.uniqueId].varianteDraft || {}) : fn
+                            }
+                          }))}
+                          onAgregar={() => {
+                            setProductoDetalles(prev => {
+                              const nuevas = [...(prev[p.uniqueId].variantes || []), det.varianteDraft];
+                              // También agregar a variantesPedido con cantidad y precio_costo
+                              const nuevasPedido = [
+                                ...(prev[p.uniqueId].variantesPedido || []),
+                                {
+                                  variante_id: `nueva_${nuevas.length - 1}`,
+                                  cantidad: det.varianteDraft.cantidad,
+                                  precio_costo: det.varianteDraft.precio_costo
+                                }
+                              ];
+                              return {
+                                ...prev,
+                                [p.uniqueId]: {
+                                  ...prev[p.uniqueId],
+                                  variantes: nuevas,
+                                  variantesPedido: nuevasPedido,
+                                  varianteDraft: {},
+                                  showVarianteModal: false
+                                }
+                              };
+                            });
+                          }}
+                          onClose={() => setProductoDetalles(prev => ({
+                            ...prev,
+                            [p.uniqueId]: {
+                              ...prev[p.uniqueId],
+                              varianteDraft: {},
+                              showVarianteModal: false
                             }
                           }))}
                         />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* Campo de cantidad duplicado eliminado, ya está arriba */}
-                        <button type="button" className="btn btn-xs btn-error" onClick={() => quitarProducto(idx)}>Quitar</button>
-                      </div>
+                      )}
                     </li>
                   );
                 })}
