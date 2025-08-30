@@ -8,6 +8,14 @@ import config from '../../../../config/config';
 
 const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto }) => {
   const { proveedores, cargarProveedores } = useProveedores();
+  
+  // Estado para variantes y atributos de productos sin registrar
+  const [showVarianteModalIdx, setShowVarianteModalIdx] = useState(null); // idx del producto sin registrar
+  const [showAtributosModalIdx, setShowAtributosModalIdx] = useState(null); // idx del producto sin registrar para atributos
+  const [formulariosVariantes, setFormulariosVariantes] = useState({}); // { idx: [ { ...variante } ] }
+  // Estado para la variante draft (solo uno global)
+  const [varianteDraft, setVarianteDraft] = useState({});
+
   const {
     proveedorId, setProveedorId,
     productos, setProductos,
@@ -24,14 +32,7 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
     productoDetalles, setProductoDetalles,
     subtotal, descuentoPorcentaje, descuentoMonto, total,
     confirmarSeleccion, quitarProducto, quitarProductoSinRegistrar, handleSubmit
-  } = useCrearPedido(pedido, cargarProveedores);
-
-  // Estado para variantes y atributos de productos sin registrar
-  const [showVarianteModalIdx, setShowVarianteModalIdx] = useState(null); // idx del producto sin registrar
-  const [showAtributosModalIdx, setShowAtributosModalIdx] = useState(null); // idx del producto sin registrar para atributos
-  const [formulariosVariantes, setFormulariosVariantes] = useState({}); // { idx: [ { ...variante } ] }
-  // Estado para la variante draft (solo uno global)
-  const [varianteDraft, setVarianteDraft] = useState({});
+  } = useCrearPedido(pedido, cargarProveedores, formulariosVariantes);
 
   if (!open) return null;
 
@@ -354,13 +355,17 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                             }))}
                             initialAtributos={atributosConfigurados.atributos || []}
                             onSave={data => {
+                              const yaTenieAtributos = atributosConfigurados.atributos.length > 0;
                               setProductoDetalles(prev => ({
                                 ...prev,
                                 [p.uniqueId]: {
                                   ...prev[p.uniqueId],
                                   atributosConfigurados: data,
                                   showAtributosModal: false,
-                                  variantes: [] // reset variantes si cambian atributos
+                                  variantes: [], // reset variantes si cambian atributos
+                                  // Si antes no tenía atributos y ahora sí, borrar cantidad y precio originales
+                                  cantidad: !yaTenieAtributos && data.atributos.length > 0 ? '' : prev[p.uniqueId].cantidad,
+                                  precio_costo: !yaTenieAtributos && data.atributos.length > 0 ? '' : prev[p.uniqueId].precio_costo
                                 }
                               }));
                             }}
@@ -636,7 +641,13 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                                 {
                                   variante_id: `nueva_${nuevas.length - 1}`,
                                   cantidad: det.varianteDraft.cantidad,
-                                  precio_costo: det.varianteDraft.precio_costo
+                                  precio_costo: det.varianteDraft.precio_costo,
+                                  atributos: Object.keys(det.varianteDraft || {})
+                                    .filter(key => key !== 'cantidad' && key !== 'precio_costo')
+                                    .map(key => ({
+                                      atributo_nombre: key,
+                                      valor_nombre: det.varianteDraft[key] || ''
+                                    }))
                                 }
                               ];
                               return {
@@ -755,7 +766,14 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                   onClose={() => setShowAtributosModalIdx(null)}
                   initialAtributos={productosSinRegistrar[showAtributosModalIdx]?.atributosConfigurados?.atributos || []}
                   onSave={data => {
-                    setProductosSinRegistrar(prev => prev.map((item, i) => i === showAtributosModalIdx ? { ...item, atributosConfigurados: data } : item));
+                    const yaTenieAtributos = productosSinRegistrar[showAtributosModalIdx]?.atributosConfigurados?.atributos?.length > 0;
+                    setProductosSinRegistrar(prev => prev.map((item, i) => i === showAtributosModalIdx ? { 
+                      ...item, 
+                      atributosConfigurados: data,
+                      // Si antes no tenía atributos y ahora sí, borrar cantidad y precio originales
+                      cantidad: !yaTenieAtributos && data.atributos.length > 0 ? '' : item.cantidad,
+                      precio_costo: !yaTenieAtributos && data.atributos.length > 0 ? '' : item.precio_costo
+                    } : item));
                     setShowAtributosModalIdx(null);
                   }}
                 />
