@@ -37,120 +37,188 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-2xl relative">
-        <button className="absolute top-3 right-3 btn btn-sm btn-circle btn-ghost" onClick={onClose}>✕</button>
-        <h2 className="text-2xl font-semibold mb-4">{pedido ? 'Editar Pedido' : 'Nuevo Pedido'}</h2>
-        <form onSubmit={e => handleSubmit(e, onSubmit)} className="space-y-4">
-          {/* Proveedor */}
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] overflow-hidden border border-gray-100">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-violet-50">
           <div>
-            <label className="block text-sm font-semibold mb-1">Proveedor</label>
-            <select
-              className="select select-bordered w-full"
-              value={proveedorId}
-              onChange={e => setProveedorId(e.target.value)}
-              required
-            >
-              <option value="">Seleccione proveedor</option>
-              {proveedores.map(p => (
-                <option key={p.proveedor_id} value={p.proveedor_id}>{p.proveedor_nombre}</option>
-              ))}
-            </select>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {pedido ? 'Editar Pedido' : 'Nuevo Pedido'}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {pedido ? 'Modifica los detalles del pedido' : 'Crea un nuevo pedido para un proveedor'}
+            </p>
           </div>
+          <button 
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-colors" 
+            onClick={onClose}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(95vh-140px)]">
+          <form onSubmit={e => handleSubmit(e, onSubmit)} className="space-y-6">
+            {/* Información básica */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Proveedor */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Proveedor <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full px-3 py-2.5 border border-violet-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition duration-150 bg-white"
+                  value={proveedorId}
+                  onChange={e => setProveedorId(e.target.value)}
+                  required
+                >
+                  <option value="">Seleccione un proveedor</option>
+                  {proveedores.map(p => (
+                    <option key={p.proveedor_id} value={p.proveedor_id}>{p.proveedor_nombre}</option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Fecha esperada de entrega (opcional) */}
-          <div>
-            <label className="block text-sm font-semibold mb-1">Fecha esperada de entrega (opcional)</label>
-            <input
-              type="date"
-              className="input input-bordered w-full"
-              value={fechaEsperada}
-              onChange={e => setFechaEsperada(e.target.value)}
-            />
-          </div>
+              {/* Fecha esperada de entrega */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Fecha esperada de entrega
+                </label>
+                <input
+                  type="date"
+                  className="w-full px-3 py-2.5 border border-violet-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition duration-150"
+                  value={fechaEsperada}
+                  onChange={e => setFechaEsperada(e.target.value)}
+                />
+              </div>
+            </div>
 
-          {/* Selector de productos (modal estilo ventas) */}
-          <div>
-            <button type="button" className="btn btn-success mb-2" onClick={() => setShowSelector(true)}>
-              Agregar productos
-            </button>
-          </div>
+            {/* Selector de productos */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-medium text-gray-800">Productos</h3>
+                <button 
+                  type="button" 
+                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 flex items-center gap-2" 
+                  onClick={() => setShowSelector(true)}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Agregar productos
+                </button>
+              </div>
+            </div>
 
           {/* Modal de selección de productos */}
           {showSelector && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-              <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4">Seleccionar Productos</h2>
-                <div className="flex mb-4">
-                  <input
-                    type="text"
-                    value={busqueda}
-                    onChange={e => setBusqueda(e.target.value)}
-                    placeholder="Buscar productos..."
-                    className="border rounded-l px-4 py-2 w-full"
-                    onKeyDown={e => e.key === 'Enter' && setBusqueda(busqueda)}
-                  />
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden border border-gray-100">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-violet-50">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">Seleccionar Productos</h2>
+                    <p className="text-sm text-gray-600 mt-1">Busca y selecciona los productos para el pedido</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowSelector(false);
+                      setSeleccionados([]);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <div className="mb-4 space-y-2">
-                  {loadingSugerencias ? (
-                    <div className="text-center py-4">
-                      <p>Cargando productos...</p>
-                      <div className="mt-2">
-                        <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                
+                <div className="p-6">
+                  <div className="relative mb-6">
+                    <input
+                      type="text"
+                      value={busqueda}
+                      onChange={e => setBusqueda(e.target.value)}
+                      placeholder="Buscar productos por nombre..."
+                      className="w-full pl-10 pr-4 py-3 border border-violet-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition duration-150"
+                      onKeyDown={e => e.key === 'Enter' && setBusqueda(busqueda)}
+                    />
+                    <svg className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  
+                  <div className="max-h-[400px] overflow-y-auto space-y-3">
+                    {loadingSugerencias ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent mb-4"></div>
+                        <p className="text-gray-600">Cargando productos...</p>
                       </div>
-                    </div>
-                  ) : sugerencias.length > 0 ? (
-                    sugerencias.map(producto => (
-                      <div
-                        key={producto.producto_id}
-                        className={`flex items-center p-2 border rounded ${
-                          seleccionados.find(p => p.producto_id === producto.producto_id)
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!seleccionados.find(p => p.producto_id === producto.producto_id)}
-                          onChange={() => {
+                    ) : sugerencias.length > 0 ? (
+                      sugerencias.map(producto => (
+                        <div
+                          key={producto.producto_id}
+                          className={`flex items-center p-4 border rounded-lg cursor-pointer transition duration-150 ${
+                            seleccionados.find(p => p.producto_id === producto.producto_id)
+                              ? 'border-purple-300 bg-purple-50 shadow-sm'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                          onClick={() => {
                             if (seleccionados.find(p => p.producto_id === producto.producto_id)) {
                               setSeleccionados(prev => prev.filter(p => p.producto_id !== producto.producto_id));
                             } else {
                               setSeleccionados(prev => [...prev, producto]);
                             }
                           }}
-                          className="mr-2"
-                        />
-                        <div className="flex items-center flex-1">
-                          {producto.imagen_url && (
-                            <img
-                              src={`${config.backendUrl}${producto.imagen_url}`}
-                              alt={producto.producto_nombre}
-                              className="w-12 h-12 object-cover rounded mr-3"
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium">{producto.producto_nombre}</p>
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!seleccionados.find(p => p.producto_id === producto.producto_id)}
+                            onChange={() => {}} // Manejado por el onClick del div
+                            className="mr-3 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                          />
+                          <div className="flex items-center flex-1">
+                            {producto.imagen_url && (
+                              <img
+                                src={`${config.backendUrl}${producto.imagen_url}`}
+                                alt={producto.producto_nombre}
+                                className="w-12 h-12 object-cover rounded-lg mr-4 border border-gray-200"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800">{producto.producto_nombre}</p>
+                              {producto.producto_descripcion && (
+                                <p className="text-sm text-gray-600 mt-1">{producto.producto_descripcion}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.08-2.33M15 17H9v-2.639a9.015 9.015 0 016 0V17z" />
+                        </svg>
+                        <p className="text-gray-600">
+                          {busqueda.length < 2
+                            ? 'Ingrese al menos 2 caracteres para buscar productos'
+                            : 'No se encontraron productos con ese criterio'}
+                        </p>
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-gray-500">
-                      {busqueda.length < 2
-                        ? 'Ingrese al menos 2 caracteres para buscar.'
-                        : 'No se encontraron productos.'}
-                    </p>
-                  )}
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-end space-x-2">
+                
+                <div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
                   <button
                     type="button"
                     onClick={() => {
                       setShowSelector(false);
                       setSeleccionados([]);
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded"
+                    className="flex-1 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                   >
                     Cancelar
                   </button>
@@ -158,44 +226,54 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
                     type="button"
                     onClick={confirmarSeleccion}
                     disabled={seleccionados.length === 0}
-                    className={`px-4 py-2 rounded text-white ${
+                    className={`flex-1 px-4 py-2.5 font-medium rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                       seleccionados.length > 0
-                        ? 'bg-blue-500 hover:bg-blue-600'
-                        : 'bg-gray-400 cursor-not-allowed'
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    Agregar {seleccionados.length > 0 && `(${seleccionados.length})`}
+                    Agregar Productos {seleccionados.length > 0 && `(${seleccionados.length})`}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Descuento y costo de envío */}
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-semibold mb-1">Descuento</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="input input-bordered w-full"
-                value={descuento}
-                onChange={e => setDescuento(e.target.value)}
-              />
+            {/* Configuración de costos */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-lg font-medium text-gray-800 mb-4">Configuración de Costos</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Descuento (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    className="w-full px-3 py-2.5 border border-violet-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition duration-150"
+                    placeholder="0.00"
+                    value={descuento}
+                    onChange={e => setDescuento(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Costo de Envío ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2.5 border border-violet-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition duration-150"
+                    placeholder="0.00"
+                    value={costoEnvio}
+                    onChange={e => setCostoEnvio(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-semibold mb-1">Costo de Envío</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="input input-bordered w-full"
-                value={costoEnvio}
-                onChange={e => setCostoEnvio(e.target.value)}
-              />
-            </div>
-          </div>
 
           {/* Productos agregados */}
           {productos.length > 0 && (
@@ -804,41 +882,72 @@ const CrearPedidoModal = ({ open, onClose, onSubmit, pedido, onPrecargarProducto
 
           {/* Resumen de totales: solo mostrar si hay productos o productosSinRegistrar */}
           {(productos.length > 0 || productosSinRegistrar.length > 0) && (
-            <div className="mt-4 border-t pt-4">
-              <div className="flex justify-between mb-1">
-                <span className="font-medium">Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-1">
-                <span className="font-medium">Descuento ({descuentoPorcentaje}%)</span>
-                <span>-${descuentoMonto.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-1">
-                <span className="font-medium">Costo de Envío</span>
-                <span>${Number(costoEnvio).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="font-medium text-gray-800 mb-3">Resumen del Pedido</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Descuento ({descuentoPorcentaje}%)</span>
+                  <span className="font-medium text-red-600">-${descuentoMonto.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Costo de Envío</span>
+                  <span className="font-medium">${Number(costoEnvio).toFixed(2)}</span>
+                </div>
+                <div className="border-t border-gray-300 pt-2 mt-2">
+                  <div className="flex justify-between text-lg font-bold text-gray-800">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          <button
-            type="button"
-            className="btn btn-link"
-            onClick={() => setProductosSinRegistrar(prev => ([...prev, { nombre: '', cantidad: '', precio_costo: '' }]))}
-          >
-            Agregar producto sin registrar
-          </button>
+          {/* Agregar producto sin registrar */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              className="px-4 py-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg font-medium transition duration-150 flex items-center gap-2"
+              onClick={() => setProductosSinRegistrar(prev => ([...prev, { nombre: '', cantidad: '', precio_costo: '' }]))}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar producto sin registrar
+            </button>
+          </div>
 
-          {error && <p className="text-error text-sm">{error}</p>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-700 text-sm font-medium">{error}</p>
+            </div>
+          )}
 
-          <button type="submit" className="btn btn-primary w-full">{pedido ? 'Guardar Cambios' : 'Crear Pedido'}</button>
-        </form>
+          {/* Footer con botones */}
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <button 
+              type="button" 
+              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400" 
+              onClick={onClose}
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              {pedido ? 'Guardar Cambios' : 'Crear Pedido'}
+            </button>
+          </div>
+          </form>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default CrearPedidoModal;
