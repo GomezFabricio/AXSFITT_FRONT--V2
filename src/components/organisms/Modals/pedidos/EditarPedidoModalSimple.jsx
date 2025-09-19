@@ -1,11 +1,42 @@
-import React from 'react';
-import useEditarPedidoSimple from '../../../../hooks/useEditarPedidoSimple';
-import { FiX, FiPackage, FiUser, FiCalendar, FiDollarSign, FiTruck } from 'react-icons/fi';
+import React, { useState } from 'react';
+import useEditarPedidoModal from '../../../../hooks/useEditarPedidoModal';
+import { FiX, FiPackage, FiUser, FiCalendar, FiDollarSign, FiTruck, FiSave, FiPlus, FiSearch } from 'react-icons/fi';
 
 const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
-  const { datosCompletos, loading, error } = useEditarPedidoSimple(pedido);
+  const { 
+    datosCompletos, 
+    loading, 
+    error, 
+    formData, 
+    handleInputChange, 
+    handleSave,
+    showSelector,
+    setShowSelector,
+    busqueda,
+    setBusqueda,
+    sugerencias,
+    loadingSugerencias,
+    seleccionados,
+    setSeleccionados,
+    confirmarSeleccionProductos
+  } = useEditarPedidoModal(pedido);
+  const [saving, setSaving] = useState(false);
 
   if (!open || !pedido) return null;
+
+  // Función para calcular el total dinámico basado en el formulario
+  const calcularTotalDinamico = () => {
+    if (!datosCompletos) return 0;
+    
+    const subtotal = parseFloat(datosCompletos.subtotal) || 0;
+    const descuentoPorcentaje = parseFloat(formData.pedido_descuento) || 0;
+    const costoEnvio = parseFloat(formData.pedido_costo_envio) || 0;
+    
+    const montoDescuento = (subtotal * descuentoPorcentaje) / 100;
+    const total = subtotal - montoDescuento + costoEnvio;
+    
+    return total;
+  };
 
   const formatearFecha = (fecha) => {
     if (!fecha) return '-';
@@ -35,6 +66,22 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
       grupos[productoNombre].push(variante);
       return grupos;
     }, {});
+  };
+
+  const handleSaveClick = async () => {
+    setSaving(true);
+    try {
+      await handleSave();
+      // Mostrar mensaje de éxito
+      alert('Pedido modificado exitosamente');
+      // No llamar a onSubmit porque handleSave ya procesó la modificación
+      onClose();
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      alert(`Error al modificar el pedido: ${error.message || error}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -119,9 +166,12 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                     <FiCalendar className="inline mr-1" />
                     Fecha Esperada de Entrega
                   </label>
-                  <p className="text-gray-900">
-                    {formatearFecha(datosCompletos.pedido_fecha_esperada_entrega)}
-                  </p>
+                  <input
+                    type="date"
+                    value={formData.pedido_fecha_esperada_entrega}
+                    onChange={(e) => handleInputChange('pedido_fecha_esperada_entrega', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -151,27 +201,45 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Descuento ({datosCompletos.descuento || 0}%)
+                    Descuento (%)
                   </label>
-                  <p className="text-lg font-semibold text-red-600">
-                    -{formatearPrecio(datosCompletos.descuentoCalculado)}
-                  </p>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.pedido_descuento}
+                    onChange={(e) => handleInputChange('pedido_descuento', parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                  {formData.pedido_descuento > 0 && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      Descuento: -{formatearPrecio((parseFloat(datosCompletos?.subtotal || 0) * parseFloat(formData.pedido_descuento)) / 100)}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <FiTruck className="inline mr-1" />
                     Costo de Envío
                   </label>
-                  <p className="text-lg font-semibold text-blue-600">
-                    {formatearPrecio(datosCompletos.costo_envio)}
-                  </p>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.pedido_costo_envio}
+                    onChange={(e) => handleInputChange('pedido_costo_envio', parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                  />
                 </div>
                 <div className="bg-green-100 rounded-lg p-3">
                   <label className="block text-sm font-medium text-green-700 mb-1">
                     Total
                   </label>
                   <p className="text-xl font-bold text-green-800">
-                    {formatearPrecio(datosCompletos.total)}
+                    {formatearPrecio(calcularTotalDinamico())}
                   </p>
                 </div>
               </div>
@@ -199,10 +267,13 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                           <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">Cantidad</th>
                           <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Precio Unit.</th>
                           <th className="px-4 py-2 text-right text-sm font-medium text-gray-700">Subtotal</th>
+                          <th className="px-4 py-2 text-center text-sm font-medium text-gray-700">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {datosCompletos.items.map((item, idx) => (
+                        {datosCompletos.items
+                          .filter((item, idx) => !formData.itemsEliminados?.includes(item.pd_id))
+                          .map((item, idx) => (
                           <tr key={idx} className="hover:bg-gray-50">
                             <td className="px-4 py-2 text-sm text-gray-900">
                               {item.producto_nombre || 'Producto sin nombre'}
@@ -210,14 +281,37 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                             <td className="px-4 py-2 text-sm text-gray-600">
                               {item.variante_atributos || 'Sin variante'}
                             </td>
-                            <td className="px-4 py-2 text-center text-sm text-gray-900">
-                              {item.pd_cantidad_pedida}
+                            <td className="px-4 py-2 text-center">
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={formData.items?.[idx]?.pd_cantidad_pedida || item.pd_cantidad_pedida}
+                                onChange={(e) => handleInputChange('items', idx, 'pd_cantidad_pedida', parseInt(e.target.value) || 0)}
+                                className="w-20 px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
                             </td>
-                            <td className="px-4 py-2 text-right text-sm text-gray-900">
-                              {formatearPrecio(item.pd_precio_unitario)}
+                            <td className="px-4 py-2 text-right">
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={formData.items?.[idx]?.pd_precio_unitario || item.pd_precio_unitario}
+                                onChange={(e) => handleInputChange('items', idx, 'pd_precio_unitario', parseFloat(e.target.value) || 0)}
+                                className="w-24 px-2 py-1 border border-gray-300 rounded text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
                             </td>
                             <td className="px-4 py-2 text-right text-sm font-medium text-gray-900">
-                              {formatearPrecio(item.pd_subtotal)}
+                              {formatearPrecio((formData.items?.[idx]?.pd_precio_unitario || item.pd_precio_unitario) * (formData.items?.[idx]?.pd_cantidad_pedida || item.pd_cantidad_pedida))}
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <button
+                                onClick={() => handleInputChange('removeItem', item.pd_id)}
+                                className="text-red-600 hover:text-red-800 transition-colors"
+                                title="Eliminar producto"
+                              >
+                                <FiX className="w-5 h-5" />
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -234,7 +328,9 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                     Variantes Borrador
                   </h4>
                   <div className="space-y-4">
-                    {Object.entries(agruparVariantesPorProducto(datosCompletos.variantesBorrador)).map(([productoNombre, variantes]) => (
+                    {Object.entries(agruparVariantesPorProducto(
+                      datosCompletos.variantesBorrador.filter(v => !formData.variantesBorradorEliminadas?.includes(v.vb_id))
+                    )).map(([productoNombre, variantes]) => (
                       <div key={productoNombre} className="border border-orange-200 bg-orange-50 rounded-lg p-4">
                         {/* Nombre del producto */}
                         <div className="flex items-center mb-3">
@@ -255,6 +351,7 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                                 <th className="px-3 py-2 text-center text-sm font-medium text-gray-700">Cantidad</th>
                                 <th className="px-3 py-2 text-right text-sm font-medium text-gray-700">Precio Unit.</th>
                                 <th className="px-3 py-2 text-right text-sm font-medium text-gray-700">Subtotal</th>
+                                <th className="px-3 py-2 text-center text-sm font-medium text-gray-700">Acciones</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -297,14 +394,37 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                                       return 'Sin atributos';
                                     })()}
                                   </td>
-                                  <td className="px-3 py-2 text-center text-sm text-gray-900">
-                                    {variante.vb_cantidad}
+                                  <td className="px-3 py-2 text-center">
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      value={formData.variantesBorrador?.find(v => v.vb_id === variante.vb_id)?.vb_cantidad || variante.vb_cantidad}
+                                      onChange={(e) => handleInputChange('variantesBorrador', variante.vb_id, 'vb_cantidad', parseInt(e.target.value) || 0)}
+                                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
                                   </td>
-                                  <td className="px-3 py-2 text-right text-sm text-gray-900">
-                                    {formatearPrecio(variante.vb_precio_unitario)}
+                                  <td className="px-3 py-2 text-right">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={formData.variantesBorrador?.find(v => v.vb_id === variante.vb_id)?.vb_precio_unitario || variante.vb_precio_unitario}
+                                      onChange={(e) => handleInputChange('variantesBorrador', variante.vb_id, 'vb_precio_unitario', parseFloat(e.target.value) || 0)}
+                                      className="w-24 px-2 py-1 border border-gray-300 rounded text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
                                   </td>
                                   <td className="px-3 py-2 text-right text-sm font-medium text-gray-900">
-                                    {formatearPrecio(variante.vb_precio_unitario * variante.vb_cantidad)}
+                                    {formatearPrecio((formData.variantesBorrador?.find(v => v.vb_id === variante.vb_id)?.vb_precio_unitario || variante.vb_precio_unitario) * (formData.variantesBorrador?.find(v => v.vb_id === variante.vb_id)?.vb_cantidad || variante.vb_cantidad))}
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    <button
+                                      onClick={() => handleInputChange('removeVarianteBorrador', variante.vb_id)}
+                                      className="text-red-600 hover:text-red-800 transition-colors"
+                                      title="Eliminar variante"
+                                    >
+                                      <FiX className="w-4 h-4" />
+                                    </button>
                                   </td>
                                 </tr>
                               ))}
@@ -316,7 +436,11 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                         <div className="mt-3 text-right">
                           <span className="text-sm font-medium text-gray-700">
                             Subtotal {productoNombre}: {formatearPrecio(
-                              variantes.reduce((sum, v) => sum + (v.vb_precio_unitario * v.vb_cantidad), 0)
+                              variantes.reduce((sum, v) => {
+                                const cantidad = formData.variantesBorrador?.find(vb => vb.vb_id === v.vb_id)?.vb_cantidad || v.vb_cantidad;
+                                const precio = formData.variantesBorrador?.find(vb => vb.vb_id === v.vb_id)?.vb_precio_unitario || v.vb_precio_unitario;
+                                return sum + (precio * cantidad);
+                              }, 0)
                             )}
                           </span>
                         </div>
@@ -333,7 +457,9 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                     Productos Borrador
                   </h4>
                   <div className="space-y-4">
-                    {datosCompletos.productosBorrador.map((producto, idx) => (
+                    {datosCompletos.productosBorrador
+                      .filter(producto => !formData.productosBorradorEliminados?.includes(producto.pbp_id))
+                      .map((producto, idx) => (
                       <div key={idx} className="border border-purple-200 bg-purple-50 rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">
                           <h5 className="font-medium text-gray-900">
@@ -342,6 +468,13 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                               producto borrador
                             </span>
                           </h5>
+                          <button
+                            onClick={() => handleInputChange('removeProductoBorrador', producto.pbp_id)}
+                            className="text-red-600 hover:text-red-800 transition-colors"
+                            title="Eliminar producto"
+                          >
+                            <FiX className="w-5 h-5" />
+                          </button>
                         </div>
                         
                         {/* Información del producto */}
@@ -356,11 +489,25 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                           </div>
                           <div>
                             <span className="font-medium text-gray-600">Cantidad:</span>
-                            <p className="text-gray-900">{producto.pbp_cantidad || 0}</p>
+                            <input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={formData.productosBorrador?.find(p => p.pbp_id === producto.pbp_id)?.pbp_cantidad || producto.pbp_cantidad}
+                              onChange={(e) => handleInputChange('productosBorrador', producto.pbp_id, 'pbp_cantidad', parseInt(e.target.value) || 0)}
+                              className="w-20 px-2 py-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
                           </div>
                           <div>
                             <span className="font-medium text-gray-600">Precio Unit.:</span>
-                            <p className="text-gray-900">{formatearPrecio(producto.pbp_precio_unitario)}</p>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={formData.productosBorrador?.find(p => p.pbp_id === producto.pbp_id)?.pbp_precio_unitario || producto.pbp_precio_unitario}
+                              onChange={(e) => handleInputChange('productosBorrador', producto.pbp_id, 'pbp_precio_unitario', parseFloat(e.target.value) || 0)}
+                              className="w-28 px-2 py-1 border border-gray-300 rounded text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
                           </div>
                         </div>
 
@@ -453,6 +600,16 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                             </div>
                           </div>
                         )}
+
+                        {/* Subtotal del producto borrador */}
+                        <div className="mt-3 pt-3 border-t border-purple-200 text-right">
+                          <span className="text-sm font-medium text-gray-700">
+                            Subtotal: {formatearPrecio(
+                              (formData.productosBorrador?.find(p => p.pbp_id === producto.pbp_id)?.pbp_precio_unitario || producto.pbp_precio_unitario) * 
+                              (formData.productosBorrador?.find(p => p.pbp_id === producto.pbp_id)?.pbp_cantidad || producto.pbp_cantidad)
+                            )}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -468,6 +625,26 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
                   <p className="text-lg font-medium">Sin productos en este pedido</p>
                 </div>
               )}
+
+              {/* Botones para agregar productos */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleInputChange('openProductSelector')}
+                    className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <FiPlus className="w-4 h-4 mr-2" />
+                    Agregar Producto
+                  </button>
+                  <button
+                    onClick={() => handleInputChange('openProductoBorradorModal')}
+                    className="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  >
+                    <FiPlus className="w-4 h-4 mr-2" />
+                    Agregar Producto Sin Registrar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -476,12 +653,164 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+            disabled={saving}
+            className="px-6 py-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg transition-colors"
           >
-            Cerrar
+            Cancelar
+          </button>
+          <button
+            onClick={handleSaveClick}
+            disabled={saving || loading}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors flex items-center gap-2"
+          >
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                Guardando...
+              </>
+            ) : (
+              <>
+                <FiSave className="text-sm" />
+                Guardar Cambios
+              </>
+            )}
           </button>
         </div>
       </div>
+
+      {/* Modal de selección de productos */}
+      {showSelector && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-hidden border border-gray-100">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Seleccionar Productos</h2>
+                <p className="text-sm text-gray-600 mt-1">Busca y selecciona productos para agregar al pedido</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowSelector(false);
+                  setSeleccionados([]);
+                  setBusqueda('');
+                }}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="relative mb-6">
+                <input
+                  type="text"
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                  placeholder="Buscar productos por nombre..."
+                  className="w-full pl-10 pr-4 py-3 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-150"
+                />
+                <FiSearch className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+              </div>
+
+              {loadingSugerencias && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Buscando productos...</span>
+                </div>
+              )}
+
+              {!loadingSugerencias && sugerencias.length > 0 && (
+                <div className="space-y-2 mb-6">
+                  <h3 className="text-sm font-medium text-gray-700">Productos disponibles:</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {sugerencias.map(producto => (
+                      <div 
+                        key={producto.producto_id} 
+                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                          seleccionados.find(s => s.producto_id === producto.producto_id)
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                        }`}
+                        onClick={() => {
+                          const yaSeleccionado = seleccionados.find(s => s.producto_id === producto.producto_id);
+                          if (yaSeleccionado) {
+                            setSeleccionados(prev => prev.filter(s => s.producto_id !== producto.producto_id));
+                          } else {
+                            setSeleccionados(prev => [...prev, producto]);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-gray-900">{producto.producto_nombre}</div>
+                            <div className="text-sm text-gray-500">
+                              Precio costo: ${producto.producto_precio_costo || 0} | Stock: {producto.stock_cantidad || 0}
+                            </div>
+                          </div>
+                          {seleccionados.find(s => s.producto_id === producto.producto_id) && (
+                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                              <FiX className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!loadingSugerencias && busqueda && sugerencias.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <FiPackage className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>No se encontraron productos con "{busqueda}"</p>
+                </div>
+              )}
+
+              {seleccionados.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Productos seleccionados ({seleccionados.length}):
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {seleccionados.map(producto => (
+                      <div key={producto.producto_id} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        {producto.producto_nombre}
+                        <button
+                          onClick={() => {
+                            setSeleccionados(prev => prev.filter(s => s.producto_id !== producto.producto_id));
+                          }}
+                          className="hover:bg-blue-200 rounded-full p-0.5"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+                <button
+                  onClick={() => {
+                    setShowSelector(false);
+                    setSeleccionados([]);
+                    setBusqueda('');
+                  }}
+                  className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarSeleccionProductos}
+                  disabled={seleccionados.length === 0}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+                >
+                  Agregar {seleccionados.length > 0 ? `(${seleccionados.length})` : ''} Producto{seleccionados.length !== 1 ? 's' : ''}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

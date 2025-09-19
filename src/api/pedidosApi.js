@@ -82,15 +82,6 @@ export const modificarPedido = async (datos) => {
   }
 };
 
-// Modificar pedido completo con productos, variantes y productos borrador
-export const modificarPedidoCompleto = async (datos) => {
-  try {
-    return await pedidosApi.post('/modificar-completo', datos);
-  } catch (error) {
-    throw error;
-  }
-};
-
 // Cancelar pedido
 export const cancelarPedido = async (cancelacion) => {
   try {
