@@ -21,8 +21,6 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
     confirmarSeleccionProductos
   } = useEditarPedidoModal(pedido);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   if (!open || !pedido) return null;
 
@@ -72,19 +70,15 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
 
   const handleSaveClick = async () => {
     setSaving(true);
-    setSuccessMessage('');
-    setErrorMessage('');
     try {
       await handleSave();
-      setSuccessMessage('Pedido modificado exitosamente');
-      setTimeout(() => {
-        setSuccessMessage('');
-        onClose();
-      }, 1800);
+      // Mostrar mensaje de éxito
+      alert('Pedido modificado exitosamente');
+      // No llamar a onSubmit porque handleSave ya procesó la modificación
+      onClose();
     } catch (error) {
       console.error('Error al guardar:', error);
-      setErrorMessage(`Error al modificar el pedido: ${error.message || error}`);
-      setTimeout(() => setErrorMessage(''), 3500);
+      alert(`Error al modificar el pedido: ${error.message || error}`);
     } finally {
       setSaving(false);
     }
@@ -93,28 +87,6 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative m-4">
-        {successMessage && (
-          <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-green-700">
-                  <b>✔️</b> {successMessage}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-        {errorMessage && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-red-700">
-                  <b>Error:</b> {errorMessage}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
         
         {/* Botón cerrar */}
         <button 
