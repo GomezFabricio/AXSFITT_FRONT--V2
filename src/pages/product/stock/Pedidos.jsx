@@ -22,6 +22,7 @@ const Pedidos = () => {
     cargarPedidos,
     recepcionarPedido,
     modificarPedido,
+    cancelarPedido,
     detallePedido,
     modalDetalleOpen,
     setModalDetalleOpen,
@@ -60,20 +61,31 @@ const Pedidos = () => {
       orderable: false,
       render: function (data, type, row) {
         let botones = [];
-        
         // Botón de editar (solo si tiene permiso y está pendiente)
         if (puedeModificar && row.pedido_estado === 'pendiente') {
           botones.push(`<button class="btn-editar-pedido" data-id="${row.pedido_id}" style="background:#e0e7ff;color:#2563eb;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px;display:inline-block;">Editar</button>`);
         }
-        
-        // Botón de ver historial (solo si tiene permiso)
-        if (puedeVerHistorial) {
-          botones.push(`<button class="btn-historial-pedido" data-id="${row.pedido_id}" style="background:#f3e8ff;color:#7c3aed;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px;display:inline-block;">Historial</button>`);
-        }
-        
         // Botón de ver detalle (siempre visible)
         botones.push(`<button class="btn-detalle-pedido" data-id="${row.pedido_id}" style="background:#bae6fd;color:#0369a1;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-block;">Detalle</button>`);
-        
+
+        // Menú desplegable 'Más opciones'
+        let opciones = [];
+        if (puedeVerHistorial) {
+          opciones.push(`<button class='btn-historial-pedido' data-id='${row.pedido_id}' style='background:none;border:none;padding:6px 12px;width:100%;text-align:left;cursor:pointer;'>Ver historial</button>`);
+        }
+        if (puedeCancelar && row.pedido_estado === 'pendiente') {
+          opciones.push(`<button class='btn-cancelar-pedido' data-id='${row.pedido_id}' style='background:none;border:none;padding:6px 12px;width:100%;text-align:left;cursor:pointer;color:#dc2626;'>Cancelar pedido</button>`);
+        }
+        if (opciones.length > 0) {
+          botones.push(`
+            <div class='dropdown-mas-opciones' style='position:relative;display:inline-block;'>
+              <button class='btn-mas-opciones' style='background:#f1f5f9;color:#334155;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:20px;line-height:1;'>⋮</button>
+              <div class='dropdown-content-mas-opciones' style='display:none;position:absolute;right:0;top:110%;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 2px 8px #0002;min-width:160px;z-index:100;'>
+                ${opciones.join('')}
+              </div>
+            </div>
+          `);
+        }
         return `<div style="display:flex;gap:8px;justify-content:center;align-items:center;">${botones.join('')}</div>`;
       }
     }
@@ -90,7 +102,7 @@ const Pedidos = () => {
         if (row) handleDetallePedido(row.pedido_id);
         return;
       }
-      
+
       // Botón editar
       const editarBtn = e.target.closest('.btn-editar-pedido');
       if (editarBtn) {
@@ -102,7 +114,7 @@ const Pedidos = () => {
         }
         return;
       }
-      
+
       // Botón historial
       const historialBtn = e.target.closest('.btn-historial-pedido');
       if (historialBtn) {
@@ -114,10 +126,91 @@ const Pedidos = () => {
         }
         return;
       }
+
+      // Botón cancelar pedido
+      const cancelarBtn = e.target.closest('.btn-cancelar-pedido');
+      if (cancelarBtn) {
+        const rowId = cancelarBtn.getAttribute('data-id');
+        const row = pedidos.find(r => String(r.pedido_id) === String(rowId));
+        if (row) {
+          if (window.confirm('¿Seguro que deseas cancelar este pedido?')) {
+            cancelarPedido({ pedido_id: row.pedido_id, motivo_cancelacion: 'Cancelado desde tabla', usuario_id: row.usuario_id });
+          }
+        }
+        return;
+      }
+
+      // Desplegar/cerrar menú de opciones
+      const masOpcionesBtn = e.target.closest('.btn-mas-opciones');
+      if (masOpcionesBtn) {
+        // Cerrar otros menús abiertos
+        document.querySelectorAll('.dropdown-content-mas-opciones-fixed').forEach(el => {
+          el.remove();
+        });
+
+        // Crear menú como elemento fixed en el body
+        const rect = masOpcionesBtn.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const menuHeight = 80; // Aproximado, puedes ajustar
+        let top = rect.bottom + 4;
+        let dropup = false;
+        if (rect.bottom + menuHeight > windowHeight - 20) {
+          top = rect.top - menuHeight - 4;
+          dropup = true;
+        }
+        const left = rect.right - 160; // ancho del menú
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-content-mas-opciones-fixed';
+        menu.style.position = 'fixed';
+        menu.style.top = `${top}px`;
+        menu.style.left = `${left}px`;
+        menu.style.background = '#fff';
+        menu.style.border = '1px solid #e5e7eb';
+        menu.style.borderRadius = '8px';
+        menu.style.boxShadow = dropup ? '0 -4px 16px 2px #0004' : '0 4px 16px 2px #0004';
+        menu.style.minWidth = '160px';
+        menu.style.zIndex = '999999';
+        menu.style.padding = '4px 0';
+        menu.innerHTML = masOpcionesBtn.parentElement.parentElement.querySelector('.btn-historial-pedido, .btn-cancelar-pedido')
+          ? masOpcionesBtn.parentElement.parentElement.querySelector('.btn-historial-pedido, .btn-cancelar-pedido').parentElement.innerHTML
+          : '';
+
+        // Alternativa: reconstruir el HTML de opciones
+        let opcionesHtml = '';
+        const rowId = masOpcionesBtn.getAttribute('data-id');
+        if (masOpcionesBtn.parentElement.parentElement.querySelector('.btn-historial-pedido')) {
+          opcionesHtml += masOpcionesBtn.parentElement.parentElement.querySelector('.btn-historial-pedido').outerHTML;
+        }
+        if (masOpcionesBtn.parentElement.parentElement.querySelector('.btn-cancelar-pedido')) {
+          opcionesHtml += masOpcionesBtn.parentElement.parentElement.querySelector('.btn-cancelar-pedido').outerHTML;
+        }
+        menu.innerHTML = opcionesHtml;
+
+        document.body.appendChild(menu);
+
+        // Cerrar menú al hacer click fuera
+        setTimeout(() => {
+          document.addEventListener('click', function cerrarMenu(ev) {
+            if (!menu.contains(ev.target) && ev.target !== masOpcionesBtn) {
+              menu.remove();
+              document.removeEventListener('click', cerrarMenu);
+            }
+          });
+        }, 10);
+
+        e.stopPropagation();
+        return;
+      }
+
+      // Cerrar menú si se hace click fuera
+      document.querySelectorAll('.dropdown-content-mas-opciones').forEach(el => {
+        el.style.display = 'none';
+      });
     };
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
-  }, [pedidos, handleDetallePedido]);
+  }, [pedidos, handleDetallePedido, modificarPedido]);
 
   return (
     <div className="px-2 sm:px-4 md:px-6 py-4 md:py-8">
