@@ -3,9 +3,10 @@ import usePedidos from '../../../hooks/usePedidos';
 import Table from '../../../components/molecules/Table';
 import RecepcionarPedidoPanel from '../../../components/molecules/pedidos/RecepcionarPedidoPanel';
 import CrearPedidoModal from '../../../components/organisms/modals/pedidos/CrearPedidoModal';
+import EditarPedidoModal from '../../../components/organisms/Modals/pedidos/EditarPedidoModalSimple';
 import { crearPedido, modificarPedido } from '../../../api/pedidosApi';
 import PrecargarProductoModal from '../../../components/organisms/modals/pedidos/PrecargarProductoModal';
-import HistorialModificacionesModal from '../../../components/organisms/modals/pedidos/HistorialModificacionesModal';
+import HistorialModificacionesModal from '../../../components/organisms/Modals/pedidos/HistorialModificacionesModal';
 import DetallePedidoModal from '../../../components/organisms/Modals/pedidos/DetallePedidoModal';
 
 const Pedidos = () => {
@@ -17,8 +18,10 @@ const Pedidos = () => {
     puedeModificar,
     puedeRecepcionar,
     puedeCancelar,
+    puedeVerHistorial,
     cargarPedidos,
     recepcionarPedido,
+    modificarPedido,
     detallePedido,
     modalDetalleOpen,
     setModalDetalleOpen,
@@ -37,6 +40,7 @@ const Pedidos = () => {
   const [tab, setTab] = useState('gestion');
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
   const [modalCrear, setModalCrear] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
   const [modalPrecargar, setModalPrecargar] = useState(false);
   const [modalHistorial, setModalHistorial] = useState(false);
 
@@ -56,11 +60,20 @@ const Pedidos = () => {
       orderable: false,
       render: function (data, type, row) {
         let botones = [];
+        
+        // Botón de editar (solo si tiene permiso y está pendiente)
         if (puedeModificar && row.pedido_estado === 'pendiente') {
           botones.push(`<button class="btn-editar-pedido" data-id="${row.pedido_id}" style="background:#e0e7ff;color:#2563eb;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px;display:inline-block;">Editar</button>`);
         }
-        // Botón de ver detalle
+        
+        // Botón de ver historial (solo si tiene permiso)
+        if (puedeVerHistorial) {
+          botones.push(`<button class="btn-historial-pedido" data-id="${row.pedido_id}" style="background:#f3e8ff;color:#7c3aed;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px;display:inline-block;">Historial</button>`);
+        }
+        
+        // Botón de ver detalle (siempre visible)
         botones.push(`<button class="btn-detalle-pedido" data-id="${row.pedido_id}" style="background:#bae6fd;color:#0369a1;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-block;">Detalle</button>`);
+        
         return `<div style="display:flex;gap:8px;justify-content:center;align-items:center;">${botones.join('')}</div>`;
       }
     }
@@ -69,6 +82,7 @@ const Pedidos = () => {
   // Delegación de eventos para botones de acción de DataTables
   React.useEffect(() => {
     const handler = (e) => {
+      // Botón detalle
       const detalleBtn = e.target.closest('.btn-detalle-pedido');
       if (detalleBtn) {
         const rowId = detalleBtn.getAttribute('data-id');
@@ -76,13 +90,27 @@ const Pedidos = () => {
         if (row) handleDetallePedido(row.pedido_id);
         return;
       }
+      
+      // Botón editar
       const editarBtn = e.target.closest('.btn-editar-pedido');
       if (editarBtn) {
         const rowId = editarBtn.getAttribute('data-id');
         const row = pedidos.find(r => String(r.pedido_id) === String(rowId));
         if (row) {
           setPedidoSeleccionado(row);
-          setModalCrear(true);
+          setModalEditar(true);
+        }
+        return;
+      }
+      
+      // Botón historial
+      const historialBtn = e.target.closest('.btn-historial-pedido');
+      if (historialBtn) {
+        const rowId = historialBtn.getAttribute('data-id');
+        const row = pedidos.find(r => String(r.pedido_id) === String(rowId));
+        if (row) {
+          setPedidoSeleccionado(row);
+          setModalHistorial(true);
         }
         return;
       }
@@ -197,6 +225,27 @@ const Pedidos = () => {
             }
           }}
           onPrecargarProducto={() => setModalPrecargar(true)}
+        />
+      )}
+      {modalEditar && (
+        <EditarPedidoModal
+          open={modalEditar}
+          onClose={() => {
+            setModalEditar(false);
+            setPedidoSeleccionado(null);
+          }}
+          pedido={pedidoSeleccionado}
+          onSubmit={async (data) => {
+            try {
+              await modificarPedido(data);
+              setModalEditar(false);
+              setPedidoSeleccionado(null);
+              cargarPedidos();
+              alert('Pedido modificado exitosamente');
+            } catch (err) {
+              alert('Error al modificar el pedido: ' + (err?.message || 'Error desconocido'));
+            }
+          }}
         />
       )}
       {modalPrecargar && (

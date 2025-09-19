@@ -15,6 +15,7 @@ const usePedidos = () => {
   const puedeModificar = tienePermiso('Modificar Pedido');
   const puedeCancelar = tienePermiso('Cancelar Pedido');
   const puedeRecepcionar = tienePermiso('Recibir Pedido');
+  const puedeVerHistorial = tienePermiso('Ver Histórico Modificaciones');
 
   const cargarPedidos = useCallback(async () => {
     setLoading(true);
@@ -146,6 +147,7 @@ const usePedidos = () => {
     puedeModificar,
     puedeCancelar,
     puedeRecepcionar,
+    puedeVerHistorial,
     // Detalle
     detallePedido,
     modalDetalleOpen,

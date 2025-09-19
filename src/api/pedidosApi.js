@@ -74,9 +74,18 @@ export const crearPedido = async (pedido) => {
 };
 
 // Modificar pedido
-export const modificarPedido = async (modificacion) => {
+export const modificarPedido = async (datos) => {
   try {
-    return await pedidosApi.post('/modificar', modificacion);
+    return await pedidosApi.post('/modificar', datos);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Modificar pedido completo con productos, variantes y productos borrador
+export const modificarPedidoCompleto = async (datos) => {
+  try {
+    return await pedidosApi.post('/modificar-completo', datos);
   } catch (error) {
     throw error;
   }
