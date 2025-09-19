@@ -18,7 +18,8 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
     loadingSugerencias,
     seleccionados,
     setSeleccionados,
-    confirmarSeleccionProductos
+    confirmarSeleccionProductos,
+    cargarDatosCompletos
   } = useEditarPedidoModal(pedido);
   const [saving, setSaving] = useState(false);
 
@@ -68,14 +69,12 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
     }, {});
   };
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const handleSaveClick = async () => {
     setSaving(true);
     try {
       await handleSave();
-      // Mostrar mensaje de éxito
-      alert('Pedido modificado exitosamente');
-      // No llamar a onSubmit porque handleSave ya procesó la modificación
-      onClose();
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error al guardar:', error);
       alert(`Error al modificar el pedido: ${error.message || error}`);
@@ -678,6 +677,24 @@ const EditarPedidoModal = ({ open, onClose, pedido, onSubmit }) => {
         </div>
       </div>
 
+      {/* Modal de éxito */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center">
+            <span className="text-green-600 text-3xl mb-2">✔</span>
+            <span className="text-lg font-semibold mb-2">¡Pedido modificado con éxito!</span>
+            <span className="text-gray-600 text-sm mb-4">Los cambios se guardaron correctamente.</span>
+            <button
+              className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              onClick={async () => {
+                await cargarDatosCompletos(pedido.pedido_id);
+                setShowSuccessModal(false);
+                onClose();
+              }}
+            >Cerrar</button>
+          </div>
+        </div>
+      )}
       {/* Modal de selección de productos */}
       {showSelector && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60 flex items-center justify-center p-4">

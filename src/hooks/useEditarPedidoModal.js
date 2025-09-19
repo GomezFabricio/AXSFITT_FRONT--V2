@@ -205,8 +205,7 @@ const useEditarPedidoModal = (pedido) => {
       
       const response = await modificarPedido(datos);
       
-      // Recargar los datos después de guardar
-      await cargarDatosCompletos(pedido.pedido_id);
+  // Recarga de datos se hará desde el componente luego de cerrar el mensaje de éxito
       
       return response;
     } catch (err) {
