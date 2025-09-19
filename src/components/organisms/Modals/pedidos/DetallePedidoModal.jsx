@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import NotaPedido from "./NotaPedido";
 
 const DetallePedidoModal = ({ open, onClose, pedido }) => {
+  const [showNota, setShowNota] = useState(false);
   if (!open || !pedido) return null;
 
   // Función para formatear atributos de variantes
@@ -125,6 +127,15 @@ const DetallePedidoModal = ({ open, onClose, pedido }) => {
         </button>
         
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Detalle del Pedido #{pedido.pedido_id}</h2>
+        <div className="flex justify-end mb-4">
+          <button
+            className="bg-black text-white rounded px-4 py-2 text-sm font-semibold shadow-lg"
+            title="Ver nota de pedido"
+            onClick={() => setShowNota(true)}
+          >
+            Nota de pedido
+          </button>
+        </div>
         
         {/* Información básica del pedido */}
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg mb-6 border border-gray-200">
@@ -286,6 +297,9 @@ const DetallePedidoModal = ({ open, onClose, pedido }) => {
             </div>
           </div>
         </div>
+        {showNota && (
+          <NotaPedido open={showNota} onClose={() => setShowNota(false)} pedido={pedido} />
+        )}
       </div>
     </div>
   );
