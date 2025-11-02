@@ -33,18 +33,99 @@ const HistorialModificacionesModal = ({ open, onClose, pedido }) => {
       pedido_descuento: 'Descuento',
       pedido_costo_envio: 'Costo de envío',
       pedido_fecha_esperada_entrega: 'Fecha esperada entrega',
-      pedido_total: 'Total'
+      pedido_total: 'Total',
+      pedido_estado: 'Estado del Pedido',
+      estado: 'Estado del Pedido',
+      fecha_recepcion: 'Fecha de Recepción'
     };
 
+    const formatearValor = (valor) => {
+      if (valor === null || valor === undefined) return 'Sin definir';
+      if (typeof valor === 'string' && valor.includes('T')) {
+        // Es una fecha ISO
+        try {
+          const fecha = new Date(valor);
+          return fecha.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch {
+          return valor;
+        }
+      }
+      if (typeof valor === 'string' && !isNaN(parseFloat(valor))) {
+        // Es un número como string (precios, descuentos)
+        const num = parseFloat(valor);
+        if (valor.includes('.') && num >= 1000) {
+          // Probablemente sea un precio
+          return new Intl.NumberFormat('es-ES', { 
+            style: 'currency', 
+            currency: 'ARS' 
+          }).format(num);
+        } else if (num < 100 && num > 0) {
+          // Probablemente sea un porcentaje
+          return `${num}%`;
+        }
+        return num.toString();
+      }
+      // Capitalizar estados y strings
+      if (typeof valor === 'string') {
+        return valor.charAt(0).toUpperCase() + valor.slice(1).toLowerCase();
+      }
+      return valor.toString();
+    };
+
+    // Campos ya procesados para evitar duplicados
+    const camposProcesados = new Set();
+    
+    // Solo procesar los campos que están definidos en nuestro mapeo de campos
     Object.keys(campos).forEach(campo => {
-      if (anterior[campo] !== nuevo[campo]) {
+      const valorAnterior = anterior ? anterior[campo] : undefined;
+      const valorNuevo = nuevo ? nuevo[campo] : undefined;
+      
+      // Evitar duplicados: si es estado, priorizar 'estado' sobre 'pedido_estado'
+      if (campo === 'pedido_estado' && (nuevo.hasOwnProperty('estado') || camposProcesados.has('Estado del Pedido'))) {
+        return; // Skip este campo si ya procesamos 'estado'
+      }
+      
+      // Solo mostrar el cambio si el campo existe en 'nuevo' y es diferente al anterior
+      if (nuevo.hasOwnProperty(campo) && valorAnterior !== valorNuevo) {
+        camposProcesados.add(campos[campo]); // Marcar como procesado
         cambios.push({
           campo: campos[campo],
-          anterior: anterior[campo],
-          nuevo: nuevo[campo]
+          anterior: formatearValor(valorAnterior),
+          nuevo: formatearValor(valorNuevo)
         });
       }
     });
+
+
+
+    // Agregar información sobre cambios en items si están presentes
+    if (nuevo.items && Array.isArray(nuevo.items)) {
+      const cantidadItemsAnterior = anterior?.items?.length || 0;
+      const cantidadItemsNuevo = nuevo.items.length;
+      
+      if (cantidadItemsAnterior !== cantidadItemsNuevo) {
+        cambios.push({
+          campo: 'Cantidad de Items',
+          anterior: cantidadItemsAnterior.toString(),
+          nuevo: cantidadItemsNuevo.toString()
+        });
+      }
+      
+      // Si hay modificaciones en items específicos, mostrar un resumen
+      if (cantidadItemsNuevo > 0) {
+        cambios.push({
+          campo: 'Items del Pedido',
+          anterior: 'Ver detalle completo',
+          nuevo: 'Modificados/Actualizados'
+        });
+      }
+    }
 
     return cambios;
   };
@@ -131,7 +212,7 @@ const HistorialModificacionesModal = ({ open, onClose, pedido }) => {
                       </div>
 
                       {/* Cambios realizados */}
-                      {cambios.length > 0 && (
+                      {cambios.length > 0 ? (
                         <div>
                           <h4 className="font-medium text-gray-800 mb-2">Cambios realizados:</h4>
                           <div className="overflow-x-auto">
@@ -157,12 +238,12 @@ const HistorialModificacionesModal = ({ open, onClose, pedido }) => {
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-600">
                                       <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                                        {cambio.anterior || 'N/A'}
+                                        {cambio.anterior}
                                       </span>
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-600">
                                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                        {cambio.nuevo || 'N/A'}
+                                        {cambio.nuevo}
                                       </span>
                                     </td>
                                   </tr>
@@ -171,6 +252,61 @@ const HistorialModificacionesModal = ({ open, onClose, pedido }) => {
                             </table>
                           </div>
                         </div>
+                      ) : (
+                        (() => {
+                          const anterior = modificacion.pm_datos_anteriores ? JSON.parse(modificacion.pm_datos_anteriores) : null;
+                          const nuevo = modificacion.pm_datos_nuevos ? JSON.parse(modificacion.pm_datos_nuevos) : null;
+                          
+                          // Si es un cambio de estado únicamente
+                          if (anterior && nuevo && anterior.estado !== nuevo.estado) {
+                            return (
+                              <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                                <div className="flex">
+                                  <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                  <div className="ml-3 w-full">
+                                    <p className="text-sm font-medium text-blue-800 mb-2">Cambio de estado:</p>
+                                    <div className="bg-white rounded p-3 border">
+                                      <div className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-600">De:</span>
+                                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded font-medium">
+                                          {formatearValor(anterior.estado)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center text-sm mt-2">
+                                        <span className="text-gray-600">A:</span>
+                                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                                          {formatearValor(nuevo.estado)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          // Para otros tipos de acciones
+                          return (
+                            <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                              <div className="flex">
+                                <div className="flex-shrink-0">
+                                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                                <div className="ml-3">
+                                  <p className="text-sm text-blue-700">
+                                    <b>Acción realizada:</b> {modificacion.pm_descripcion || 'Modificación de estado del pedido'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()
                       )}
                     </div>
                   </div>
