@@ -72,11 +72,29 @@ const usePedidos = () => {
     }
   }, [cargarPedidos]);
 
-  const recepcionarPedido = useCallback(async (recepcion) => {
+  const recepcionarPedido = useCallback(async (datosRecepcion) => {
     setLoading(true);
     setError(null);
     try {
-      await pedidosApi.recepcionarPedido(recepcion);
+      // Si hay productos sin registrar, precargarlos primero
+      if (datosRecepcion.productos_sin_registrar?.length > 0) {
+        for (const producto of datosRecepcion.productos_sin_registrar) {
+          await pedidosApi.precargarProductoSinRegistrar({
+            ...producto,
+            pedido_id: datosRecepcion.pedido_id
+          });
+        }
+      }
+
+      // Luego proceder con la recepción del pedido
+      const recepcionData = {
+        pedido_id: datosRecepcion.pedido_id,
+        recepcion: datosRecepcion.recepcion,
+        usuario_id: datosRecepcion.usuario_id,
+        observaciones: datosRecepcion.observaciones
+      };
+
+      await pedidosApi.recepcionarPedido(recepcionData);
       await cargarPedidos();
     } catch (err) {
       setError(err.message || 'Error al recepcionar pedido');

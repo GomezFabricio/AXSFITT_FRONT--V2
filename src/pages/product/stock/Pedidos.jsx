@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import usePedidos from '../../../hooks/usePedidos';
 import Table from '../../../components/molecules/Table';
-import RecepcionarPedidoPanel from '../../../components/molecules/pedidos/RecepcionarPedidoPanel';
+import RecepcionPedidos from '../../../components/organisms/RecepcionPedidos';
 import CrearPedidoModal from '../../../components/organisms/modals/pedidos/CrearPedidoModal';
 import EditarPedidoModal from '../../../components/organisms/Modals/pedidos/EditarPedidoModalSimple';
 import { crearPedido, modificarPedido } from '../../../api/pedidosApi';
@@ -271,20 +271,18 @@ const Pedidos = () => {
         />
       )}
 
-      {/* Recepción de Pedido */}
-      {tab === 'recepcion' && pedidoSeleccionado && (
-        <RecepcionarPedidoPanel
-          pedido={pedidoSeleccionado}
-          onRecepcionar={async (pedido) => {
-            await recepcionarPedido(pedido);
-            setTab('gestion');
-            setPedidoSeleccionado(null);
+      {/* Vista de Recepción */}
+      {tab === 'recepcion' && (
+        <RecepcionPedidos
+          pedidos={pedidos}
+          loading={loading}
+          error={error}
+          onRecepcionar={async (datosRecepcion) => {
+            await recepcionarPedido(datosRecepcion);
             cargarPedidos();
           }}
-          onClose={() => {
-            setTab('gestion');
-            setPedidoSeleccionado(null);
-          }}
+          onVerDetalle={handleDetallePedido}
+          puedeRecepcionar={puedeRecepcionar}
         />
       )}
 
