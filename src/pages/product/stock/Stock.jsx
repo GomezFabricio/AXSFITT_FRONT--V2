@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { obtenerStock } from '../../../api/stockApi';
 import config from '../../../config/config';
 import ListaStock from '../../../components/molecules/stock/ListaStock';
+import ConfiguracionNotificacionesModerna from '../../../components/molecules/stock/ConfiguracionNotificacionesModerna';
+import useNotification from '../../../hooks/useNotification';
+import NotificationContainer from '../../../components/atoms/NotificationContainer';
 
 const Stock = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [vistaActiva, setVistaActiva] = useState('inventario'); // 'inventario' o 'notificaciones'
+  const { notifications, removeNotification } = useNotification();
 
   useEffect(() => {
     const fetchStock = async () => {
@@ -61,8 +66,51 @@ const Stock = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Inventario de Productos</h1>
-      <ListaStock productos={productos} />
+      <h1 className="text-2xl font-bold mb-6">Gestionar Stock</h1>
+      
+      {/* Tabs de navegación */}
+      <div className="mb-6">
+        <nav className="flex space-x-8" aria-label="Tabs">
+          <button
+            onClick={() => setVistaActiva('inventario')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              vistaActiva === 'inventario'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            📦 Inventario de Productos
+          </button>
+          <button
+            onClick={() => setVistaActiva('notificaciones')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              vistaActiva === 'notificaciones'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🔔 Configurar Notificaciones
+          </button>
+        </nav>
+      </div>
+
+      {/* Contenido de las tabs */}
+      {vistaActiva === 'inventario' && (
+        <div>
+          {loading && <div className="text-center mt-10">Cargando inventario...</div>}
+          {error && <div className="text-center mt-10 text-red-500">Error: {error}</div>}
+          {!loading && !error && <ListaStock productos={productos} />}
+        </div>
+      )}
+
+      {vistaActiva === 'notificaciones' && (
+        <ConfiguracionNotificacionesModerna />
+      )}
+
+      <NotificationContainer 
+        notifications={notifications} 
+        removeNotification={removeNotification} 
+      />
     </div>
   );
 };

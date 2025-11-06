@@ -74,3 +74,17 @@ export const resolverFaltante = async (idFaltante, token) => {
     throw error;
   }
 };
+
+export const pedirFaltante = async (idFaltante, token) => {
+  try {
+    const res = await axios.put(`${config.backendUrl}/api/stock-v2/faltantes/${idFaltante}/pedir`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error al marcar faltante como pedido:", error);
+    throw error;
+  }
+};

@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { resolverFaltante } from '../../../api/stockApi';
+import { resolverFaltante, pedirFaltante } from '../../../api/stockApi';
 import tienePermiso from '../../../utils/tienePermiso';
 
-const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
+const ListaFaltantesPendientes = ({ 
+  faltantes, 
+  onResolverExitoso, 
+  onPedirExitoso, 
+  mostrarAcciones = false, 
+  tituloAccion = "Marcar como Pedido" 
+}) => {
   const [procesando, setProcesando] = useState(false);
   const [resolviendoTodo, setResolviendoTodo] = useState(false);
   const [itemsProcesados, setItemsProcesados] = useState([]);
@@ -15,13 +21,19 @@ const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
       setItemsProcesados(prev => [...prev, id]);
       
       const token = sessionStorage.getItem('token');
-      await resolverFaltante(id, token);
       
-      // Notificar al componente padre
-      onResolverExitoso();
+      // Usar la función correcta según el contexto
+      if (tituloAccion === "Pedir") {
+        await pedirFaltante(id, token);
+        if (onPedirExitoso) onPedirExitoso();
+      } else {
+        await resolverFaltante(id, token);
+        if (onResolverExitoso) onResolverExitoso();
+      }
+      
     } catch (error) {
-      console.error('Error al resolver faltante:', error);
-      alert('Error al marcar faltante como pedido');
+      console.error('Error al procesar faltante:', error);
+      alert(`Error al ${tituloAccion.toLowerCase()} faltante`);
     } finally {
       if (!resolviendoTodo) {
         setProcesando(false);
@@ -37,13 +49,17 @@ const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
       setProcesando(true);
       setResolviendoTodo(true);
       
-      // Resolver todos los faltantes secuencialmente
+      // Procesar todos los faltantes secuencialmente
       for (const faltante of faltantes) {
-        await handleResolverFaltante(faltante.id_faltante);
+        await handleResolverFaltante(faltante.faltante_id || faltante.id_faltante);
       }
       
       // Notificar al componente padre
-      onResolverExitoso();
+      if (tituloAccion === "Pedir" && onPedirExitoso) {
+        onPedirExitoso();
+      } else if (onResolverExitoso) {
+        onResolverExitoso();
+      }
     } catch (error) {
       console.error('Error al resolver todos los faltantes:', error);
       alert('Error al marcar todos los faltantes como pedidos');
@@ -80,7 +96,7 @@ const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
             <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
               Fecha Detección
             </th>
-            {tienePermiso('Gestionar Stock') && (
+            {(tienePermiso('Gestionar Stock') && mostrarAcciones) && (
               <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
                 Acciones
               </th>
@@ -89,7 +105,7 @@ const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {faltantes.map((item) => (
-            <tr key={item.id_faltante} className="hover:bg-gray-50">
+            <tr key={item.faltante_id || item.id_faltante} className="hover:bg-gray-50">
               <td className="py-3 px-2 md:px-4 text-sm">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-8 w-8 md:h-10 md:w-10">
@@ -120,17 +136,20 @@ const ListaFaltantesPendientes = ({ faltantes, onResolverExitoso }) => {
                 {item.cantidad_faltante}
               </td>
               <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-gray-700 text-center">
-                {new Date(item.fecha_deteccion).toLocaleDateString()}
+                {new Date(item.faltante_fecha_deteccion || item.fecha_deteccion).toLocaleDateString()}
               </td>
-              {tienePermiso('Gestionar Stock') && (
+              {(tienePermiso('Gestionar Stock') && mostrarAcciones) && (
                 <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-center">
                   <button
-                    onClick={() => handleResolverFaltante(item.id_faltante)}
+                    onClick={() => handleResolverFaltante(item.faltante_id || item.id_faltante)}
                     disabled={procesando}
-                    className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded transition
-                      ${itemsProcesados.includes(item.id_faltante) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`text-white px-3 py-1 rounded transition ${
+                      tituloAccion === "Pedir" 
+                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        : 'bg-green-600 hover:bg-green-700'
+                    } ${itemsProcesados.includes(item.faltante_id || item.id_faltante) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {itemsProcesados.includes(item.id_faltante) ? 'Procesando...' : 'Marcar como Pedido'}
+                    {itemsProcesados.includes(item.faltante_id || item.id_faltante) ? 'Procesando...' : tituloAccion}
                   </button>
                 </td>
               )}

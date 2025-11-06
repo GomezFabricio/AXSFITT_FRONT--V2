@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { obtenerFaltantes } from '../../../api/stockApi';
 import config from '../../../config/config';
-import TablaFaltantes from '../../../components/molecules/stock/TablaFaltantes';
 import ListaFaltantesPendientes from '../../../components/molecules/stock/ListaFaltantesPendientes';
 import tienePermiso from '../../../utils/tienePermiso';
 
 const Faltantes = () => {
-  const [faltantes, setFaltantes] = useState([]);
-  const [faltantesRegistrados, setFaltantesRegistrados] = useState([]);
+  const [faltantesDetectados, setFaltantesDetectados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('porRegistrar'); // 'porRegistrar' o 'pendientes'
 
   useEffect(() => {
     cargarFaltantes();
@@ -22,27 +19,18 @@ const Faltantes = () => {
       const token = sessionStorage.getItem('token');
       const data = await obtenerFaltantes(token);
 
-      // Procesar URLs de imágenes y separar faltantes
+      // Procesar URLs de imágenes y filtrar solo faltantes detectados
       const procesarUrl = item => ({
         ...item,
         imagen_url: item.imagen_url ? `${config.backendUrl}${item.imagen_url}` : null
       });
 
-      // Separar faltantes por registrar de los ya registrados en la tabla faltantes
-      const porRegistrar = [];
-      const registrados = [];
+      // Solo mostrar faltantes con estado 'detectado'
+      const faltantesDetectadosFiltrados = data
+        .filter(item => item.faltante_estado === 'detectado')
+        .map(procesarUrl);
 
-      data.forEach(item => {
-        const faltanteConUrl = procesarUrl(item);
-        if (item.id_faltante) {
-          registrados.push(faltanteConUrl);
-        } else {
-          porRegistrar.push(faltanteConUrl);
-        }
-      });
-
-      setFaltantes(porRegistrar);
-      setFaltantesRegistrados(registrados);
+      setFaltantesDetectados(faltantesDetectadosFiltrados);
       setLoading(false);
     } catch (error) {
       console.error("Error al obtener faltantes:", error);
@@ -51,13 +39,8 @@ const Faltantes = () => {
     }
   };
 
-  const handleRegistrarFaltanteExitoso = () => {
-    // Recargar datos después de registrar un faltante
-    cargarFaltantes();
-  };
-
-  const handleResolverFaltanteExitoso = () => {
-    // Recargar datos después de marcar un faltante como resuelto
+  const handlePedirFaltanteExitoso = () => {
+    // Recargar datos después de pedir un faltante
     cargarFaltantes();
   };
 
@@ -81,80 +64,57 @@ const Faltantes = () => {
     <div className="px-2 sm:px-4 md:px-6 py-4 md:py-8">
       <h1 className="text-xl md:text-2xl font-bold mb-4">Gestión de Faltantes</h1>
       
-      {/* Tabs para cambiar entre "Por Registrar" y "Pendientes de Pedido" */}
-      <div className="flex border-b mb-6">
-        <button
-          onClick={() => setActiveTab('porRegistrar')}
-          className={`py-2 px-4 text-sm md:text-base font-medium ${
-            activeTab === 'porRegistrar'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Por Registrar
-        </button>
-        <button
-          onClick={() => setActiveTab('pendientes')}
-          className={`py-2 px-4 text-sm md:text-base font-medium ${
-            activeTab === 'pendientes'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Pendientes de Pedido
-          {faltantesRegistrados.length > 0 && (
-            <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-              {faltantesRegistrados.length}
-            </span>
+      {/* Encabezado con estadísticas */}
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-medium text-orange-800">
+              Faltantes Detectados Automáticamente
+            </h2>
+            <p className="text-sm text-orange-600 mt-1">
+              Productos y variantes con stock por debajo del mínimo
+            </p>
+          </div>
+          {faltantesDetectados.length > 0 && (
+            <div className="bg-orange-500 text-white text-sm rounded-full px-3 py-1 font-medium">
+              {faltantesDetectados.length} faltante{faltantesDetectados.length !== 1 ? 's' : ''}
+            </div>
           )}
-        </button>
+        </div>
       </div>
       
-      {/* Contenido de las pestañas */}
-      {activeTab === 'porRegistrar' ? (
-        <>
-          <h2 className="text-lg font-medium mb-4">Productos con Stock por Debajo del Mínimo</h2>
-          {faltantes.length === 0 ? (
-            <div className="bg-gray-50 p-6 rounded-lg text-center">
-              <p className="text-gray-600">No hay productos con stock por debajo del mínimo.</p>
-            </div>
-          ) : (
-            <TablaFaltantes 
-              faltantes={faltantes} 
-              onRegistrarExitoso={handleRegistrarFaltanteExitoso} 
-            />
-          )}
-        </>
+      {/* Lista de faltantes para pedir */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-base font-medium text-gray-700">Por Pedir</h3>
+        {tienePermiso('Gestionar Stock') && faltantesDetectados.length > 0 && (
+          <button 
+            onClick={() => {
+              if (window.confirm('¿Estás seguro de marcar todos los faltantes como pedidos?')) {
+                // Esta función se implementará en el componente ListaFaltantesPendientes
+                document.getElementById('marcarTodosPedidos')?.click();
+              }
+            }}
+            className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded text-sm md:text-base transition"
+          >
+            Pedir Todos
+          </button>
+        )}
+      </div>
+      
+      {/* Contenido principal */}
+      {faltantesDetectados.length === 0 ? (
+        <div className="bg-green-50 border border-green-200 p-6 rounded-lg text-center">
+          <div className="text-green-600 text-4xl mb-2">✓</div>
+          <p className="text-green-800 font-medium">¡Excelente!</p>
+          <p className="text-green-600 text-sm mt-1">No hay faltantes detectados en este momento.</p>
+        </div>
       ) : (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium">Faltantes Pendientes de Pedido</h2>
-            {tienePermiso('Gestionar Stock') && faltantesRegistrados.length > 0 && (
-              <button 
-                onClick={() => {
-                  if (window.confirm('¿Estás seguro de marcar todos los faltantes como pedidos?')) {
-                    // Esta función se implementará en el componente ListaFaltantesPendientes
-                    document.getElementById('marcarTodosPedidos').click();
-                  }
-                }}
-                className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded text-sm md:text-base transition"
-              >
-                Pedir Todos
-              </button>
-            )}
-          </div>
-          
-          {faltantesRegistrados.length === 0 ? (
-            <div className="bg-gray-50 p-6 rounded-lg text-center">
-              <p className="text-gray-600">No hay faltantes pendientes de pedido.</p>
-            </div>
-          ) : (
-            <ListaFaltantesPendientes 
-              faltantes={faltantesRegistrados} 
-              onResolverExitoso={handleResolverFaltanteExitoso} 
-            />
-          )}
-        </>
+        <ListaFaltantesPendientes 
+          faltantes={faltantesDetectados} 
+          onPedirExitoso={handlePedirFaltanteExitoso}
+          mostrarAcciones={true}
+          tituloAccion="Pedir"
+        />
       )}
     </div>
   );
