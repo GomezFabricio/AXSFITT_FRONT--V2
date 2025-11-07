@@ -663,39 +663,95 @@ const ConfiguracionNotificaciones = () => {
                 {/* Frecuencia */}
                 <div className="bg-gray-50 rounded-xl p-4">
                   <h3 className="font-semibold text-gray-800 mb-3">Frecuencia de Envío</h3>
-                  <div className="space-y-2">
-                    {['inmediata', 'diaria', 'semanal'].map((freq) => (
-                      <label key={freq} className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="email-frecuencia"
-                          value={freq}
-                          checked={configuracion.email.frecuencia === freq}
-                          onChange={(e) => actualizarConfiguracion('email', 'frecuencia', e.target.value)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                        />
-                        <span className="text-sm font-medium text-gray-700 capitalize">{freq}</span>
-                      </label>
-                    ))}
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border hover:bg-blue-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="email-frecuencia"
+                        value="inmediata"
+                        checked={configuracion.email.frecuencia === 'inmediata'}
+                        onChange={(e) => actualizarConfiguracion('email', 'frecuencia', e.target.value)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Inmediata</span>
+                        <p className="text-xs text-gray-500">Email al momento que se detecta faltante</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border hover:bg-blue-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="email-frecuencia"
+                        value="diaria"
+                        checked={configuracion.email.frecuencia === 'diaria'}
+                        onChange={(e) => actualizarConfiguracion('email', 'frecuencia', e.target.value)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Diaria</span>
+                        <p className="text-xs text-gray-500">Email todos los días seleccionados</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border hover:bg-blue-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="email-frecuencia"
+                        value="semanal"
+                        checked={configuracion.email.frecuencia === 'semanal'}
+                        onChange={(e) => actualizarConfiguracion('email', 'frecuencia', e.target.value)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Semanal</span>
+                        <p className="text-xs text-gray-500">Email una vez por semana (primer día seleccionado)</p>
+                      </div>
+                    </label>
                   </div>
                 </div>
 
-                {/* Hora de envío */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3">Hora de Envío</h3>
-                  <input
-                    type="time"
-                    value={configuracion.email.horaEnvio}
-                    onChange={(e) => actualizarConfiguracion('email', 'horaEnvio', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                {/* Hora de envío - Solo se muestra si NO es inmediata */}
+                {configuracion.email.frecuencia !== 'inmediata' && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h3 className="font-semibold text-gray-800 mb-3">Hora de Envío</h3>
+                    <input
+                      type="time"
+                      value={configuracion.email.horaEnvio}
+                      onChange={(e) => actualizarConfiguracion('email', 'horaEnvio', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Los emails se enviarán a esta hora en los días configurados
+                    </p>
+                  </div>
+                )}
+
+                {/* Info adicional para modo inmediato */}
+                {configuracion.email.frecuencia === 'inmediata' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h3 className="font-semibold text-blue-800 mb-2">Modo Inmediato Activo</h3>
+                    <div className="text-sm text-blue-700 space-y-1">
+                      <p>• Los emails se envían automáticamente cuando se detecta un faltante</p>
+                      <p>• No se requiere configurar hora específica</p>
+                      <p>• La notificación llega en tiempo real</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Días de la semana */}
               {configuracion.email.frecuencia !== 'inmediata' && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <h3 className="font-semibold text-gray-800 mb-3">Días de Envío</h3>
+                  {configuracion.email.frecuencia === 'diaria' && (
+                    <p className="text-sm text-blue-600 mb-3 font-medium">
+                      📧 Se enviará un email CADA DÍA seleccionado a la hora configurada
+                    </p>
+                  )}
+                  {configuracion.email.frecuencia === 'semanal' && (
+                    <p className="text-sm text-green-600 mb-3 font-medium">
+                      📅 Se enviará un email UNA VEZ por semana en el primer día seleccionado
+                    </p>
+                  )}
                   <div className="grid grid-cols-7 gap-2">
                     {diasSemana.map((dia) => (
                       <button
@@ -711,11 +767,19 @@ const ConfiguracionNotificaciones = () => {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Días seleccionados: {configuracion.email.diasSemana.map(id => 
-                      diasSemana.find(d => d.id === id)?.nombre
-                    ).join(', ')}
-                  </p>
+                  {configuracion.email.frecuencia === 'diaria' && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Días seleccionados: {configuracion.email.diasSemana.map(id => 
+                        diasSemana.find(d => d.id === id)?.nombre
+                      ).join(', ')} (se enviará en todos estos días)
+                    </p>
+                  )}
+                  {configuracion.email.frecuencia === 'semanal' && configuracion.email.diasSemana.length > 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Se enviará solo los {diasSemana.find(d => d.id === configuracion.email.diasSemana[0])?.nombre}
+                      {configuracion.email.diasSemana.length > 1 && ' (otros días seleccionados serán ignorados)'}
+                    </p>
+                  )}
                 </div>
               )}
 
