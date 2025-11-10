@@ -96,63 +96,36 @@ const ListaFaltantesPendientes = ({
             <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
               Fecha Detección
             </th>
-            {(tienePermiso('Gestionar Stock') && mostrarAcciones) && (
-              <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
-                Acciones
-              </th>
-            )}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {faltantes.map((item) => (
             <tr key={item.faltante_id || item.id_faltante} className="hover:bg-gray-50">
               <td className="py-3 px-2 md:px-4 text-sm">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-8 w-8 md:h-10 md:w-10">
-                    <img 
-                      className="h-full w-full rounded-full object-cover" 
-                      src={item.imagen_url || 'https://via.placeholder.com/40'} 
-                      alt={item.tipo === 'producto' ? item.nombre : item.variante_sku}
-                    />
+                <div>
+                  <div className="text-xs md:text-sm font-medium text-gray-900">
+                    {item.producto_nombre || `Producto ID: ${item.faltante_producto_id || item.faltante_variante_id}`}
                   </div>
-                  <div className="ml-2 md:ml-4">
-                    <div className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[100px] md:max-w-[200px]">
-                      {item.tipo === 'producto' ? item.nombre : item.producto_nombre}
+                  {item.valores_variante && (
+                    <div className="text-xs text-gray-500">
+                      {item.valores_variante}
                     </div>
-                    {item.tipo === 'variante' && (
-                      <div className="text-xs md:text-sm text-gray-500 truncate max-w-[100px] md:max-w-[200px]">
-                        {item.atributos || `${item.atributo_nombre}: ${item.valor_nombre}`}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </td>
               <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-gray-700 text-center">
                 <span className="text-red-600 font-bold">
-                  {item.stock_actual}
+                  {item.stock_actual || 0}
                 </span>
               </td>
               <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-red-600 font-medium text-center">
-                {item.cantidad_faltante}
+                <span className="font-bold">
+                  {item.faltante_cantidad_faltante || item.cantidad_faltante || 0}
+                </span>
               </td>
               <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-gray-700 text-center">
                 {new Date(item.faltante_fecha_deteccion || item.fecha_deteccion).toLocaleDateString()}
               </td>
-              {(tienePermiso('Gestionar Stock') && mostrarAcciones) && (
-                <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-center">
-                  <button
-                    onClick={() => handleResolverFaltante(item.faltante_id || item.id_faltante)}
-                    disabled={procesando}
-                    className={`text-white px-3 py-1 rounded transition ${
-                      tituloAccion === "Pedir" 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
-                        : 'bg-green-600 hover:bg-green-700'
-                    } ${itemsProcesados.includes(item.faltante_id || item.id_faltante) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {itemsProcesados.includes(item.faltante_id || item.id_faltante) ? 'Procesando...' : tituloAccion}
-                  </button>
-                </td>
-              )}
             </tr>
           ))}
         </tbody>

@@ -371,12 +371,32 @@ const RecepcionPedidoModal = ({ open, onClose, pedido, onRecepcionar }) => {
               </p>
             </div>
           </div>
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
-            onClick={onClose}
-          >
-            <FiX className="w-6 h-6 text-gray-500" />
-          </button>
+          <div className="flex items-center space-x-4">
+            {/* Total visible en header */}
+            {!loading && !error && (
+              <div className="text-sm text-gray-700">
+                Total: <span className="font-bold text-lg text-blue-600">
+                  ${totales.totalGeneral.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            )}
+            {/* Botón Recepcionar movido aquí */}
+            {!loading && !error && (
+              <button
+                onClick={handleConfirmarRecepcion}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <FiCheck className="w-5 h-5" />
+                <span>Confirmar Recepción</span>
+              </button>
+            )}
+            <button 
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+              onClick={onClose}
+            >
+              <FiX className="w-6 h-6 text-gray-500" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -528,18 +548,11 @@ const RecepcionPedidoModal = ({ open, onClose, pedido, onRecepcionar }) => {
 
               {/* Productos sin registrar */}
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4">
                   <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                     <FiPlus className="w-5 h-5 mr-2" />
                     Productos Sin Registrar ({productosSinRegistrar.length})
                   </h3>
-                  <button
-                    onClick={() => setShowFormProductoSinRegistrar(true)}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    <span>Agregar Nuevo Producto</span>
-                  </button>
                 </div>
 
                 {productosSinRegistrar.length > 0 && (
@@ -639,17 +652,6 @@ const RecepcionPedidoModal = ({ open, onClose, pedido, onRecepcionar }) => {
                           </div>
                           
                           <div className="flex items-center space-x-2">
-                            {/* Botones para productos borrador */}
-                            {(producto.tipo === 'producto_borrador' || producto.tipo === 'variante_borrador') && (
-                              <button
-                                onClick={() => abrirModalRegistro(producto)}
-                                className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-1"
-                              >
-                                <FiCheck className="w-3 h-3" />
-                                <span>Registrar</span>
-                              </button>
-                            )}
-                            
                             {/* Solo mostrar botón eliminar para productos agregados manualmente */}
                             {producto.tipo !== 'producto_borrador' && producto.tipo !== 'variante_borrador' && (
                               <button
@@ -696,32 +698,6 @@ const RecepcionPedidoModal = ({ open, onClose, pedido, onRecepcionar }) => {
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        {!loading && !error && (
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-            <div className="text-sm text-gray-600">
-              Total: <span className="font-bold text-lg text-gray-900">
-                ${totales.totalGeneral.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={onClose}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleConfirmarRecepcion}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-              >
-                <FiCheck className="w-5 h-5" />
-                <span>Confirmar Recepción</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Modal para agregar producto sin registrar */}
         {showFormProductoSinRegistrar && (
