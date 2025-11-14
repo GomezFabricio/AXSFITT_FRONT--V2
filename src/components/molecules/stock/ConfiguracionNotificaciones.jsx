@@ -9,12 +9,14 @@ const ConfiguracionNotificaciones = () => {
     email: {
       activo: false,
       frecuencia: 'inmediata',
-      horaEnvio: '09:00'
+      horaEnvio: '09:00',
+      diasSemana: ['1', '2', '3', '4', '5']
     },
     whatsapp: {
       activo: false,
       frecuencia: 'inmediata',
-      horaEnvio: '09:00'
+      horaEnvio: '09:00',
+      diasSemana: ['1', '2', '3', '4', '5']
     }
   });
   
@@ -55,20 +57,26 @@ const ConfiguracionNotificaciones = () => {
       
       if (configResponse.ok) {
         const configData = await configResponse.json();
-        const nuevasConfiguraciones = {};
+        console.log('📋 Configuración recibida:', configData);
         
-        configData.forEach(config => {
-          nuevasConfiguraciones[config.config_tipo] = {
-            activo: config.config_activo === 1,
-            frecuencia: config.config_frecuencia || 'inmediata',
-            horaEnvio: config.config_hora_envio || '09:00'
-          };
-        });
+        // La API devuelve un objeto con propiedades email y whatsapp
+        const nuevasConfiguraciones = {
+          email: {
+            activo: configData.email?.activo || false,
+            frecuencia: configData.email?.frecuencia || 'inmediata',
+            horaEnvio: configData.email?.horaEnvio ? configData.email.horaEnvio.substring(0, 5) : '09:00',
+            diasSemana: configData.email?.diasSemana || ['1', '2', '3', '4', '5']
+          },
+          whatsapp: {
+            activo: configData.whatsapp?.activo || false,
+            frecuencia: configData.whatsapp?.frecuencia || 'inmediata',
+            horaEnvio: configData.whatsapp?.horaEnvio ? configData.whatsapp.horaEnvio.substring(0, 5) : '09:00',
+            diasSemana: configData.whatsapp?.diasSemana || ['1', '2', '3', '4', '5']
+          }
+        };
         
-        setConfiguraciones(prev => ({
-          ...prev,
-          ...nuevasConfiguraciones
-        }));
+        console.log('📝 Configuraciones mapeadas:', nuevasConfiguraciones);
+        setConfiguraciones(nuevasConfiguraciones);
       }
       
     } catch (error) {
@@ -170,14 +178,9 @@ const ConfiguracionNotificaciones = () => {
       });
       
       if (response.ok) {
-        setConfiguraciones(prev => ({
-          ...prev,
-          [tipo]: {
-            ...prev[tipo],
-            activo: nuevoEstado
-          }
-        }));
         success(`Notificaciones ${tipo} ${nuevoEstado ? 'activadas' : 'desactivadas'}`);
+        // Recargar configuración desde servidor para mostrar datos reales
+        await cargarConfiguraciones();
       } else {
         throw new Error('Error al cambiar estado');
       }
@@ -337,14 +340,9 @@ const ConfiguracionNotificaciones = () => {
       });
 
       if (response.ok) {
-        setConfiguraciones(prev => ({
-          ...prev,
-          [tipo]: {
-            ...prev[tipo],
-            frecuencia
-          }
-        }));
         success('Frecuencia actualizada correctamente');
+        // Recargar configuración desde servidor para mostrar datos reales
+        await cargarConfiguraciones();
       } else {
         throw new Error('Error al actualizar frecuencia');
       }

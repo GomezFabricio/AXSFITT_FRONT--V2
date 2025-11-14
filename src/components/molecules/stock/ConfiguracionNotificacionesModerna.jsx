@@ -72,7 +72,26 @@ const ConfiguracionNotificaciones = () => {
       
       if (configRes.ok) {
         const configData = await configRes.json();
-        // Procesar configuración aquí si es necesario
+        console.log('📋 Configuración recibida (Moderna):', configData);
+        
+        // Mapear configuración recibida
+        const nuevaConfig = {
+          email: {
+            activo: configData.email?.activo || false,
+            frecuencia: configData.email?.frecuencia || 'inmediata',
+            horaEnvio: configData.email?.horaEnvio ? configData.email.horaEnvio.substring(0, 5) : '09:00',
+            diasSemana: configData.email?.diasSemana || ['1', '2', '3', '4', '5']
+          },
+          whatsapp: {
+            activo: configData.whatsapp?.activo || false,
+            frecuencia: configData.whatsapp?.frecuencia || 'inmediata',
+            horaEnvio: configData.whatsapp?.horaEnvio ? configData.whatsapp.horaEnvio.substring(0, 5) : '09:00',
+            diasSemana: configData.whatsapp?.diasSemana || ['1', '2', '3', '4', '5']
+          }
+        };
+        
+        console.log('📝 Configuración mapeada (Moderna):', nuevaConfig);
+        setConfiguracion(nuevaConfig);
       }
       
     } catch (error) {
@@ -243,11 +262,9 @@ const ConfiguracionNotificaciones = () => {
       });
 
       if (response.ok) {
-        setConfiguracion(prev => ({
-          ...prev,
-          [tipo]: { ...prev[tipo], activo: nuevoEstado }
-        }));
         success(`Notificaciones ${tipo} ${nuevoEstado ? 'activadas' : 'desactivadas'}`);
+        // Recargar datos desde servidor para mostrar configuración real
+        await cargarDatos();
       } else {
         throw new Error('Error al cambiar estado');
       }
@@ -270,11 +287,9 @@ const ConfiguracionNotificaciones = () => {
       });
 
       if (response.ok) {
-        setConfiguracion(prev => ({
-          ...prev,
-          [tipo]: { ...prev[tipo], [campo]: valor }
-        }));
         success('Configuración actualizada');
+        // Recargar datos desde servidor para mostrar configuración real
+        await cargarDatos();
       } else {
         throw new Error('Error al actualizar configuración');
       }
