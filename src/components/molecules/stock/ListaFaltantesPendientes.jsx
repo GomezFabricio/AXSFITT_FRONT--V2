@@ -111,13 +111,6 @@ const ListaFaltantesPendientes = ({
   return (
     <div className="overflow-x-auto shadow-md rounded-lg">
       {/* Botón oculto para activar la función de marcar todos desde el componente padre */}
-      <button 
-        id="marcarTodosPedidos" 
-        onClick={handleResolverTodos} 
-        className="hidden"
-      >
-        Pedir Todos
-      </button>
       
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-100">
@@ -134,11 +127,6 @@ const ListaFaltantesPendientes = ({
             <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
               Fecha Detección
             </th>
-            {tienePermiso('Gestionar Stock') && (
-              <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
-                Acciones
-              </th>
-            )}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -169,17 +157,6 @@ const ListaFaltantesPendientes = ({
               <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-gray-700 text-center">
                 {new Date(item.faltante_fecha_deteccion || item.fecha_deteccion).toLocaleDateString()}
               </td>
-              {tienePermiso('Gestionar Stock') && (
-                <td className="py-3 px-2 md:px-4 text-center">
-                  <button
-                    onClick={() => agregarAlCarrito(item)}
-                    disabled={procesando}
-                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-3 py-1 rounded text-xs md:text-sm transition-colors"
-                  >
-                    {procesando ? 'Agregando...' : 'Pedir'}
-                  </button>
-                </td>
-              )}
             </tr>
           ))}
         </tbody>

@@ -122,12 +122,6 @@ const Faltantes = () => {
               <FiShoppingCart size={16} />
               <span>Ver Carrito</span>
             </button>
-            <button 
-              onClick={agregarTodosAlCarrito}
-              className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded text-sm md:text-base transition"
-            >
-              Pedir Todos
-            </button>
           </div>
         )}
       </div>
