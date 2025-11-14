@@ -18,6 +18,7 @@ import VerVentasPage from './pages/ventas/ventas/VerVentasPage';
 import DetalleVentaPage from './pages/ventas/ventas/DetalleVentaPage';
 import HomePage from './pages/HomePage';
 import FacturaPage from './pages/ventas/ventas/FacturaPage';
+import NotificacionesListaPage from './pages/notificaciones/NotificacionesListaPage';
 import MetricasDeVenta from './pages/ventas/metricas/MetricasDeVenta';
 import Pedidos from './pages/product/stock/Pedidos';
 
@@ -86,6 +87,11 @@ export const rutasProtegidas = [
     path: '/productos/faltantes',
     permiso: 'Ver Lista de Faltantes',
     componente: <Faltantes />,
+  },
+  {
+    path: '/notificaciones/lista',
+    permiso: 'Ver Lista de Faltantes',
+    componente: <NotificacionesListaPage />,
   },
   {
     path: '/productos/proveedores',

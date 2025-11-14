@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   FaShoppingCart, FaBoxOpen, FaUsers, FaUserFriends, 
   FaChartLine, FaTags, FaClipboardList, FaWarehouse,
-  FaLayerGroup, FaCog
+  FaLayerGroup, FaCog, FaBell
 } from 'react-icons/fa';
 import tienePermiso from '../utils/tienePermiso';
 
@@ -127,6 +127,14 @@ const HomePage = () => {
               <div className="absolute -top-1 -right-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs font-bold">!</div>
             </div>
             <span className="text-sm font-medium text-gray-700">Faltantes</span>
+          </Link>
+        )}
+        
+        {/* Lista de Notificaciones */}
+        {tienePermiso('Ver Lista de Faltantes') && (
+          <Link to="/notificaciones/lista" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-375">
+            <FaBell className="text-4xl text-blue-600 mb-3" />
+            <span className="text-sm font-medium text-gray-700">Notificaciones</span>
           </Link>
         )}
         

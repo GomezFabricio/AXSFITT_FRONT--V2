@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import useNotification from '../../../hooks/useNotification';
 import config from '../../../config/config';
 
@@ -369,8 +370,17 @@ const ConfiguracionNotificaciones = () => {
                 Gestiona contactos y configura cuando recibir alertas de stock bajo
               </p>
             </div>
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg">
-              <span className="font-semibold">Sistema Activo</span>
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/notificaciones/lista"
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center space-x-2"
+              >
+                <span>📋</span>
+                <span>Ver Historial</span>
+              </Link>
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg">
+                <span className="font-semibold">Sistema Activo</span>
+              </div>
             </div>
           </div>
         </div>

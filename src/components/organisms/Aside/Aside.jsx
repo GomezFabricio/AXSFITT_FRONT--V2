@@ -91,6 +91,7 @@ const Aside = ({ isAsideOpen = true }) => {
     if (nombre === 'gestionar stock') return <FaClipboardCheck />;
     if (nombre === 'ver stock') return <FaLayerGroup />;
     if (nombre === 'ver lista de faltantes' || nombre === 'ver faltantes') return <FaExclamationTriangle />;
+    if (nombre === 'lista de notificaciones' || nombre === 'notificaciones') return <FaBell />;
     if (nombre === 'gestionar proveedores' || nombre === 'proveedores') return <FaHandshake />;
     if (nombre === 'gestionar pedidos') return <FaClipboardList />;
     if (nombre === 'reportes de stock') return <FaChartBar />;
