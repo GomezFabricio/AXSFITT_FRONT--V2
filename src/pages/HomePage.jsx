@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   FaShoppingCart, FaBoxOpen, FaUsers, FaUserFriends, 
   FaChartLine, FaTags, FaClipboardList, FaWarehouse,
-  FaLayerGroup, FaCog, FaBell
+  FaLayerGroup, FaCog, FaBell, FaTruck, FaFileAlt
 } from 'react-icons/fa';
 import tienePermiso from '../utils/tienePermiso';
 
@@ -130,9 +130,58 @@ const HomePage = () => {
           </Link>
         )}
         
+        {/* Agregar Perfil */}
+        {tienePermiso('Agregar Perfil') && (
+          <Link to="/admin/perfiles/agregar" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-250">
+            <div className="relative">
+              <FaLayerGroup className="text-4xl text-blue-600 mb-3" />
+              <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs font-bold">+</div>
+            </div>
+            <span className="text-sm font-medium text-gray-700">Nuevo Perfil</span>
+          </Link>
+        )}
+
+        {/* Nueva Categoría */}
+        {tienePermiso('Ver Categorias') && (
+          <Link to="/productos/categorias/agregar" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-325">
+            <div className="relative">
+              <FaTags className="text-4xl text-yellow-600 mb-3" />
+              <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs font-bold">+</div>
+            </div>
+            <span className="text-sm font-medium text-gray-700">Nueva Categoría</span>
+          </Link>
+        )}
+
+        {/* Gestión de Pedidos */}
+        {tienePermiso('Gestionar Pedidos') && (
+          <Link to="/productos/pedidos" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-375">
+            <FaClipboardList className="text-4xl text-purple-600 mb-3" />
+            <span className="text-sm font-medium text-gray-700">Gestión de Pedidos</span>
+          </Link>
+        )}
+
+        {/* Gestión de Proveedores */}
+        {tienePermiso('Gestionar Proveedores') && (
+          <Link to="/productos/proveedores" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-400">
+            <div className="relative">
+              <FaUsers className="text-4xl text-teal-600 mb-3" />
+              <div className="absolute -bottom-1 -right-1 bg-orange-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs font-bold">P</div>
+            </div>
+            <span className="text-sm font-medium text-gray-700">Proveedores</span>
+          </Link>
+        )}
+
+        {/* Reportes de Stock */}
+        {tienePermiso('Reportes de Stock') && (
+          <Link to="/productos/reportes" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-425">
+            <FaChartLine className="text-4xl text-emerald-600 mb-3" />
+            <span className="text-sm font-medium text-gray-700">Reportes de Stock</span>
+          </Link>
+        )}
+
         {/* Lista de Notificaciones */}
         {tienePermiso('Ver Lista de Faltantes') && (
-          <Link to="/notificaciones/lista" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-375">
+          <Link to="/notificaciones/lista" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-450">
             <FaBell className="text-4xl text-blue-600 mb-3" />
             <span className="text-sm font-medium text-gray-700">Notificaciones</span>
           </Link>
@@ -140,7 +189,7 @@ const HomePage = () => {
         
         {/* Ventas */}
         {tienePermiso('Listado de Ventas') && (
-          <Link to="/ventas" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-100">
+          <Link to="/ventas" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-475">
             <FaShoppingCart className="text-4xl text-violet-600 mb-3" />
             <span className="text-sm font-medium text-gray-700">Ventas</span>
           </Link>
@@ -148,7 +197,7 @@ const HomePage = () => {
         
         {/* Nueva Venta */}
         {tienePermiso('Agregar Venta') && (
-          <Link to="/ventas/agregar" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-150">
+          <Link to="/ventas/agregar" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-500">
             <div className="relative">
               <FaShoppingCart className="text-4xl text-violet-600 mb-3" />
               <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs font-bold">+</div>
@@ -159,7 +208,7 @@ const HomePage = () => {
         
         {/* Clientes */}
         {tienePermiso('Ver Clientes') && (
-          <Link to="/ventas/clientes" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-250">
+          <Link to="/ventas/clientes" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-525">
             <FaUserFriends className="text-4xl text-blue-600 mb-3" />
             <span className="text-sm font-medium text-gray-700">Clientes</span>
           </Link>
@@ -167,7 +216,7 @@ const HomePage = () => {
         
         {/* Nuevo Cliente */}
         {tienePermiso('Agregar Cliente') && (
-          <Link to="/ventas/clientes/agregar" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-300">
+          <Link to="/ventas/clientes/agregar" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-550">
             <div className="relative">
               <FaUserFriends className="text-4xl text-blue-600 mb-3" />
               <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs font-bold">+</div>
@@ -178,7 +227,7 @@ const HomePage = () => {
         
         {/* Métricas de Ventas */}
         {tienePermiso('Metricas') && (
-          <Link to="/ventas/metricas" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-400">
+          <Link to="/ventas/metricas" className="bg-white rounded-xl shadow-md p-5 flex flex-col items-center justify-center border border-violet-100 hover:shadow-lg transition animate-pop delay-575">
             <FaChartLine className="text-4xl text-green-600 mb-3" />
             <span className="text-sm font-medium text-gray-700">Métricas</span>
           </Link>
@@ -217,9 +266,17 @@ const HomePage = () => {
           .animate-pop.delay-200 { animation-delay: .2s; }
           .animate-pop.delay-250 { animation-delay: .25s; }
           .animate-pop.delay-300 { animation-delay: .3s; }
+          .animate-pop.delay-325 { animation-delay: .325s; }
           .animate-pop.delay-350 { animation-delay: .35s; }
+          .animate-pop.delay-375 { animation-delay: .375s; }
           .animate-pop.delay-400 { animation-delay: .4s; }
+          .animate-pop.delay-425 { animation-delay: .425s; }
           .animate-pop.delay-450 { animation-delay: .45s; }
+          .animate-pop.delay-475 { animation-delay: .475s; }
+          .animate-pop.delay-500 { animation-delay: .5s; }
+          .animate-pop.delay-525 { animation-delay: .525s; }
+          .animate-pop.delay-550 { animation-delay: .55s; }
+          .animate-pop.delay-575 { animation-delay: .575s; }
           @keyframes bounce-slow {
             0%, 100% { transform: translateY(0);}
             50% { transform: translateY(-10px);}
