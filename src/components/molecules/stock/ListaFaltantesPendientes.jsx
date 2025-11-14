@@ -7,11 +7,49 @@ const ListaFaltantesPendientes = ({
   onResolverExitoso, 
   onPedirExitoso, 
   mostrarAcciones = false, 
-  tituloAccion = "Marcar como Pedido" 
+  tituloAccion = "Marcar como Pedido",
+  onAgregarCarrito
 }) => {
   const [procesando, setProcesando] = useState(false);
   const [resolviendoTodo, setResolviendoTodo] = useState(false);
   const [itemsProcesados, setItemsProcesados] = useState([]);
+
+  const agregarAlCarrito = async (faltante) => {
+    try {
+      setProcesando(true);
+      const token = sessionStorage.getItem('token');
+      
+      const datosItem = {
+        faltante_id: faltante.faltante_id,
+        producto_id: faltante.faltante_producto_id,
+        variante_id: faltante.faltante_variante_id,
+        cantidad_necesaria: faltante.faltante_cantidad_faltante || 
+                           Math.max(0, faltante.stock_minimo - faltante.stock_actual)
+      };
+
+      const response = await fetch('/api/carrito-pedidos/carrito/agregar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(datosItem)
+      });
+
+      if (response.ok) {
+        alert('✅ Producto agregado al carrito');
+        if (onAgregarCarrito) onAgregarCarrito(true); // Abrir carrito
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al agregar al carrito');
+      }
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      alert('Error: ' + error.message);
+    } finally {
+      setProcesando(false);
+    }
+  };
 
   const handleResolverFaltante = async (id) => {
     if (!tienePermiso('Gestionar Stock')) return;
@@ -96,6 +134,11 @@ const ListaFaltantesPendientes = ({
             <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
               Fecha Detección
             </th>
+            {tienePermiso('Gestionar Stock') && (
+              <th scope="col" className="py-3 px-2 md:px-4 text-center text-xs md:text-sm font-semibold text-gray-700">
+                Acciones
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -126,6 +169,17 @@ const ListaFaltantesPendientes = ({
               <td className="py-3 px-2 md:px-4 text-xs md:text-sm text-gray-700 text-center">
                 {new Date(item.faltante_fecha_deteccion || item.fecha_deteccion).toLocaleDateString()}
               </td>
+              {tienePermiso('Gestionar Stock') && (
+                <td className="py-3 px-2 md:px-4 text-center">
+                  <button
+                    onClick={() => agregarAlCarrito(item)}
+                    disabled={procesando}
+                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-3 py-1 rounded text-xs md:text-sm transition-colors"
+                  >
+                    {procesando ? 'Agregando...' : 'Pedir'}
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

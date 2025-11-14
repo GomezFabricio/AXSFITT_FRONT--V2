@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { obtenerFaltantes } from '../../../api/stockApi';
 import config from '../../../config/config';
 import ListaFaltantesPendientes from '../../../components/molecules/stock/ListaFaltantesPendientes';
+import CarritoPedidosRapidos from '../../../components/organisms/CarritoPedidosRapidos';
 import tienePermiso from '../../../utils/tienePermiso';
+import { FiShoppingCart } from 'react-icons/fi';
 
 const Faltantes = () => {
   const [faltantesDetectados, setFaltantesDetectados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [carritoOpen, setCarritoOpen] = useState(false);
 
   useEffect(() => {
     cargarFaltantes();
@@ -42,6 +45,30 @@ const Faltantes = () => {
   const handlePedirFaltanteExitoso = () => {
     // Recargar datos después de pedir un faltante
     cargarFaltantes();
+  };
+
+  const agregarTodosAlCarrito = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      const response = await fetch('/api/carrito-pedidos/carrito/agregar-todos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`✅ ${data.data.faltantes_agregados} productos agregados al carrito`);
+        setCarritoOpen(true);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al agregar productos al carrito');
+      }
+    } catch (error) {
+      console.error('Error al agregar todos al carrito:', error);
+      alert('Error: ' + error.message);
+    }
   };
 
   if (loading) {
@@ -87,17 +114,21 @@ const Faltantes = () => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-base font-medium text-gray-700">Por Pedir</h3>
         {tienePermiso('Gestionar Stock') && faltantesDetectados.length > 0 && (
-          <button 
-            onClick={() => {
-              if (window.confirm('¿Estás seguro de marcar todos los faltantes como pedidos?')) {
-                // Esta función se implementará en el componente ListaFaltantesPendientes
-                document.getElementById('marcarTodosPedidos')?.click();
-              }
-            }}
-            className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded text-sm md:text-base transition"
-          >
-            Pedir Todos
-          </button>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setCarritoOpen(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded text-sm md:text-base transition flex items-center space-x-2"
+            >
+              <FiShoppingCart size={16} />
+              <span>Ver Carrito</span>
+            </button>
+            <button 
+              onClick={agregarTodosAlCarrito}
+              className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded text-sm md:text-base transition"
+            >
+              Pedir Todos
+            </button>
+          </div>
         )}
       </div>
       
@@ -114,8 +145,19 @@ const Faltantes = () => {
           onPedirExitoso={handlePedirFaltanteExitoso}
           mostrarAcciones={true}
           tituloAccion="Pedir"
+          onAgregarCarrito={setCarritoOpen}
         />
       )}
+
+      {/* Modal del Carrito */}
+      <CarritoPedidosRapidos 
+        isOpen={carritoOpen}
+        onClose={() => setCarritoOpen(false)}
+        onPedidoCreado={(pedido) => {
+          console.log('Pedido creado:', pedido);
+          cargarFaltantes(); // Recargar faltantes después de crear pedido
+        }}
+      />
     </div>
   );
 };
